@@ -8,6 +8,7 @@ import EmployeeManagement from '@/pages/EmployeeManagement'
 import CostCenterManagement from '@/pages/CostCenterManagement'
 import PhoneManagement from '@/pages/PhoneManagement'
 import ExtensionPoolManagement from '@/pages/ExtensionPoolManagement'
+import AreaCodeManagement from '@/pages/AreaCodeManagement'
 
 const App = () => {
   return (
@@ -52,6 +53,14 @@ const App = () => {
             element={
               <PrivateRoute>
                 <ExtensionPoolManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/area-codes"
+            element={
+              <PrivateRoute>
+                <AreaCodeManagement />
               </PrivateRoute>
             }
           />
