@@ -2,6 +2,8 @@ package com.phonebiz.controller;
 
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.CreatePhoneRequest;
+import com.phonebiz.dto.PhoneAllocationRequest;
+import com.phonebiz.dto.PhoneReclaimRequest;
 import com.phonebiz.dto.UpdatePhoneRequest;
 import com.phonebiz.entity.PhoneHistory;
 import com.phonebiz.entity.PhoneNumber;
@@ -96,5 +98,23 @@ public class PhoneController {
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         return ApiResponse.success(phoneService.updatePhone(id, request, operator));
+    }
+
+    @PostMapping("/allocate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> allocatePhone(
+            @Valid @RequestBody PhoneAllocationRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.allocatePhone(request, operator));
+    }
+
+    @PostMapping("/reclaim")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> reclaimPhone(
+            @Valid @RequestBody PhoneReclaimRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.reclaimPhone(request, operator));
     }
 }

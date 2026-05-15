@@ -3,10 +3,14 @@ package com.phonebiz.service;
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreatePhoneRequest;
+import com.phonebiz.dto.PhoneAllocationRequest;
+import com.phonebiz.dto.PhoneReclaimRequest;
 import com.phonebiz.dto.UpdatePhoneRequest;
 import com.phonebiz.entity.PhoneHistory;
 import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.entity.PhoneSurrenderRecord;
+import com.phonebiz.repository.EmployeeRepository;
+import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.PhoneHistoryRepository;
 import com.phonebiz.repository.PhoneNumberRepository;
 import com.phonebiz.repository.PhoneSurrenderRecordRepository;
@@ -29,6 +33,8 @@ public class PhoneService {
     private final PhoneNumberRepository phoneRepository;
     private final PhoneHistoryRepository historyRepository;
     private final PhoneSurrenderRecordRepository surrenderRepository;
+    private final EmployeeRepository employeeRepository;
+    private final OrgStructureRepository orgRepository;
 
     @Transactional(readOnly = true)
     public Page<PhoneNumber> getPhones(Pageable pageable) {
@@ -96,6 +102,104 @@ public class PhoneService {
 
         phone.setUpdatedBy(operator);
         return phoneRepository.save(phone);
+    }
+
+    @Transactional
+    public PhoneNumber allocatePhone(PhoneAllocationRequest request, String operator) {
+        Long phoneId = request.getPhoneId();
+
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.idle) {
+            throw new BusinessException(ErrorCode.PHONE_003);
+        }
+
+        if (!employeeRepository.existsByEmployeeNo(request.getUserId())) {
+            throw new BusinessException(ErrorCode.EMP_002);
+        }
+
+        if (!orgRepository.existsById(request.getOrgId())) {
+            throw new BusinessException(ErrorCode.ORG_001);
+        }
+
+        String fromUser = phone.getUserId();
+        String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
+        String fromStatus = phone.getStatus().name();
+
+        phone.setUserId(request.getUserId());
+        phone.setOrgId(request.getOrgId());
+        phone.setStatus(PhoneNumber.PhoneStatus.active);
+        phone.setUpdatedBy(operator);
+
+        if (request.getExtensionNumber() != null) {
+            if (phoneRepository.existsByExtensionNumber(request.getExtensionNumber())) {
+                throw new BusinessException(ErrorCode.PHONE_101);
+            }
+            phone.setExtensionNumber(request.getExtensionNumber());
+            phone.setExtensionType("manual");
+        }
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "allocate",
+            fromStatus,
+            "active",
+            fromUser,
+            request.getUserId(),
+            fromOrg,
+            String.valueOf(request.getOrgId()),
+            operator,
+            request.getWorkOrderNo(),
+            request.getRemark()
+        );
+
+        log.info("Phone {} allocated to user {} by {}", phone.getPhoneNumber(), request.getUserId(), operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber reclaimPhone(PhoneReclaimRequest request, String operator) {
+        Long phoneId = request.getPhoneId();
+
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.active) {
+            throw new BusinessException(ErrorCode.PHONE_004);
+        }
+
+        String fromUser = phone.getUserId();
+        String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
+        String fromStatus = phone.getStatus().name();
+
+        phone.setUserId(null);
+        phone.setOrgId(null);
+        phone.setExtensionNumber(null);
+        phone.setExtensionType(null);
+        phone.setStatus(PhoneNumber.PhoneStatus.idle);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "reclaim",
+            fromStatus,
+            "idle",
+            fromUser,
+            null,
+            fromOrg,
+            null,
+            operator,
+            request.getWorkOrderNo(),
+            request.getReason() != null ? "Reason: " + request.getReason() : request.getRemark()
+        );
+
+        log.info("Phone {} reclaimed from user {} by {}", phone.getPhoneNumber(), fromUser, operator);
+        return saved;
     }
 
     @Transactional
