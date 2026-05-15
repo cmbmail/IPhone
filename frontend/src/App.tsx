@@ -5,6 +5,7 @@ import { PrivateRoute } from '@/components/PrivateRoute'
 import Login from '@/pages/Login'
 import OrgManagement from '@/pages/OrgManagement'
 import EmployeeManagement from '@/pages/EmployeeManagement'
+import CostCenterManagement from '@/pages/CostCenterManagement'
 
 const App = () => {
   return (
@@ -25,6 +26,14 @@ const App = () => {
             element={
               <PrivateRoute>
                 <EmployeeManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/cost-centers"
+            element={
+              <PrivateRoute>
+                <CostCenterManagement />
               </PrivateRoute>
             }
           />
