@@ -1,0 +1,2 @@
+-- PhoneBiz Flyway Baseline Migration
+-- Placeholder - actual migrations will start from V02

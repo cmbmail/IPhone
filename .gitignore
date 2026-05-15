@@ -1,0 +1,47 @@
+# Gradle
+backend/build/
+backend/.gradle/
+backend/gradle/
+backend/gradlew
+backend/gradlew.bat
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Java
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+application-prod.yml
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# Test coverage
+**/jacoco/
+**/coverage/
+
+# Flyway
+**/flyway/

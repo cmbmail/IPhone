@@ -1,0 +1,111 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'org.owasp.dependencycheck' version '9.2.0'
+}
+
+group = 'com.phonebiz'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+checkstyle {
+    toolVersion '10.17.0'
+    configFile = file("${projectDir}/config/checkstyle/checkstyle.xml")
+    maxErrors = 0
+    maxWarnings = 0
+}
+
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+dependencyCheck {
+    format = 'ALL'
+    failBuildOnCVSS = 7.0
+    suppressionFiles = files("${projectDir}/config/owasp/suppressions.xml")
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    springBootVersion = '3.2.5'
+    jjwtVersion = '0.12.3'
+    checkstyleVersion = '10.17.0'
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.flywaydb:flyway-core"
+    implementation "org.flywaydb:flyway-mysql"
+    compileOnly "org.projectlombok:lombok"
+    runtimeOnly "com.mysql:mysql-connector-j"
+    annotationProcessor "org.projectlombok:lombok"
+    
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.security:spring-security-test"
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+
+tasks.withType(JacocoReport) {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.90
+                counter = 'LINE'
+            }
+            includes = ['com.phonebiz.*.service.*']
+        }
+        rule {
+            limit {
+                minimum = 0.70
+                counter = 'LINE'
+            }
+            includes = ['com.phonebiz.*.controller.*']
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+tasks.named('check') {
+    dependsOn dependencyCheckAnalyze
+}
