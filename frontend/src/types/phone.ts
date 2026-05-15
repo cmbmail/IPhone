@@ -76,6 +76,42 @@ export interface UpdatePhoneDTO {
   remark?: string
 }
 
+export interface PhoneAllocationRequest {
+  phoneId: number
+  userId: string
+  orgId: number
+  extensionNumber?: string
+  workOrderNo?: string
+  remark?: string
+}
+
+export interface PhoneReclaimRequest {
+  phoneId: number
+  reason?: string
+  workOrderNo?: string
+  remark?: string
+}
+
+export interface PhoneStatusChangeRequest {
+  phoneId: number
+  newStatus: PhoneStatus
+  workOrderNo?: string
+  remark?: string
+}
+
+export interface PhoneSurrenderRequest {
+  phoneId: number
+  surrenderType: 'surrender' | 'cancel'
+  workOrderNo?: string
+  remark?: string
+}
+
+export interface PhoneReserveRequest {
+  phoneId: number
+  workOrderNo?: string
+  remark?: string
+}
+
 export interface PhoneQueryDTO {
   phoneNumber?: string
   userId?: string

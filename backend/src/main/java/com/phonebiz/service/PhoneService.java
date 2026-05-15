@@ -235,4 +235,170 @@ public class PhoneService {
     public long countActiveByOrg(Long orgId) {
         return phoneRepository.countActiveByOrgId(orgId);
     }
+
+    @Transactional
+    public PhoneNumber changeStatus(Long phoneId, PhoneNumber.PhoneStatus newStatus, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        String fromStatus = phone.getStatus().name();
+
+        if (!isValidStatusTransition(phone.getStatus(), newStatus)) {
+            throw new BusinessException(ErrorCode.PHONE_200);
+        }
+
+        phone.setStatus(newStatus);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_status",
+            fromStatus,
+            newStatus.name(),
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} status changed from {} to {} by {}", phone.getPhoneNumber(), fromStatus, newStatus, operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneSurrenderRecord surrenderPhone(Long phoneId, String surrenderType, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (!canSurrender(phone.getStatus())) {
+            throw new BusinessException(ErrorCode.PHONE_201);
+        }
+
+        PhoneSurrenderRecord record = new PhoneSurrenderRecord();
+        record.setPhoneId(phoneId);
+        record.setPhoneNumber(phone.getPhoneNumber());
+        record.setFinalUser(phone.getUserId());
+        record.setFinalOrg(phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null);
+        record.setSurrenderDate(LocalDate.now());
+        record.setSurrenderType(surrenderType);
+        record.setOperator(operator);
+        record.setWorkOrderNo(workOrderNo);
+        record.setRemark(remark);
+        record.setArchivedAt(LocalDateTime.now());
+
+        PhoneSurrenderRecord savedRecord = surrenderRepository.save(record);
+
+        String fromStatus = phone.getStatus().name();
+        phone.setStatus(PhoneNumber.PhoneStatus.cancelled);
+        phone.setUserId(null);
+        phone.setOrgId(null);
+        phone.setExtensionNumber(null);
+        phone.setExtensionType(null);
+        phone.setUpdatedBy(operator);
+        phone.setIsReentry(true);
+        phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "surrender",
+            fromStatus,
+            "cancelled",
+            record.getFinalUser(),
+            null,
+            record.getFinalOrg(),
+            null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} surrendered with type {} by {}", phone.getPhoneNumber(), surrenderType, operator);
+        return savedRecord;
+    }
+
+    @Transactional
+    public PhoneNumber reservePhone(Long phoneId, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.idle) {
+            throw new BusinessException(ErrorCode.PHONE_005);
+        }
+
+        String fromStatus = phone.getStatus().name();
+        phone.setStatus(PhoneNumber.PhoneStatus.reserved);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "reserve",
+            fromStatus,
+            "reserved",
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} reserved by {}", phone.getPhoneNumber(), operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber releasePhone(Long phoneId, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.reserved) {
+            throw new BusinessException(ErrorCode.PHONE_005);
+        }
+
+        String fromStatus = phone.getStatus().name();
+        phone.setStatus(PhoneNumber.PhoneStatus.idle);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "release",
+            fromStatus,
+            "idle",
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} released by {}", phone.getPhoneNumber(), operator);
+        return saved;
+    }
+
+    private boolean isValidStatusTransition(PhoneNumber.PhoneStatus from, PhoneNumber.PhoneStatus to) {
+        return switch (from) {
+            case idle -> to == PhoneNumber.PhoneStatus.active || to == PhoneNumber.PhoneStatus.reserved;
+            case active -> to == PhoneNumber.PhoneStatus.stopped || to == PhoneNumber.PhoneStatus.idle;
+            case stopped -> to == PhoneNumber.PhoneStatus.active || to == PhoneNumber.PhoneStatus.cancelled;
+            case cancelled -> false;
+            case reserved -> to == PhoneNumber.PhoneStatus.idle || to == PhoneNumber.PhoneStatus.active;
+            case disabled -> to == PhoneNumber.PhoneStatus.idle;
+        };
+    }
+
+    private boolean canSurrender(PhoneNumber.PhoneStatus status) {
+        return status == PhoneNumber.PhoneStatus.active || status == PhoneNumber.PhoneStatus.stopped;
+    }
 }

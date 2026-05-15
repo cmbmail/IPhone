@@ -4,6 +4,9 @@ import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.CreatePhoneRequest;
 import com.phonebiz.dto.PhoneAllocationRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
+import com.phonebiz.dto.PhoneReserveRequest;
+import com.phonebiz.dto.PhoneStatusChangeRequest;
+import com.phonebiz.dto.PhoneSurrenderRequest;
 import com.phonebiz.dto.UpdatePhoneRequest;
 import com.phonebiz.entity.PhoneHistory;
 import com.phonebiz.entity.PhoneNumber;
@@ -116,5 +119,42 @@ public class PhoneController {
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         return ApiResponse.success(phoneService.reclaimPhone(request, operator));
+    }
+
+    @PostMapping("/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> changeStatus(
+            @Valid @RequestBody PhoneStatusChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        PhoneNumber.PhoneStatus newStatus = PhoneNumber.PhoneStatus.valueOf(request.getNewStatus().toLowerCase());
+        return ApiResponse.success(phoneService.changeStatus(request.getPhoneId(), newStatus, operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/surrender")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<?> surrenderPhone(
+            @Valid @RequestBody PhoneSurrenderRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.surrenderPhone(request.getPhoneId(), request.getSurrenderType(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/reserve")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> reservePhone(
+            @Valid @RequestBody PhoneReserveRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.reservePhone(request.getPhoneId(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/release")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> releasePhone(
+            @Valid @RequestBody PhoneReserveRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.releasePhone(request.getPhoneId(), operator, request.getWorkOrderNo(), request.getRemark()));
     }
 }
