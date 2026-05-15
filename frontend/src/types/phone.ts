@@ -112,6 +112,16 @@ export interface PhoneReserveRequest {
   remark?: string
 }
 
+export interface PhoneChangeRequest {
+  phoneId: number
+  userId?: string
+  orgId?: number
+  phoneNumber?: string
+  extensionNumber?: string
+  workOrderNo?: string
+  remark?: string
+}
+
 export interface PhoneQueryDTO {
   phoneNumber?: string
   userId?: string

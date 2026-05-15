@@ -4,6 +4,7 @@ import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.CreatePhoneRequest;
 import com.phonebiz.dto.PhoneAllocationRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
+import com.phonebiz.dto.PhoneChangeRequest;
 import com.phonebiz.dto.PhoneReserveRequest;
 import com.phonebiz.dto.PhoneStatusChangeRequest;
 import com.phonebiz.dto.PhoneSurrenderRequest;
@@ -156,5 +157,50 @@ public class PhoneController {
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         return ApiResponse.success(phoneService.releasePhone(request.getPhoneId(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/change-user")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> changeUser(
+            @Valid @RequestBody PhoneChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.changeUser(request.getPhoneId(), request.getUserId(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/change-org")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> changeOrg(
+            @Valid @RequestBody PhoneChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.changeOrg(request.getPhoneId(), request.getOrgId(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/change-number")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> changeNumber(
+            @Valid @RequestBody PhoneChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.changeNumber(request.getPhoneId(), request.getPhoneNumber(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/change-extension")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> changeExtension(
+            @Valid @RequestBody PhoneChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.changeExtension(request.getPhoneId(), request.getExtensionNumber(), operator, request.getWorkOrderNo(), request.getRemark()));
+    }
+
+    @PostMapping("/change")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
+    public ApiResponse<PhoneNumber> batchChange(
+            @Valid @RequestBody PhoneChangeRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.batchChange(request.getPhoneId(), request, operator));
     }
 }

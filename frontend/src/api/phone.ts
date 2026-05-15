@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { PhoneNumber, CreatePhoneDTO, UpdatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest } from '@/types/phone'
+import type { PhoneNumber, CreatePhoneDTO, UpdatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest, PhoneChangeRequest } from '@/types/phone'
 
 const request = axios.create({
   baseURL: '/api',
@@ -38,5 +38,15 @@ export const phoneApi = {
 
   reserve: (data: PhoneReserveRequest) => request.post<PhoneNumber>('/phones/reserve', data),
 
-  release: (data: PhoneReserveRequest) => request.post<PhoneNumber>('/phones/release', data)
+  release: (data: PhoneReserveRequest) => request.post<PhoneNumber>('/phones/release', data),
+
+  changeUser: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-user', data),
+
+  changeOrg: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-org', data),
+
+  changeNumber: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-number', data),
+
+  changeExtension: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-extension', data),
+
+  batchChange: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change', data)
 }

@@ -401,4 +401,228 @@ public class PhoneService {
     private boolean canSurrender(PhoneNumber.PhoneStatus status) {
         return status == PhoneNumber.PhoneStatus.active || status == PhoneNumber.PhoneStatus.stopped;
     }
+
+    @Transactional
+    public PhoneNumber changeUser(Long phoneId, String newUserId, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.active) {
+            throw new BusinessException(ErrorCode.PHONE_003);
+        }
+
+        if (!employeeRepository.existsByEmployeeNo(newUserId)) {
+            throw new BusinessException(ErrorCode.EMP_002);
+        }
+
+        String fromUser = phone.getUserId();
+        String fromStatus = phone.getStatus().name();
+
+        phone.setUserId(newUserId);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_user",
+            fromStatus,
+            fromStatus,
+            fromUser,
+            newUserId,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} user changed from {} to {} by {}", phone.getPhoneNumber(), fromUser, newUserId, operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber changeOrg(Long phoneId, Long newOrgId, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.active) {
+            throw new BusinessException(ErrorCode.PHONE_003);
+        }
+
+        if (!orgRepository.existsById(newOrgId)) {
+            throw new BusinessException(ErrorCode.ORG_001);
+        }
+
+        String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
+        String fromStatus = phone.getStatus().name();
+
+        phone.setOrgId(newOrgId);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_org",
+            fromStatus,
+            fromStatus,
+            phone.getUserId(),
+            phone.getUserId(),
+            fromOrg,
+            String.valueOf(newOrgId),
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} org changed from {} to {} by {}", phone.getPhoneNumber(), fromOrg, newOrgId, operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber changeNumber(Long phoneId, String newPhoneNumber, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getPhoneNumber().equals(newPhoneNumber)) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "New number is the same as current");
+        }
+
+        if (phoneRepository.existsByPhoneNumber(newPhoneNumber)) {
+            throw new BusinessException(ErrorCode.PHONE_002);
+        }
+
+        String fromNumber = phone.getPhoneNumber();
+        String fromStatus = phone.getStatus().name();
+
+        phone.setPhoneNumber(newPhoneNumber);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_number",
+            fromStatus,
+            fromStatus,
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark != null ? remark : "Number changed from " + fromNumber + " to " + newPhoneNumber
+        );
+
+        log.info("Phone {} number changed from {} to {} by {}", phoneId, fromNumber, newPhoneNumber, operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber changeExtension(Long phoneId, String newExtension, String operator, String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (newExtension != null && phoneRepository.existsByExtensionNumber(newExtension)) {
+            throw new BusinessException(ErrorCode.PHONE_101);
+        }
+
+        phone.setExtensionNumber(newExtension);
+        phone.setExtensionType(newExtension != null ? "manual" : null);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_number",
+            phone.getStatus().name(),
+            phone.getStatus().name(),
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} extension changed to {} by {}", phone.getPhoneNumber(), newExtension, operator);
+        return saved;
+    }
+
+    @Transactional
+    public PhoneNumber batchChange(Long phoneId, PhoneChangeRequest request, String operator) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        String fromUser = phone.getUserId();
+        String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
+        String fromNumber = phone.getPhoneNumber();
+        String fromStatus = phone.getStatus().name();
+        boolean hasChanges = false;
+        StringBuilder changeDetails = new StringBuilder();
+
+        if (request.getUserId() != null && !request.getUserId().equals(phone.getUserId())) {
+            if (!employeeRepository.existsByEmployeeNo(request.getUserId())) {
+                throw new BusinessException(ErrorCode.EMP_002);
+            }
+            changeDetails.append("user: ").append(fromUser).append("->").append(request.getUserId()).append("; ");
+            phone.setUserId(request.getUserId());
+            hasChanges = true;
+        }
+
+        if (request.getOrgId() != null && !request.getOrgId().equals(phone.getOrgId())) {
+            if (!orgRepository.existsById(request.getOrgId())) {
+                throw new BusinessException(ErrorCode.ORG_001);
+            }
+            changeDetails.append("org: ").append(fromOrg).append("->").append(request.getOrgId()).append("; ");
+            phone.setOrgId(request.getOrgId());
+            hasChanges = true;
+        }
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(phone.getPhoneNumber())) {
+            if (phoneRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                throw new BusinessException(ErrorCode.PHONE_002);
+            }
+            changeDetails.append("number: ").append(fromNumber).append("->").append(request.getPhoneNumber()).append("; ");
+            phone.setPhoneNumber(request.getPhoneNumber());
+            hasChanges = true;
+        }
+
+        if (request.getExtensionNumber() != null) {
+            if (phoneRepository.existsByExtensionNumber(request.getExtensionNumber())) {
+                throw new BusinessException(ErrorCode.PHONE_101);
+            }
+            changeDetails.append("extension: ").append(phone.getExtensionNumber()).append("->").append(request.getExtensionNumber()).append("; ");
+            phone.setExtensionNumber(request.getExtensionNumber());
+            phone.setExtensionType("manual");
+            hasChanges = true;
+        }
+
+        if (!hasChanges) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No changes provided");
+        }
+
+        phone.setUpdatedBy(operator);
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "change_number",
+            fromStatus,
+            fromStatus,
+            fromUser,
+            phone.getUserId(),
+            fromOrg,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            request.getWorkOrderNo(),
+            request.getRemark() != null ? request.getRemark() : changeDetails.toString()
+        );
+
+        log.info("Phone {} batch changed: {}", phoneId, changeDetails);
+        return saved;
+    }
 }
