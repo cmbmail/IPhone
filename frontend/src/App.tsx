@@ -7,6 +7,7 @@ import OrgManagement from '@/pages/OrgManagement'
 import EmployeeManagement from '@/pages/EmployeeManagement'
 import CostCenterManagement from '@/pages/CostCenterManagement'
 import PhoneManagement from '@/pages/PhoneManagement'
+import ExtensionPoolManagement from '@/pages/ExtensionPoolManagement'
 
 const App = () => {
   return (
@@ -43,6 +44,14 @@ const App = () => {
             element={
               <PrivateRoute>
                 <PhoneManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/extension-pools"
+            element={
+              <PrivateRoute>
+                <ExtensionPoolManagement />
               </PrivateRoute>
             }
           />
