@@ -1,0 +1,43 @@
+package com.phonebiz.repository;
+
+import com.phonebiz.entity.PhoneNumber;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> {
+
+    Optional<PhoneNumber> findByPhoneNumber(String phoneNumber);
+
+    boolean existsByPhoneNumber(String phoneNumber);
+
+    boolean existsByExtensionNumber(String extensionNumber);
+
+    Page<PhoneNumber> findByStatus(PhoneNumber.PhoneStatus status, Pageable pageable);
+
+    Page<PhoneNumber> findByOrgId(Long orgId, Pageable pageable);
+
+    List<PhoneNumber> findByUserId(String userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PhoneNumber p WHERE p.id = :id")
+    Optional<PhoneNumber> findByIdWithLock(@Param("id") Long id);
+
+    @Query("SELECT p FROM PhoneNumber p WHERE p.status = 'idle' ORDER BY p.createdAt")
+    List<PhoneNumber> findIdlePhones();
+
+    @Query("SELECT p FROM PhoneNumber p WHERE p.extensionNumber = :ext AND p.status = 'idle'")
+    Optional<PhoneNumber> findIdleByExtensionNumber(@Param("ext") String extensionNumber);
+
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.orgId = :orgId AND p.status = 'active'")
+    long countActiveByOrgId(@Param("orgId") Long orgId);
+}

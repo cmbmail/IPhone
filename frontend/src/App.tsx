@@ -6,6 +6,7 @@ import Login from '@/pages/Login'
 import OrgManagement from '@/pages/OrgManagement'
 import EmployeeManagement from '@/pages/EmployeeManagement'
 import CostCenterManagement from '@/pages/CostCenterManagement'
+import PhoneManagement from '@/pages/PhoneManagement'
 
 const App = () => {
   return (
@@ -34,6 +35,14 @@ const App = () => {
             element={
               <PrivateRoute>
                 <CostCenterManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/phones"
+            element={
+              <PrivateRoute>
+                <PhoneManagement />
               </PrivateRoute>
             }
           />
