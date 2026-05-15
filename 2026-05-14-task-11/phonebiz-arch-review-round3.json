@@ -1,0 +1,200 @@
+{
+  "review_info": {
+    "round": 3,
+    "focus": [
+      "M20 API迁移策略完整性",
+      "M09/M11 并发设计",
+      "模块依赖风险"
+    ],
+    "document": "PhoneBiz-金融级开发规范_v3.md",
+    "reviewer": "CodeBuddy Architecture Review",
+    "date": "2026-05-14"
+  },
+  "score": {
+    "overall": 82,
+    "dimensions": {
+      "m20_api_migration": 75,
+      "m09_m11_concurrency": 80,
+      "module_dependency": 88,
+      "architecture_consistency": 85
+    },
+    "grading_scale": "0-100 (>=90 优秀, >=80 良好, >=70 合格, <70 需修订)"
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "severity": "HIGH",
+      "dimension": "M20 API迁移策略",
+      "location": "§5.1 M20 交付 — API迁移策略",
+      "title": "M20 灰度开关缺少 scope_org_id 的 DDL 定义和迁移时机",
+      "description": "规范提到 sys_feature_flag 表增加 scope_org_id 字段支持按组织灰度，但：(1) M17 新建表时 sys_feature_flag 的字段定义仅包含 feature_key + enabled + description，未预留 scope_org_id；(2) M20 声明无新建表，那么 DDL 变更应在 M20 的 Flyway 迁移文件中。需明确该 ALTER TABLE 归属哪个 Module 的交付物。",
+      "recommendation": "在 M17 的 sys_feature_flag 表定义中增加 scope_org_id BIGINT NULL 字段（默认 NULL = 全局），或在 M20 交付中显式标注 Flyway 迁移文件 V20__add_scope_org_id_to_feature_flag.sql 作为 DDL 变更产出。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-002",
+      "severity": "HIGH",
+      "dimension": "M20 API迁移策略",
+      "location": "§5.1 M20 — API迁移策略 — 绕过防护",
+      "title": "绕过防护引入 SUPER_ADMIN 角色与现有角色体系冲突",
+      "description": "规范提出开关 true 时原生端点加 @PreAuthorize(\"hasRole('SUPER_ADMIN')\")，但 §2/M04 角色体系仅定义了 ADMIN/OPS/FINANCE/BOSS 四种角色，无 SUPER_ADMIN。这导致：(1) 角色枚举需新增；(2) PermissionEvaluator 需同步适配；(3) 数据库 sys_user.role ENUM 需变更；(4) 前端角色常量/路由守卫需同步。连锁影响未被评估。",
+      "recommendation": "方案A（推荐）：复用现有 ADMIN 角色 + 新增 sys_user.is_super_admin BOOLEAN 字段，通过自定义 SecurityExpression 处理。方案B：在 M04 就预留 SUPER_ADMIN 角色枚举，M20 直接使用。无论哪种，需在规范中明确角色变更的归属 Module。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-003",
+      "severity": "MEDIUM",
+      "dimension": "M20 API迁移策略",
+      "location": "§5.1 M20 — API迁移策略 — 回滚机制",
+      "title": "回滚机制引用的 phone_snapshot 快照触发时机未定义",
+      "description": "规范称'开关状态切换前，系统自动触发一次 phone_snapshot 快照备份'，但 phone_snapshot 表由 M21 月度快照模块负责，是月末定时任务。M20 开关切换可在任意时间点发生，(1) M20 依赖 M21 的快照逻辑但 M20 在 Phase 2 先于 M21 开发；(2) 临时快照与月末快照可能数据结构冲突；(3) 快照触发是同步阻塞还是异步未说明。",
+      "recommendation": "M20 应内嵌独立的'切换前快照'逻辑，不依赖 M21 的月度快照机制。建议：(1) M20 新建 api_switch_snapshot 独立表或在 sys_feature_flag_log 中记录切换前的关键数据状态；(2) 明确快照为同步操作（数据量可控，内部系统）。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-004",
+      "severity": "MEDIUM",
+      "dimension": "M20 API迁移策略",
+      "location": "§5.1 M20 — API迁移策略 — 旧端点废弃",
+      "title": "旧端点废弃计划缺乏客户端适配和版本协商机制",
+      "description": "规范提到'Phase 3 稳定后加 @Deprecated 注解 + 响应头 X-API-Deprecated: true，6 个月后物理删除'，但：(1) 前端 axios 拦截器未设计对 X-API-Deprecated 响应头的感知和告警；(2) 6 个月的废弃期如何通知前端团队升级；(3) 如果 Phase 3 延期，废弃时间线是否联动调整；(4) 物理删除时是否需要 Flyway 清理关联代码。",
+      "recommendation": "在 M20 或 M17 的前端 axios 拦截器中增加对 X-API-Deprecated 响应头的 console.warn 告警。在规范中明确废弃期从'Phase 3 全量稳定后'起算而非固定日期，并标注废弃检查项加入 Phase 3 门禁。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-005",
+      "severity": "MEDIUM",
+      "dimension": "M20 API迁移策略",
+      "location": "§5.1 M20 — 交付",
+      "title": "M20 工单类型覆盖了 7 类操作但缺少数据迁移/验证策略",
+      "description": "M20 声称'7 类工单（分配/过户/换号/转移/回收/拆机/停复机）+ 状态变更仅通过工单触发'，但：(1) 开关切换时已在进行中的直接操作（如 allocate 事务进行中）如何处理——是等待完成还是强制中断；(2) 已有的 phone_history 记录中无 work_order_no 字段的历史数据如何补充关联；(3) 工单驱动激活后，M10 的 reserve/release 等轻量操作是否全部需要工单审批，审批链路是否过重。",
+      "recommendation": "增加'切换过渡期'设计：(1) 开关切换时设置短暂的缓冲期（如 5 分钟），拒绝新请求并等待进行中事务完成；(2) 历史数据补充：新增 Flyway 迁移脚本为 phone_history.work_order_no 批量回填 'DIRECT-OPERATION' 标记；(3) 对轻量操作（reserve/release）考虑'免审批快速工单'机制。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-006",
+      "severity": "HIGH",
+      "dimension": "M09/M11 并发设计",
+      "location": "§5.1 M09 — 安全 — 隐式依赖",
+      "title": "M09 的 @Transactional(READ_COMMITTED) 与 Spring Boot 默认事务隔离级别冗余且可能误导",
+      "description": "规范标注 M09 使用 @Transactional(READ_COMMITTED)，但：(1) MySQL InnoDB 默认隔离级别即为 REPEATABLE READ，Spring Boot 默认不显式指定时使用数据库默认；(2) 要真正使用 READ_COMMITTED 需要在数据源连接 URL 中追加 ?transactionIsolation=READ_COMMITTED，或在 @Transactional 注解中指定 isolation=Isolation.READ_COMMITTED；(3) 悲观锁 PESSIMISTIC_WRITE 在 REPEATABLE READ 下同样有效，但语义上 REPEATABLE READ + 悲观锁比 READ_COMMITTED + 悲观锁更安全；(4) 规范写法 @Transactional(READ_COMMITTED) 不是合法的 Spring 注解语法，应为 @Transactional(isolation = Isolation.READ_COMMITTED)。",
+      "recommendation": "确认是否需要降级到 READ_COMMITTED。如果使用 MySQL 默认的 REPEATABLE READ，删除该标注或明确写 @Transactional(isolation = Isolation.REPEATABLE_READ)。如确实需要 READ_COMMITTED，在 application.yml 的 datasource URL 中配置并修正注解语法。统一 M09/M10/M11 的事务隔离级别声明。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-007",
+      "severity": "HIGH",
+      "dimension": "M09/M11 并发设计",
+      "location": "§5.1 M09 — JPA悲观锁实现方式",
+      "title": "M09 悲观锁未定义锁超时和锁等待策略",
+      "description": "M09 使用 @Lock(LockModeType.PESSIMISTIC_WRITE) 对号码加悲观锁，但未定义：(1) 锁等待超时时间——默认 MySQL InnoDB 的 innodb_lock_wait_timeout 为 50 秒，在高并发下可能导致线程长时间阻塞；(2) 获取锁失败时的异常处理——是否转换为 BusinessException(PHONE-100) 还是直接抛 PessimisticLockException；(3) 是否使用 javax.persistence.lock.timeout hint 或 @QueryHint 控制超时。50 秒超时对内部系统用户体验不可接受。",
+      "recommendation": "显式设置锁等待超时（建议 3-5 秒）：@Lock(LockModeType.PESSIMISTIC_WRITE) + @QueryHint(name = \"javax.persistence.lock.timeout\", value = \"3000\")。在 GlobalExceptionHandler 中捕获 PessimisticLockException/CannotAcquireLockException 并转换为友好的 BusinessException(PHONE-100, '号码正被操作，请稍后重试')。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-008",
+      "severity": "MEDIUM",
+      "dimension": "M09/M11 并发设计",
+      "location": "§5.1 M11 — 交付",
+      "title": "M11 change-number 的 ORDER BY id ASC 防死锁策略存在边缘漏洞",
+      "description": "M11 规定双号码锁 findByIdsForUpdate(List<Long> ids) 加 ORDER BY id ASC 防死锁，逻辑上正确（全局统一加锁顺序），但：(1) findByIdsForUpdate 接收的 ids 列表由前端传入或业务层构造，如果调用方未排序就传入，SQL 中的 ORDER BY 虽然能保证数据库层顺序，但部分 JPA 实现可能先按 ids 参数顺序发起查询再 ORDER BY，导致加锁顺序仍依赖参数；(2) 规范未要求在 Service 层对 ids 进行预排序作为双保险；(3) 如果未来扩展到 3 个以上实体的联合锁（如 M20 工单+号码+设备），简单的 ORDER BY id 可能不够（需跨表统一排序键）。",
+      "recommendation": "在 Service 层入口增加防御性排序：List<Long> sortedIds = ids.stream().sorted().collect(Collectors.toList())，再传入 Repository。这是零成本双保险。补充注释说明为什么需要双保险（JPA 实现差异）。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-009",
+      "severity": "MEDIUM",
+      "dimension": "M09/M11 并发设计",
+      "location": "§5.1 M11 — 交付 — EMP-04 离职自动 reclaim",
+      "title": "离职自动回收的批量 reclaim 在员工有多号码时缺少批量锁策略",
+      "description": "M11 的 EMP-04 离职自动 reclaim 需要回收该员工名下所有号码。如果员工有 N 个号码：(1) 是串行逐个悲观锁 reclaim 还是批量锁；(2) 串行方式在 N 较大时事务持续时间过长，可能导致号池耗尽竞态；(3) 批量锁方式需注意一次性获取大量锁可能触发 MySQL 的 lock_wait_timeout。当前规范未定义批量回收的锁策略。",
+      "recommendation": "明确离职回收策略：(1) 查询员工名下所有 assigned 号码 ID；(2) 按方案 ARCH-008 的 ORDER BY id ASC 批量悲观锁；(3) 逐个执行 reclaim 逻辑并写 history；(4) 在单个事务中完成（内部系统，单个员工号码数量有限）。增加单元测试覆盖'员工有 10+ 号码的批量回收'场景。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-010",
+      "severity": "LOW",
+      "dimension": "M09/M11 并发设计",
+      "location": "§6.3 Phase级门禁 — Phase 1 并发压测",
+      "title": "并发压测缺少 M09 号池耗尽并发竞态测试的具体方案",
+      "description": "Phase 1 并发压测提到'号池耗尽并发抢号测试'但未定义：(1) 测试场景——多少线程同时从同一号池分配；(2) 预期结果——只有号池容量内的分配成功，其余失败且无重复；(3) 测试数据准备——号池大小、预分配比例；(4) 这项测试是放在 M07（号池）还是 M09（分配）的压测中。",
+      "recommendation": "在 Phase 1 压测方案中补充号池竞态测试的具体参数：号池容量 100、200 并发请求、预期 100 成功 100 失败、零重复分配。归入 M09 压测（M09 负责 allocate 逻辑）。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-011",
+      "severity": "MEDIUM",
+      "dimension": "模块依赖风险",
+      "location": "§5.1 依赖顺序 — M15 通知",
+      "title": "M15 依赖 M09-M14 存在隐式耦合风险：接口替换时需同时验证 6 个模块",
+      "description": "M15 通知系统的设计是'M01 预定义空接口 → M09-M14 调用 → M15 接入真实实现'。这种延迟绑定模式虽然避免了循环依赖，但 M15 交付时需要：(1) 验证 M09/M10/M11/M12/M13/M14 共 6 个模块的通知调用是否全部正确触发；(2) 如果 M15 发现空接口的参数签名不满足真实通知需求（如缺少 related_id），需要回改 M01 空接口 + M09-M14 的调用代码，产生 7 个模块的连锁修改；(3) 当前规范缺少'M15 集成回归需覆盖 M09-M14 全场景通知触发'的明确要求。",
+      "recommendation": "在 M15 的门禁中显式追加：'M15 交付时必须逐模块验证 M09-M14 的通知触发，覆盖 §5.1 M15 通知触发矩阵的所有场景'。建议 M01 空接口设计时预留充足的参数（Map<String, Object> context），避免 M15 实现时参数不足。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-012",
+      "severity": "LOW",
+      "dimension": "模块依赖风险",
+      "location": "§5.1 Phase 2 — M18/M19/M20",
+      "title": "Phase 2 的 M20 依赖链过长（M18+M09+M10+M11），合并冲突风险高",
+      "description": "M20 依赖 M18+M09+M10+M11 四个模块，且需要修改 M09/M10/M11 的 Controller 层（增加 SUPER_ADMIN 绕过防护和工单拦截逻辑）。如果 M09/M10/M11 在 Phase 1 交付后经历 bug 修复分支，M20 合并时需要处理与这些修复分支的冲突。规范未说明跨 Phase 的分支冲突处理策略。",
+      "recommendation": "M20 开发前执行 git merge main 确保与 Phase 1 最新代码同步。M20 对 M09/M10/M11 的修改建议通过策略模式注入（如 OperationStrategy），而非直接修改原有 Controller 代码，减少侵入性。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-013",
+      "severity": "LOW",
+      "dimension": "模块依赖风险",
+      "location": "§5.1 M16 — 权限收尾",
+      "title": "M16 依赖 M02-M15 全部模块，回归范围过大",
+      "description": "M16 权限收尾需要审查所有 Controller 的权限注解，依赖 M02-M15 共 14 个模块。如果在 M16 审查中发现某个模块的权限设计有结构性问题（如 scope 裁剪逻辑有误），修复可能需要回溯到早期模块，产生连锁影响。规范缺少'M16 发现问题时的回溯修复流程'。",
+      "recommendation": "将权限审查从 M16 单次集中审查拆分为渐进式：(1) 每个模块交付时即做本模块权限自检（已部分体现在安全自查清单中）；(2) M16 只做跨模块的 scope 交叉验证和遗漏补漏；(3) 如 M16 发现结构性问题，评估是否需要专项修复分支，不阻塞后续模块。",
+      "status": "OPEN"
+    },
+    {
+      "id": "ARCH-014",
+      "severity": "LOW",
+      "dimension": "模块依赖风险",
+      "location": "§4.2 工具链 — Flyway 版本托管",
+      "title": "Flyway 版本标注为 Spring 托管但未指定 Baseline Version 和修复策略",
+      "description": "Flyway 由 Spring Boot 管理，但规范未定义：(1) flyway.baseline-version 的起始值；(2) 如果某个 Flyway 迁移脚本有问题需要修复，是否允许修改已执行的迁移（flyway.out-of-order 配置）；(3) Phase 间 Flyway 版本号衔接策略已在 M01 中定义了号段分配（Phase 1: V01-V17），但多团队并行时同一号段内的版本号竞争问题未解决。",
+      "recommendation": "在 M01 Step 2 中明确：(1) flyway.baseline-version=0；(2) flyway.out-of-order=false（严格顺序）；(3) 同一号段内多团队协作时采用'预留制'——每个 Module 开发前从号段中预留版本号（如 M06 预留 V06）。",
+      "status": "OPEN"
+    }
+  ],
+  "verified_fixes": [
+    {
+      "id": "FIX-R2-001",
+      "original_issue": "R2 JPA悲观锁实现方式不正确",
+      "round": 2,
+      "status": "VERIFIED",
+      "evidence": "§5.1 M09 和 M11 均已补充'JPA悲观锁实现方式'段落，明确要求自定义 @Query + @Lock(PESSIMISTIC_WRITE)，并禁止直接调用不存在的方法名。M11 补充了 ORDER BY id ASC 的 SQL 层保证说明。",
+      "comment": "修复有效。锁实现方式的明确说明消除了 JPA 方法名派生的歧义。"
+    },
+    {
+      "id": "FIX-R2-002",
+      "original_issue": "R2 M20 缺少灰度/回滚/废弃的完整迁移策略",
+      "round": 2,
+      "status": "PARTIALLY_VERIFIED",
+      "evidence": "M20 已增加灰度发布（scope_org_id 字段）、绕过防护（SUPER_ADMIN 注解）、回滚机制（phone_snapshot 快照 + sys_feature_flag_log）、旧端点废弃（@Deprecated + X-API-Deprecated 响应头）。策略框架完整。",
+      "comment": "策略框架已补齐，但细节仍有缺陷（见 ARCH-001~005）。灰度 DDL 归属未明确、SUPER_ADMIN 与现有角色体系冲突、回滚快照与 M21 耦合等问题需进一步修订。"
+    },
+    {
+      "id": "FIX-R2-003",
+      "original_issue": "R2 Phase 1 并发压测缺少 M11 双锁死锁测试",
+      "round": 2,
+      "status": "VERIFIED",
+      "evidence": "§6.3 Phase 1 并发压测已补充'M11 change-number 双锁 deadlock 测试（10 并发同一号码对）+ 号池耗尽并发抢号测试'。",
+      "comment": "测试项已补齐。但号池竞态测试缺少具体参数定义（见 ARCH-010）。"
+    },
+    {
+      "id": "FIX-R2-004",
+      "original_issue": "R2 M15 通知触发场景覆盖不全",
+      "round": 2,
+      "status": "VERIFIED",
+      "evidence": "§5.1 M15 已增加完整的'通知触发矩阵'，覆盖号码分配/回收/变更/导入、话机送修/报废、工单创建/流转、号池预警、异常账单标记共 12 类场景，并要求通知内容中号码必须脱敏。",
+      "comment": "通知触发矩阵覆盖全面，12 类场景涵盖所有业务操作。但 M15 集成回归验证范围需进一步明确（见 ARCH-011）。"
+    }
+  ],
+  "summary": "PhoneBiz-金融级开发规范_v3 第三轮架构评审，整体评分 82/100（良好）。\n\n【M20 API迁移策略 — 75分】策略框架已在 R2 中补齐（灰度/绕过防护/回滚/废弃四要素齐全），但执行层面存在 5 个待修问题：灰度 DDL 字段归属不明确（ARCH-001）、SUPER_ADMIN 角色引入与现有体系冲突需评估连锁影响（ARCH-002）、回滚快照机制与 M21 月度快照时序耦合（ARCH-003）、废弃期前端感知缺失（ARCH-004）、切换过渡期进行中事务处理未定义（ARCH-005）。\n\n【M09/M11 并发设计 — 80分】R2 中悲观锁实现方式和双锁防死锁策略已有效修复（FIX-R2-001/003 验证通过）。本轮发现：事务隔离级别标注语法错误且语义需确认（ARCH-006，HIGH）、锁超时未定义导致潜在长时间阻塞（ARCH-007，HIGH）、ORDER BY 防死锁缺少 Service 层双保险（ARCH-008）、离职批量回收锁策略未定义（ARCH-009）、号池竞态压测缺参数（ARCH-010）。\n\n【模块依赖 — 88分】27 模块依赖拓扑合理，无循环依赖，数据依赖自底向上清晰。M01 空接口->M15 延迟绑定模式设计巧妙。但存在：M15 集成回归范围过大需明确（ARCH-011）、M20 跨 Phase 合并冲突风险（ARCH-012）、M16 审查回溯机制缺失（ARCH-013）、Flyway 多团队并行版本号竞争（ARCH-014）。\n\n【建议优先级】(1) ARCH-006 事务隔离级别语法+语义（立即修）-> (2) ARCH-007 锁超时配置（立即修）-> (3) ARCH-002 SUPER_ADMIN 角色冲突评估（高优先）-> (4) ARCH-001 灰度 DDL 归属（高优先）-> (5) ARCH-003 回滚快照解耦（中优先）-> (6) 其余 MEDIUM/LOW 按开发节奏逐步修订。"
+}

@@ -1,0 +1,455 @@
+openapi: 3.0.3
+info:
+  title: PhoneBiz API
+  version: 1.0.0
+  description: 企业内线电话业务管理平台 Phase 1
+servers:
+  - url: /api
+paths:
+  # ========== AUTH ==========
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 登录
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, maxLength: 20 }
+                password: { type: string, maxLength: 100 }
+      responses:
+        '200': { description: "{ token, user }" }
+        '401': { description: ACCOUNT_LOCKED / ACCOUNT_DISABLED }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 登出
+      responses: { '200': { description: success } }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: 当前用户信息
+      responses: { '200': { description: "{ id, username, role, scopeOrgPath }" } }
+
+  # ========== ORG ==========
+  /orgs/tree:
+    get:
+      tags: [Org]
+      summary: 组织树（按scope裁剪）
+      responses:
+        '200':
+          description: 树形结构
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrgTreeNode'
+  /orgs/{id}:
+    get:
+      tags: [Org]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: 组织详情 } }
+    put:
+      tags: [Org]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/OrgRequest' } } }
+      responses: { '200': { description: updated } }
+    delete:
+      tags: [Org]
+      parameters: [{ name: id, in: path, required: true }]
+      responses:
+        '200': { description: deleted }
+        '400': { description: ORG_HAS_CHILDREN / ORG_HAS_EMPLOYEES }
+  /orgs:
+    post:
+      tags: [Org]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/OrgRequest' } } }
+      responses:
+        '200': { description: created }
+        '400': { description: ORG_NAME_DUPLICATE / ORG_DEPTH_EXCEEDED }
+
+  # ========== EMPLOYEE ==========
+  /employees:
+    get:
+      tags: [Employee]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+        - { name: keyword, in: query, schema: { type: string } }
+        - { name: orgId, in: query, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string, enum: [active, inactive] } }
+      responses: { '200': { description: 分页列表 } }
+    post:
+      tags: [Employee]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/EmployeeRequest' } } }
+      responses: { '200': { description: created } }
+  /employees/{id}:
+    get:
+      tags: [Employee]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: 员工详情（含当前号码） } }
+    put:
+      tags: [Employee]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/EmployeeRequest' } } }
+      responses: { '200': { description: updated } }
+    delete:
+      tags: [Employee]
+      parameters: [{ name: id, in: path, required: true }]
+      description: 离职处理（标记inactive+自动回收号码）
+      responses: { '200': { description: 离职处理完成 } }
+
+  # ========== PHONE ==========
+  /phones:
+    get:
+      tags: [Phone]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+        - { name: status, in: query, schema: { type: string, enum: [idle,reserved,disabled,active,stopped,cancelled] } }
+        - { name: orgId, in: query, schema: { type: integer } }
+        - { name: keyword, in: query, schema: { type: string } }
+      responses: { '200': { description: 分页列表（含使用人+组织+分机号类型） } }
+    post:
+      tags: [Phone]
+      summary: Ops 逐条录入号码
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/PhoneAddRequest' } } }
+      responses:
+        '200': { description: 录入成功 }
+        '400': { description: PHONE_ALREADY_EXISTS / PHONE_IS_SURRENDERED }
+  /phones/{id}:
+    get:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: 号码详情（含历史时间线） } }
+  /phones/{id}/allocate:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/PhoneAllocateRequest' } } }
+      responses:
+        '200': { description: 分配成功 }
+        '400': { description: PHONE_NOT_IDLE / EMP_ALREADY_HAS_PHONE / EXT_POOL_REQUIRED / EXT_POOL_EXHAUSTED }
+  /phones/{id}/reclaim:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReasonRequest' } } }
+      responses: { '200': { description: 回收成功 } }
+  /phones/{id}/trouble:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/TroubleRequest' } } }
+      responses:
+        '200': { description: 操作成功 }
+        '400': { description: PHONE_NOT_ACTIVE or 非stopped }
+  /phones/{id}/surrender:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReasonRequest' } } }
+      responses: { '200': { description: 拆机成功（不可逆） } }
+  /phones/{id}/change-user:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangeUserRequest' } } }
+      responses: { '200': { description: 过户成功 } }
+  /phones/{id}/change-number:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangeNumberRequest' } } }
+      responses: { '200': { description: 换号成功（事务） } }
+  /phones/{id}/change-org:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangeOrgRequest' } } }
+      responses: { '200': { description: 转移成功 } }
+  /phones/{id}/reserve:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReasonRequest' } } }
+      responses: { '200': { description: 预留成功 } }
+  /phones/{id}/release:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: 解除预留 } }
+  /phones/{id}/disable:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReasonRequest' } } }
+      responses: { '200': { description: 禁用成功 } }
+  /phones/{id}/enable:
+    post:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: 解除禁用 } }
+  /phones/{id}/history:
+    get:
+      tags: [Phone]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: 操作历史列表（时间倒序） } }
+  /phones/surrendered:
+    get:
+      tags: [Phone]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+        - { name: startDate, in: query, schema: { type: string, format: date } }
+        - { name: endDate, in: query, schema: { type: string, format: date } }
+      responses: { '200': { description: 已拆机列表 } }
+
+  # ========== EXT POOL ==========
+  /ext-pools:
+    get:
+      tags: [ExtensionPool]
+      parameters: [{ name: orgId, in: query, schema: { type: integer } }]
+      responses: { '200': { description: 号池列表（含三色预警用量） } }
+    post:
+      tags: [ExtensionPool]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ExtPoolRequest' } } }
+      responses: { '400': { description: EXT_POOL_OVERLAP } }
+  /ext-pools/{id}:
+    put:
+      tags: [ExtensionPool]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ExtPoolRequest' } } }
+      responses: { '200': { description: updated } }
+    delete:
+      tags: [ExtensionPool]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '400': { description: 存在使用中的分机号 } }
+
+  # ========== AREA CODE ==========
+  /area-codes:
+    get:
+      tags: [AreaCode]
+      responses: { '200': { description: 区号列表 } }
+    post:
+      tags: [AreaCode]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AreaCodeRequest' } } }
+      responses: { '200': { description: created } }
+  /area-codes/{id}:
+    put:
+      tags: [AreaCode]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AreaCodeRequest' } } }
+      responses: { '200': { description: updated } }
+    delete:
+      tags: [AreaCode]
+      parameters: [{ name: id, in: path, required: true }]
+      responses: { '200': { description: deleted } }
+
+  # ========== IMPORT ==========
+  /import/upload:
+    post:
+      tags: [Import]
+      summary: 上传 Excel（异步处理）
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses: { '200': { description: "{ batchId, status: 'processing' }" } }
+  /import/{batchId}/status:
+    get:
+      tags: [Import]
+      parameters: [{ name: batchId, in: path, required: true }]
+      responses:
+        '200':
+          description: 导入进度
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batchId: { type: string }
+                  status: { type: string, enum: [processing, ready, confirmed, failed] }
+                  totalRows: { type: integer }
+                  successRows: { type: integer }
+                  pendingRows: { type: integer }
+                  errorRows: { type: integer }
+                  preview: { type: array, items: { $ref: '#/components/schemas/ImportRow' } }
+  /import/{batchId}/confirm:
+    post:
+      tags: [Import]
+      parameters: [{ name: batchId, in: path, required: true }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rows: { type: array, items: { $ref: '#/components/schemas/ImportRow' } }
+      responses: { '200': { description: 批量INSERT完成 } }
+
+  # ========== USER ==========
+  /users:
+    get:
+      tags: [User]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses: { '200': { description: 用户列表 } }
+    post:
+      tags: [User]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/UserRequest' } } }
+      responses: { '200': { description: created } }
+  /users/{id}/status:
+    put:
+      tags: [User]
+      parameters: [{ name: id, in: path, required: true }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } }
+      responses: { '200': { description: updated } }
+
+components:
+  schemas:
+    OrgTreeNode:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string, enum: [group, subsidiary, dept] }
+        level: { type: integer }
+        employeeCount: { type: integer }
+        phoneCount: { type: integer }
+        grayedOut: { type: boolean }
+        children: { type: array, items: { $ref: '#/components/schemas/OrgTreeNode' } }
+    OrgRequest:
+      type: object
+      required: [name, parentId, type]
+      properties:
+        name: { type: string, maxLength: 50 }
+        parentId: { type: integer }
+        type: { type: string, enum: [group, subsidiary, dept] }
+    EmployeeRequest:
+      type: object
+      required: [employeeNo, name, orgId, entryDate]
+      properties:
+        employeeNo: { type: string, maxLength: 6 }
+        name: { type: string, maxLength: 20 }
+        orgId: { type: integer }
+        position: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        entryDate: { type: string, format: date }
+        isVirtual: { type: boolean }
+    PhoneAddRequest:
+      type: object
+      required: [phoneNumber, orgId]
+      properties:
+        phoneNumber: { type: string, maxLength: 20 }
+        orgId: { type: integer }
+        extensionNumber: { type: string }
+        remark: { type: string }
+    PhoneAllocateRequest:
+      type: object
+      required: [employeeNo]
+      properties:
+        employeeNo: { type: string }
+        extensionNumber: { type: string }
+    ReasonRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string }
+    TroubleRequest:
+      type: object
+      required: [action, reason]
+      properties:
+        action: { type: string, enum: [stop, resume] }
+        reason: { type: string }
+    ChangeUserRequest:
+      type: object
+      required: [newEmployeeNo]
+      properties:
+        newEmployeeNo: { type: string }
+        extensionNumber: { type: string }
+    ChangeNumberRequest:
+      type: object
+      required: [newPhoneId]
+      properties:
+        newPhoneId: { type: integer }
+    ChangeOrgRequest:
+      type: object
+      required: [newOrgId, reason]
+      properties:
+        newOrgId: { type: integer }
+        reason: { type: string }
+    ExtPoolRequest:
+      type: object
+      required: [orgId, startNumber, endNumber]
+      properties:
+        orgId: { type: integer }
+        startNumber: { type: string }
+        endNumber: { type: string }
+    AreaCodeRequest:
+      type: object
+      required: [areaCode, orgId]
+      properties:
+        areaCode: { type: string }
+        orgId: { type: integer }
+        priority: { type: integer, default: 1 }
+    ImportRow:
+      type: object
+      properties:
+        rowNum: { type: integer }
+        phoneNumber: { type: string }
+        orgName: { type: string }
+        subOrgName: { type: string }
+        remark: { type: string }
+        status: { type: string, enum: [success, pending, duplicate, error] }
+        errorMessage: { type: string }
+        isReentry: { type: boolean }
+    UserRequest:
+      type: object
+      required: [username, role]
+      properties:
+        username: { type: string }
+        role: { type: string, enum: [admin, ops, finance, boss] }
+        scopeOrgId: { type: integer }
+    StatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [active, inactive] }
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BearerAuth: []

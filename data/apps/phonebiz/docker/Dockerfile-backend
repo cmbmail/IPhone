@@ -1,0 +1,17 @@
+FROM openjdk:8-jre-alpine
+
+RUN addgroup -S phonebiz && adduser -S phonebiz -G phonebiz
+
+WORKDIR /app
+
+COPY target/phonebiz-1.0.0-SNAPSHOT.jar app.jar
+
+RUN chown -R phonebiz:phonebiz /app
+
+USER phonebiz
+
+EXPOSE 8081
+
+ENV JAVA_OPTS="-Xms256m -Xmx512m"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
