@@ -17,7 +17,7 @@ const AreaCodeManagement = () => {
     queryKey: ['areaCodes'],
     queryFn: async () => {
       const response = await areaCodeApi.getAll()
-      return response.data
+      return response.data.data
     }
   })
 
@@ -25,14 +25,14 @@ const AreaCodeManagement = () => {
     queryKey: ['orgs'],
     queryFn: async () => {
       const response = await orgApi.getAll()
-      return response.data
+      return response.data.data
     }
   })
 
   const createMutation = useMutation({
     mutationFn: (data: CreateAreaCodeMappingDTO) => areaCodeApi.create(data),
     onSuccess: () => {
-      message.success('Area code mapping created successfully')
+      message.success('区号映射创建成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
       setIsModalOpen(false)
       form.resetFields()
@@ -42,7 +42,7 @@ const AreaCodeManagement = () => {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => areaCodeApi.delete(id),
     onSuccess: () => {
-      message.success('Area code mapping deleted successfully')
+      message.success('区号映射删除成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
     }
   })
@@ -53,8 +53,8 @@ const AreaCodeManagement = () => {
 
   const handleDelete = (id: number) => {
     Modal.confirm({
-      title: 'Confirm Delete',
-      content: 'Are you sure you want to delete this area code mapping?',
+      title: '确认删除',
+      content: '确定要删除此区号映射吗？',
       onOk: () => deleteMutation.mutate(id)
     })
   }
@@ -67,33 +67,33 @@ const AreaCodeManagement = () => {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
     {
-      title: 'Area Code',
+      title: '区号',
       dataIndex: 'areaCode',
       key: 'areaCode',
       width: 120,
       render: (code: string) => <Tag color="blue">{code}</Tag>
     },
     {
-      title: 'Organization',
+      title: '组织',
       dataIndex: 'orgId',
       key: 'orgId',
       render: (orgId: number) => getOrgName(orgId)
     },
     {
-      title: 'Priority',
+      title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
       sorter: (a: AreaCodeOrgMapping, b: AreaCodeOrgMapping) => a.priority - b.priority
     },
-    { title: 'Created By', dataIndex: 'createdBy', key: 'createdBy', width: 120 },
+    { title: '创建人', dataIndex: 'createdBy', key: 'createdBy', width: 120 },
     {
-      title: 'Actions',
+      title: '操作',
       key: 'actions',
       width: 100,
       render: (_: any, record: AreaCodeOrgMapping) => (
         <Button size="small" danger onClick={() => handleDelete(record.id)}>
-          Delete
+          删除
         </Button>
       )
     }
@@ -109,7 +109,7 @@ const AreaCodeManagement = () => {
         }}
         style={{ marginBottom: 16 }}
       >
-        Add Area Code Mapping
+        添加区号映射
       </Button>
 
       <Table
@@ -120,7 +120,7 @@ const AreaCodeManagement = () => {
       />
 
       <Modal
-        title="Add Area Code Mapping"
+        title="添加区号映射"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onOk={() => form.submit()}
@@ -128,14 +128,14 @@ const AreaCodeManagement = () => {
         <Form form={form} onFinish={handleSubmit} layout="vertical">
           <Form.Item
             name="areaCode"
-            label="Area Code"
-            rules={[{ required: true }, { pattern: /^0\d{2,3}$/, message: 'Format: 010, 021, etc.' }]}
+            label="区号"
+            rules={[{ required: true }, { pattern: /^0\d{2,3}$/, message: '格式：010，021 等' }]}
           >
-            <Input placeholder="e.g., 010" />
+            <Input placeholder="例如：010" />
           </Form.Item>
 
-          <Form.Item name="orgId" label="Organization" rules={[{ required: true }]}>
-            <Select placeholder="Select organization">
+          <Form.Item name="orgId" label="组织" rules={[{ required: true }]}>
+            <Select placeholder="选择组织">
               {orgs?.map((org: OrgStructure) => (
                 <Option key={org.id} value={org.id}>
                   {org.name}
@@ -144,7 +144,7 @@ const AreaCodeManagement = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item name="priority" label="Priority" initialValue={1}>
+          <Form.Item name="priority" label="优先级" initialValue={1}>
             <InputNumber min={1} max={100} />
           </Form.Item>
         </Form>

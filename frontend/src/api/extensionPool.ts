@@ -1,10 +1,5 @@
-import axios from 'axios'
+import { request } from './request'
 import type { ExtensionPool, CreateExtensionPoolDTO } from '@/types/extensionPool'
-
-const request = axios.create({
-  baseURL: '/api',
-  timeout: 10000
-})
 
 export const extensionPoolApi = {
   getAll: () => request.get<ExtensionPool[]>('/extension-pools'),

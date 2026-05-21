@@ -30,4 +30,5 @@ INSERT INTO employee (employee_no, name, org_id, position, status, is_virtual, c
 VALUES
     ('VIR-01', '虚拟员工-总部IT', 1, 'IT管理员', 'active', 1, 'system', 'system'),
     ('VIR-02', '虚拟员工-总部HR', 1, 'HR管理员', 'active', 1, 'system', 'system'),
-    ('VIR-03', '虚拟员工-总部财务', 1, '财务管理员', 'active', 1, 'system', 'system');
+    ('VIR-03', '虚拟员工-总部财务', 1, '财务管理员', 'active', 1, 'system', 'system'),
+    ('VIR-04', '虚拟员工-财务专员', 1, '财务专员', 'active', 1, 'system', 'system');

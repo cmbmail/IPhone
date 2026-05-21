@@ -1,16 +1,19 @@
 package com.phonebiz.controller;
 
-import com.phonebiz.common.ApiResponse;
-import com.phonebiz.dto.CreateExtensionPoolRequest;
-import com.phonebiz.entity.ExtensionPool;
-import com.phonebiz.service.ExtensionPoolService;
+import java.util.List;
+
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.phonebiz.common.ApiResponse;
+import com.phonebiz.dto.CreateExtensionPoolRequest;
+import com.phonebiz.entity.ExtensionPool;
+import com.phonebiz.service.ExtensionPoolService;
 
 @RestController
 @RequestMapping("/extension-pools")
@@ -53,4 +56,33 @@ public class ExtensionPoolController {
         poolService.deletePool(id);
         return ApiResponse.success("Extension pool deleted successfully", null);
     }
+
+    @GetMapping("/{id}/exhaustion")
+    public ApiResponse<ExtensionPoolService.PoolExhaustionInfo> checkExhaustion(@PathVariable Long id) {
+        return ApiResponse.success(poolService.checkExhaustion(id));
+    }
+
+    @GetMapping("/org/{orgId}/suggestions")
+    public ApiResponse<List<String>> getSuggestions(@PathVariable Long orgId) {
+        return ApiResponse.success(poolService.suggestAlternatePools(orgId));
+    }
+
+    @GetMapping("/overlap-check")
+    public ApiResponse<Boolean> checkOverlap(
+            @RequestParam Long orgId,
+            @RequestParam String startNumber,
+            @RequestParam String endNumber) {
+        return ApiResponse.success(poolService.checkOverlap(orgId, startNumber, endNumber));
+    }
+
+    @GetMapping("/all-usage")
+    public ApiResponse<List<ExtensionPoolService.ExtensionPoolUsage>> getAllPoolUsages() {
+        return ApiResponse.success(poolService.getAllPoolUsages());
+    }
+
+    @GetMapping("/warnings")
+    public ApiResponse<List<ExtensionPoolService.ExtensionPoolUsage>> getWarningPools() {
+        return ApiResponse.success(poolService.getWarningPools());
+    }
 }
+

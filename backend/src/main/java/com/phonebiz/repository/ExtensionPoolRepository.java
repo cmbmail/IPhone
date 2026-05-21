@@ -1,10 +1,11 @@
 package com.phonebiz.repository;
 
-import com.phonebiz.entity.ExtensionPool;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.phonebiz.entity.ExtensionPool;
 
 @Repository
 public interface ExtensionPoolRepository extends JpaRepository<ExtensionPool, Long> {
@@ -13,3 +14,4 @@ public interface ExtensionPoolRepository extends JpaRepository<ExtensionPool, Lo
 
     boolean existsByOrgId(Long orgId);
 }
+

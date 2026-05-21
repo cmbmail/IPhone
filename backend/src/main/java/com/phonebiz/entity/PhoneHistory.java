@@ -1,9 +1,10 @@
 package com.phonebiz.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+
+import lombok.Data;
 
 @Data
 @Entity
@@ -53,3 +54,4 @@ public class PhoneHistory {
     @Column(length = 500)
     private String remark;
 }
+

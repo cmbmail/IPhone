@@ -1,14 +1,9 @@
-import axios from 'axios'
+import { request } from './request'
 import type { PhoneNumber, CreatePhoneDTO, UpdatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest, PhoneChangeRequest } from '@/types/phone'
-
-const request = axios.create({
-  baseURL: '/api',
-  timeout: 10000
-})
 
 export const phoneApi = {
   getAll: (params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: PhoneNumber[]; totalElements: number } }>('/phones', { params }),
+    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>('/phones', { params }),
 
   getById: (id: number) => request.get<PhoneNumber>(`/phones/${id}`),
 
@@ -17,10 +12,10 @@ export const phoneApi = {
   getByUser: (userId: number) => request.get<PhoneNumber[]>(`/phones/user/${userId}`),
 
   getByStatus: (status: string, params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: PhoneNumber[]; totalElements: number } }>(`/phones/status/${status}`, { params }),
+    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>(`/phones/status/${status}`, { params }),
 
   getHistory: (id: number, params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: any[]; totalElements: number } }>(`/phones/${id}/history`, { params }),
+    request.get<{ code: number; data: { content: any[]; total_elements: number } }>(`/phones/${id}/history`, { params }),
 
   getIdle: () => request.get<PhoneNumber[]>('/phones/idle'),
 
@@ -48,5 +43,5 @@ export const phoneApi = {
 
   changeExtension: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-extension', data),
 
-  batchChange: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change', data)
+  batchChange: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/batch-change', data)
 }

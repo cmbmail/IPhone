@@ -12,7 +12,6 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./src/main/resources/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pCmb@123456"]
       interval: 10s
@@ -20,7 +19,6 @@ services:
       retries: 5
     networks:
       - phonebiz-network
-    user: "999:999"
 
   redis:
     image: redis:7-alpine
@@ -38,19 +36,21 @@ services:
       retries: 5
     networks:
       - phonebiz-network
-    user: "999:999"
 
   backend:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile-backend
+      context: ../..
+      dockerfile: data/apps/phonebiz/docker/Dockerfile-backend
     container_name: phonebiz-backend
     restart: unless-stopped
     environment:
-      SPRING_PROFILES_ACTIVE: h2
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/phonebiz?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Cmb@123456
       JAVA_OPTS: -Xms256m -Xmx512m
     ports:
-      - "8081:8081"
+      - "8080:8080"
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -60,12 +60,11 @@ services:
         condition: service_healthy
     networks:
       - phonebiz-network
-    user: "1000:1000"
 
   frontend:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile-frontend
+      context: ../..
+      dockerfile: data/apps/phonebiz/docker/Dockerfile-frontend
     container_name: phonebiz-frontend
     restart: unless-stopped
     ports:
@@ -74,7 +73,6 @@ services:
       - backend
     networks:
       - phonebiz-network
-    user: "1000:1000"
 
 volumes:
   mysql_data:

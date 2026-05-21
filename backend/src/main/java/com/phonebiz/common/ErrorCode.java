@@ -52,11 +52,13 @@ public enum ErrorCode {
     POOL_001(5001, "Extension pool range overlaps"),
     POOL_002(5002, "Extension pool exhausted"),
 
-    DEVICE_001(6001, "Device MAC address invalid"),
-    DEVICE_002(6002, "Device already allocated"),
-    DEVICE_003(6003, "Device not found"),
-    DEVICE_004(6004, "Device status invalid for operation"),
-    DEVICE_005(6005, "Device cannot be retired"),
+    DEVICE_001(6001, "Device not found"),
+    DEVICE_002(6002, "Device ID already exists"),
+    DEVICE_003(6003, "MAC address already exists"),
+    DEVICE_004(6004, "Device MAC address invalid"),
+    DEVICE_005(6005, "Device already allocated"),
+    DEVICE_006(6006, "Device status invalid for operation"),
+    DEVICE_007(6007, "Device cannot be retired"),
 
     IMPORT_001(7001, "File format invalid"),
     IMPORT_002(7002, "Import process failed"),
@@ -64,6 +66,8 @@ public enum ErrorCode {
 
     WO_001(8001, "Work order not found"),
     WO_002(8002, "Status transition invalid"),
+    WO_003(8003, "Work order item not found"),
+    WO_004(8004, "Invalid work order item status"),
 
     BILL_001(9001, "Bill month not found"),
     BILL_002(9002, "Allocation amount invalid"),
@@ -72,7 +76,40 @@ public enum ErrorCode {
     INV_002(10002, "Invoice already distributed"),
 
     SYS_001(11001, "System internal error"),
-    SYS_002(11002, "Parameter validation failed");
+    SYS_002(11002, "Parameter validation failed"),
+    SYS_003(11003, "Feature flag not found"),
+    SYS_004(11004, "Feature flag already exists"),
+
+    SNAPSHOT_NOT_FOUND(12001, "Snapshot not found"),
+
+    USER_001(15001, "用户不存在"),
+    USER_002(15002, "用户名已存在"),
+    USER_003(15003, "不能禁用自己"),
+    USER_004(15004, "不能删除自己"),
+    USER_005(15005, "该用户已有登录记录,无法删除"),
+
+    ROLE_001(14001, "角色不存在"),
+    ROLE_002(14002, "角色编码已存在"),
+    ROLE_003(14003, "角色名称已存在"),
+    ROLE_004(14004, "系统内置角色不允许删除"),
+    ROLE_005(14005, "该角色下仍有用户,不允许删除"),
+
+    DEVICE_MAC_INVALID(13001, "MAC格式无效（非12位十六进制）"),
+    DEVICE_MAC_DUPLICATE(13002, "MAC地址已存在"),
+    DEVICE_NOT_STOCK(13003, "话机非库存状态,无法分配"),
+    DEVICE_HAS_BOUND_PHONES(13004, "话机仍有绑定号码,请先解绑"),
+    DEVICE_PHONE_ALREADY_BOUND(13005, "号码已绑定到该话机"),
+    DEVICE_PHONE_NO_EXTENSION(13006, "目标号码无分机号,无法绑定"),
+    DEVICE_STATUS_INVALID(13007, "话机状态无效"),
+    DEVICE_NOT_ACTIVE(13008, "话机非在用状态"),
+    DEVICE_NOT_REPAIRING(13009, "话机非维修中状态"),
+    DEVICE_NOT_INACTIVE(13010, "话机非停用状态"),
+    DEVICE_RETIRED(13011, "话机已报废,不可操作"),
+    DEVICE_NOT_FOUND(13012, "话机不存在"),
+    DEVICE_EMPLOYEE_NOT_FOUND(13013, "分配的员工不存在"),
+    DEVICE_EMPLOYEE_INACTIVE(13014, "分配的员工非活跃状态"),
+    DEVICE_ORG_NOT_FOUND(13015, "组织不存在"),
+    DEVICE_PURCHASE_DATE_FUTURE(13016, "购置日期不能是未来日期");
 
     private final int code;
     private final String message;

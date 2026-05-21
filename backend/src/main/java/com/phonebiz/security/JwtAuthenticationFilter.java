@@ -1,20 +1,24 @@
 package com.phonebiz.security;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Collections;
 
 @Slf4j
 @Component
@@ -33,16 +37,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtUtil.getUsernameFromToken(token);
             String role = jwtUtil.getRoleFromToken(token);
             Long scopeOrgId = jwtUtil.getScopeOrgIdFromToken(token);
+            Long roleId = jwtUtil.getRoleIdFromToken(token);
+            List<String> permissions = jwtUtil.getPermissionsFromToken(token);
 
             if (username != null) {
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                        );
+                // Build authorities from permissions list
+                List<SimpleGrantedAuthority> authorities;
+                if (permissions != null && !permissions.isEmpty()) {
+                    authorities = permissions.stream()
+                            .map(p -> new SimpleGrantedAuthority(p))
+                            .collect(Collectors.toList());
+                    // Also add ROLE_ prefix for role-based checks
+                    if (role != null) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                    }
+                } else {
+                    // Fallback: role-only authority for backward compatibility
+                    authorities = Collections.singletonList(
+                            new SimpleGrantedAuthority("ROLE_" + (role != null ? role.toUpperCase() : "USER"))
+                    );
+                }
 
-                authentication.setDetails(new JwtAuthenticationDetails(username, role, scopeOrgId));
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+                authentication.setDetails(new JwtAuthenticationDetails(username, role, scopeOrgId, roleId, permissions));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

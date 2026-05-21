@@ -1,10 +1,11 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +29,9 @@ public class SysUser extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
+
+    @Column(name = "role_id")
+    private Long roleId;
 
     @Column(name = "scope_org_id")
     private Long scopeOrgId;

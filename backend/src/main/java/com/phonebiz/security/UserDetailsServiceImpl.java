@@ -1,8 +1,9 @@
 package com.phonebiz.security;
 
-import com.phonebiz.entity.SysUser;
-import com.phonebiz.repository.SysUserRepository;
+import java.util.Collections;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,7 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import com.phonebiz.entity.SysUser;
+import com.phonebiz.repository.SysUserRepository;
 
 @Service
 @RequiredArgsConstructor

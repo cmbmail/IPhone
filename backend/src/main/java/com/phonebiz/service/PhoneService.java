@@ -1,9 +1,22 @@
 package com.phonebiz.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreatePhoneRequest;
 import com.phonebiz.dto.PhoneAllocationRequest;
+import com.phonebiz.dto.PhoneChangeRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
 import com.phonebiz.dto.UpdatePhoneRequest;
 import com.phonebiz.entity.PhoneHistory;
@@ -13,17 +26,8 @@ import com.phonebiz.repository.EmployeeRepository;
 import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.PhoneHistoryRepository;
 import com.phonebiz.repository.PhoneNumberRepository;
+import com.phonebiz.security.DataScope;
 import com.phonebiz.repository.PhoneSurrenderRecordRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -31,6 +35,7 @@ import java.util.List;
 public class PhoneService {
 
     private final PhoneNumberRepository phoneRepository;
+    private final DataScope dataScope;
     private final PhoneHistoryRepository historyRepository;
     private final PhoneSurrenderRecordRepository surrenderRepository;
     private final EmployeeRepository employeeRepository;
@@ -520,6 +525,62 @@ public class PhoneService {
     }
 
     @Transactional
+    public void swapPhoneNumbers(Long phoneId1, Long phoneId2, String operator, String workOrderNo, String remark) {
+        if (phoneId1.equals(phoneId2)) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Cannot swap phone with itself");
+        }
+
+        List<PhoneNumber> phones = phoneRepository.findByIdsForUpdate(List.of(phoneId1, phoneId2));
+        
+        if (phones.size() != 2) {
+            throw new BusinessException(ErrorCode.PHONE_001);
+        }
+
+        PhoneNumber phone1 = phones.get(0).getId().equals(phoneId1) ? phones.get(0) : phones.get(1);
+        PhoneNumber phone2 = phones.get(0).getId().equals(phoneId2) ? phones.get(0) : phones.get(1);
+
+        String phone1Number = phone1.getPhoneNumber();
+        String phone2Number = phone2.getPhoneNumber();
+
+        phone1.setPhoneNumber(phone2Number);
+        phone2.setPhoneNumber(phone1Number);
+        phone1.setUpdatedBy(operator);
+        phone2.setUpdatedBy(operator);
+
+        phoneRepository.saveAll(List.of(phone1, phone2));
+
+        recordHistory(
+            phone1.getId(),
+            "swap_number",
+            phone1.getStatus().name(),
+            phone1.getStatus().name(),
+            phone1.getUserId(),
+            phone1.getUserId(),
+            phone1.getOrgId() != null ? String.valueOf(phone1.getOrgId()) : null,
+            phone1.getOrgId() != null ? String.valueOf(phone1.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark != null ? remark : "Swapped with phone " + phone2.getId()
+        );
+
+        recordHistory(
+            phone2.getId(),
+            "swap_number",
+            phone2.getStatus().name(),
+            phone2.getStatus().name(),
+            phone2.getUserId(),
+            phone2.getUserId(),
+            phone2.getOrgId() != null ? String.valueOf(phone2.getOrgId()) : null,
+            phone2.getOrgId() != null ? String.valueOf(phone2.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark != null ? remark : "Swapped with phone " + phone1.getId()
+        );
+
+        log.info("Phones {} and {} swapped numbers by {}", phoneId1, phoneId2, operator);
+    }
+
+    @Transactional
     public PhoneNumber changeExtension(Long phoneId, String newExtension, String operator, String workOrderNo, String remark) {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
@@ -536,7 +597,7 @@ public class PhoneService {
 
         recordHistory(
             phoneId,
-            "change_number",
+            "change_extension",
             phone.getStatus().name(),
             phone.getStatus().name(),
             phone.getUserId(),
@@ -610,7 +671,7 @@ public class PhoneService {
 
         recordHistory(
             phoneId,
-            "change_number",
+            "batch_change",
             fromStatus,
             fromStatus,
             fromUser,
@@ -625,4 +686,60 @@ public class PhoneService {
         log.info("Phone {} batch changed: {}", phoneId, changeDetails);
         return saved;
     }
+
+    @Transactional
+    public int batchChangeMultiple(List<Long> phoneIds, PhoneChangeRequest request, String operator) {
+        if (phoneIds == null || phoneIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Phone IDs cannot be empty");
+        }
+
+        int successCount = 0;
+        for (Long phoneId : phoneIds) {
+            try {
+                batchChange(phoneId, request, operator);
+                successCount++;
+            } catch (Exception e) {
+                log.warn("Failed to batch change phone {}: {}", phoneId, e.getMessage());
+            }
+        }
+
+        log.info("Batch changed {} out of {} phones", successCount, phoneIds.size());
+        return successCount;
+    }
+
+    @Transactional
+    public PhoneNumber updateStatus(Long phoneId, PhoneNumber.PhoneStatus newStatus, String operator, 
+                                    String workOrderNo, String remark) {
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        String fromStatus = phone.getStatus().name();
+
+        if (!isValidStatusTransition(phone.getStatus(), newStatus)) {
+            throw new BusinessException(ErrorCode.PHONE_200);
+        }
+
+        phone.setStatus(newStatus);
+        phone.setUpdatedBy(operator);
+
+        PhoneNumber saved = phoneRepository.save(phone);
+
+        recordHistory(
+            phoneId,
+            "status_change",
+            fromStatus,
+            newStatus.name(),
+            phone.getUserId(),
+            phone.getUserId(),
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
+            operator,
+            workOrderNo,
+            remark
+        );
+
+        log.info("Phone {} status changed from {} to {} by {}", phone.getPhoneNumber(), fromStatus, newStatus, operator);
+        return saved;
+    }
 }
+

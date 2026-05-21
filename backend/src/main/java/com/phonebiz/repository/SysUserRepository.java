@@ -1,15 +1,16 @@
 package com.phonebiz.repository;
 
-import com.phonebiz.entity.SysUser;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.phonebiz.entity.SysUser;
 
 @Repository
 public interface SysUserRepository extends JpaRepository<SysUser, Long> {
@@ -22,6 +23,12 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long> {
 
     @Query("SELECT u FROM SysUser u WHERE u.status = 'active'")
     List<SysUser> findAllActive();
+
+    @Query("SELECT u FROM SysUser u WHERE u.roleId = :roleId")
+    List<SysUser> findByRoleId(@Param("roleId") Long roleId);
+
+    @Query("SELECT COUNT(u) FROM SysUser u WHERE u.roleId = :roleId")
+    long countByRoleId(@Param("roleId") Long roleId);
 
     @Modifying
     @Query("UPDATE SysUser u SET u.loginFailCount = :count WHERE u.username = :username")

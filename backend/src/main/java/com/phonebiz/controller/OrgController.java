@@ -1,23 +1,36 @@
 package com.phonebiz.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.Valid;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.CreateOrgRequest;
+import com.phonebiz.dto.ImportOrgItem;
 import com.phonebiz.dto.UpdateOrgRequest;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.service.OrgService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.phonebiz.security.DataScope;
+import com.phonebiz.annotation.AuditLog;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/orgs")
+@PreAuthorize("isAuthenticated()")
 @RequiredArgsConstructor
 public class OrgController {
 
     private final OrgService orgService;
+    private final DataScope dataScope;
 
     @GetMapping("/tree")
     public ApiResponse<List<OrgStructure>> getOrgTree() {
@@ -40,6 +53,8 @@ public class OrgController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('org:create') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "创建组织", targetType = "OrgStructure", targetId = "#request.parentId")
     public ApiResponse<OrgStructure> createOrg(
             @Valid @RequestBody CreateOrgRequest request,
             Authentication authentication) {
@@ -48,6 +63,8 @@ public class OrgController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('org:edit') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "更新组织", targetType = "OrgStructure", targetId = "#id")
     public ApiResponse<OrgStructure> updateOrg(
             @PathVariable Long id,
             @Valid @RequestBody UpdateOrgRequest request,
@@ -57,8 +74,42 @@ public class OrgController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('org:delete') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "删除组织", targetType = "OrgStructure", targetId = "#id")
     public ApiResponse<Void> deleteOrg(@PathVariable Long id) {
         orgService.deleteOrg(id);
         return ApiResponse.success("Organization deleted successfully", null);
+    }
+
+    @PostMapping("/import")
+    public ApiResponse<Map<String, Object>> importOrgs(
+            @RequestBody List<ImportOrgItem> items,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        int created = orgService.importOrgs(items, operator);
+        return ApiResponse.success(Map.of("created", created));
+    }
+
+    @PostMapping("/import-cost-center")
+    public ApiResponse<Map<String, Object>> importCostCenter(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        Map<String, Object> result = orgService.importCostCenter(file, operator);
+        return ApiResponse.success(result);
+    }
+
+    @GetMapping("/tree/scope")
+    public ApiResponse<List<OrgStructure>> getOrgTreeByScope(Authentication authentication) {
+        return ApiResponse.success(orgService.getOrgTreeByScope(dataScope.getCurrentScopeOrgId()));
+    }
+
+    @PutMapping("/sort")
+    @PreAuthorize("hasAuthority('org:edit') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "调整排序", targetType = "OrgStructure")
+    public ApiResponse<Void> updateSortOrders(
+            @RequestBody Map<Long, Integer> sortOrderMap) {
+        orgService.updateSortOrders(sortOrderMap);
+        return ApiResponse.success("Sort order updated", null);
     }
 }

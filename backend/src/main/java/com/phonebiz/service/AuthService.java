@@ -1,15 +1,13 @@
 package com.phonebiz.service;
 
-import com.phonebiz.common.BusinessException;
-import com.phonebiz.common.ErrorCode;
-import com.phonebiz.dto.ChangePasswordRequest;
-import com.phonebiz.dto.LoginRequest;
-import com.phonebiz.dto.LoginResponse;
-import com.phonebiz.entity.SysUser;
-import com.phonebiz.repository.SysUserRepository;
-import com.phonebiz.security.JwtUtil;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,7 +18,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import com.phonebiz.common.BusinessException;
+import com.phonebiz.common.ErrorCode;
+import com.phonebiz.dto.ChangePasswordRequest;
+import com.phonebiz.dto.LoginRequest;
+import com.phonebiz.dto.LoginResponse;
+import com.phonebiz.entity.SysPermission;
+import com.phonebiz.entity.SysUser;
+import com.phonebiz.repository.SysPermissionRepository;
+import com.phonebiz.repository.SysRolePermissionRepository;
+import com.phonebiz.repository.SysUserRepository;
+import com.phonebiz.security.JwtUtil;
 
 @Slf4j
 @Service
@@ -28,6 +36,8 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private final SysUserRepository userRepository;
+    private final SysRolePermissionRepository rolePermissionRepository;
+    private final SysPermissionRepository permissionRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
@@ -77,8 +87,44 @@ public class AuthService {
             throw new BusinessException(ErrorCode.AUTH_003);
         }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name(), user.getScopeOrgId());
-        return LoginResponse.from(user, token, jwtUtil.getExpiration());
+        // Load permissions from role_id
+        List<String> permissionCodes = loadPermissionCodes(user);
+
+        String token = jwtUtil.generateToken(
+                user.getUsername(),
+                user.getRole().name(),
+                user.getScopeOrgId(),
+                user.getRoleId(),
+                permissionCodes
+        );
+
+        LoginResponse response = LoginResponse.from(user, token, jwtUtil.getExpiration());
+        if (user.needsPasswordChange()) {
+            response.setForceChangePassword(true);
+        }
+        return response;
+    }
+
+    /** Load permission codes from role_id via sys_role_permission + sys_permission */
+    private List<String> loadPermissionCodes(SysUser user) {
+        if (user.getRoleId() == null) {
+            log.warn("User {} has no roleId, assigning empty permissions", user.getUsername());
+            return Collections.emptyList();
+        }
+        try {
+            List<Long> permIds = rolePermissionRepository.findPermissionIdsByRoleId(user.getRoleId());
+            if (permIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<SysPermission> perms = permissionRepository.findByIdIn(permIds);
+            return perms.stream()
+                    .map(SysPermission::getCode)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Failed to load permissions for user {} roleId={}: {}",
+                    user.getUsername(), user.getRoleId(), e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     @Transactional
@@ -92,6 +138,15 @@ public class AuthService {
 
         String newPasswordHash = passwordEncoder.encode(request.getNewPassword());
         userRepository.updatePassword(username, newPasswordHash, LocalDateTime.now());
+    }
+
+    @Transactional(readOnly = true)
+    public void verifyPassword(String username, String rawPassword) {
+        SysUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.AUTH_002, "密码错误");
+        }
     }
 
     @Transactional(readOnly = true)

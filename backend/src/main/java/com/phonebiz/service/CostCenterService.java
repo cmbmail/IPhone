@@ -1,5 +1,13 @@
 package com.phonebiz.service;
 
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateCostCenterRequest;
@@ -8,12 +16,6 @@ import com.phonebiz.entity.CostCenterMapping;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.repository.CostCenterMappingRepository;
 import com.phonebiz.repository.OrgStructureRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -70,7 +72,7 @@ public class CostCenterService {
 
         if (request.getCostCenterCode() != null && !request.getCostCenterCode().equals(costCenter.getCostCenterCode())) {
             if (costCenterRepository.existsByOrgIdAndCostCenterCode(costCenter.getOrgId(), request.getCostCenterCode())) {
-                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED);
+                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Cost center code already exists for this organization");
             }
             costCenter.setCostCenterCode(request.getCostCenterCode());
         }
@@ -88,3 +90,4 @@ public class CostCenterService {
         costCenterRepository.deleteById(id);
     }
 }
+

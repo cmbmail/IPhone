@@ -45,3 +45,10 @@ application-prod.yml
 
 # Flyway
 **/flyway/
+
+# Runtime
+*.pid
+backend/bin/
+
+# Old project reference (not part of new project)
+data/apps/phonebiz/

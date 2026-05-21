@@ -1,24 +1,31 @@
 package com.phonebiz.service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateEmployeeRequest;
 import com.phonebiz.dto.UpdateEmployeeRequest;
 import com.phonebiz.entity.Employee;
 import com.phonebiz.entity.OrgStructure;
+import com.phonebiz.entity.PhoneDevice;
+import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.repository.EmployeeRepository;
+import com.phonebiz.security.DataScope;
 import com.phonebiz.repository.OrgStructureRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import com.phonebiz.repository.PhoneDeviceRepository;
+import com.phonebiz.repository.PhoneNumberRepository;
 
 @Slf4j
 @Service
@@ -26,8 +33,11 @@ import java.util.stream.Collectors;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    private final DataScope dataScope;
     private final OrgStructureRepository orgRepository;
     private final SysUserService sysUserService;
+    private final PhoneDeviceRepository phoneDeviceRepository;
+    private final PhoneNumberRepository phoneNumberRepository;
 
     private static final Pattern EMPLOYEE_NO_PATTERN = Pattern.compile("^[A-Z0-9]{6}$");
 
@@ -144,6 +154,42 @@ public class EmployeeService {
         employeeRepository.save(employee);
     }
 
+    @Transactional
+    public Employee terminateEmployee(Long id, String remark, String operator) {
+        Employee employee = getEmployeeById(id);
+        
+        if (employee.getStatus() != Employee.EmployeeStatus.active) {
+            throw new BusinessException(ErrorCode.EMP_004);
+        }
+
+        String employeeNo = employee.getEmployeeNo();
+        
+        phoneDeviceRepository.findByAssignedTo(employeeNo).forEach(device -> {
+            device.setStatus(PhoneDevice.PhoneDeviceStatus.stock);
+            device.setAssignedTo(null);
+            device.setUpdatedBy(operator);
+            phoneDeviceRepository.save(device);
+            log.info("Device {} reclaimed from employee {} on termination", device.getId(), employeeNo);
+        });
+
+        phoneNumberRepository.findByUserId(employeeNo).forEach(phone -> {
+            phone.setUserId(null);
+            phone.setStatus(PhoneNumber.PhoneStatus.idle);
+            phone.setUpdatedBy(operator);
+            phoneNumberRepository.save(phone);
+            log.info("Phone {} reclaimed from employee {} on termination", phone.getPhoneNumber(), employeeNo);
+        });
+
+        employee.setStatus(Employee.EmployeeStatus.inactive);
+        employee.setLeaveDate(LocalDate.now());
+        employee.setUpdatedBy(operator);
+        
+        Employee saved = employeeRepository.save(employee);
+        
+        log.info("Employee {} terminated, devices and phones reclaimed", employeeNo);
+        return saved;
+    }
+
     @Transactional(readOnly = true)
     public long countByOrg(Long orgId) {
         return employeeRepository.countActiveByOrgId(orgId);
@@ -166,3 +212,4 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 }
+

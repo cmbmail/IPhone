@@ -1,13 +1,15 @@
 package com.phonebiz.entity;
 
-import com.phonebiz.common.BusinessException;
-import com.phonebiz.common.ErrorCode;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.phonebiz.common.BusinessException;
+import com.phonebiz.common.ErrorCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,14 +34,30 @@ public class OrgStructure extends BaseEntity {
     @Column(nullable = false)
     private Integer level = 0;
 
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder = 0;
+
     @Column(nullable = false, length = 500)
     private String path;
+
+    @Column(length = 500)
+    private String remark;
+
+    @Column(name = "branch_name", length = 100)
+    private String branchName;
+
+    @Column(name = "org_code", length = 50)
+    private String orgCode;
+
+    @Column(name = "cost_center", length = 50)
+    private String costCenter;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrgStatus status = OrgStatus.active;
 
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
+    @OrderBy("sortOrder ASC")
     private List<OrgStructure> children = new ArrayList<>();
 
     public enum OrgType {
@@ -66,13 +84,5 @@ public class OrgStructure extends BaseEntity {
         if (newParentId.equals(this.id)) {
             throw new BusinessException(ErrorCode.ORG_003);
         }
-        OrgStructure parent = findParent(newParentId);
-        if (parent != null && parent.getPath().contains("/" + this.id + "/")) {
-            throw new BusinessException(ErrorCode.ORG_003);
-        }
-    }
-
-    private OrgStructure findParent(Long parentId) {
-        return null;
     }
 }

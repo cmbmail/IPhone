@@ -1,10 +1,13 @@
 package com.phonebiz.dto;
 
-import com.phonebiz.entity.SysUser;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.phonebiz.entity.SysUser;
 
 @Data
 @Builder
@@ -13,7 +16,9 @@ import lombok.NoArgsConstructor;
 public class LoginResponse {
     private String token;
     private long expiresIn;
+    private boolean forceChangePassword;
     private UserInfo user;
+    private List<String> permissions;
 
     @Data
     @Builder

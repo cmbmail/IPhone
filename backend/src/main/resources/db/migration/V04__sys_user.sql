@@ -34,4 +34,4 @@ VALUES
     ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.cE3G3o6F3Q1P0V5GkW', 'VIR-01', 'admin', 'active', 'system', 'system'),
     ('ops', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.cE3G3o6F3Q1P0V5GkW', 'VIR-02', 'ops', 'active', 'system', 'system'),
     ('boss', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.cE3G3o6F3Q1P0V5GkW', 'VIR-03', 'boss', 'active', 'system', 'system'),
-    ('finance', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.cE3G3o6F3Q1P0V5GkW', NULL, 'finance', 'active', 'system', 'system');
+    ('finance', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3.cE3G3o6F3Q1P0V5GkW', 'VIR-04', 'finance', 'active', 'system', 'system');

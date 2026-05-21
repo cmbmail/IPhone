@@ -1,10 +1,11 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDate;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -51,3 +52,4 @@ public class Employee extends BaseEntity {
         active, inactive
     }
 }
+

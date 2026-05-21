@@ -1,10 +1,5 @@
-import axios from 'axios'
+import { request } from './request'
 import type { OrgStructure, CreateOrgDTO, UpdateOrgDTO } from '@/types/org'
-
-const request = axios.create({
-  baseURL: '/api',
-  timeout: 10000
-})
 
 export const orgApi = {
   getTree: () => request.get<OrgStructure[]>('/orgs/tree'),
@@ -19,5 +14,13 @@ export const orgApi = {
 
   update: (id: number, data: UpdateOrgDTO) => request.put<OrgStructure>(`/orgs/${id}`, data),
 
-  delete: (id: number) => request.delete(`/orgs/${id}`)
+  delete: (id: number) => request.delete(`/orgs/${id}`),
+
+  importCostCenter: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post('/orgs/import-cost-center', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
 }

@@ -10,29 +10,29 @@ export const login = (data) => {
 
 export const getOrgList = () => {
   return request({
-    url: '/org/list',
+    url: '/orgs',
     method: 'GET'
   })
 }
 
 export const getOrgById = (id) => {
   return request({
-    url: `/org/${id}`,
+    url: `/orgs/${id}`,
     method: 'GET'
   })
 }
 
 export const addOrg = (data) => {
   return request({
-    url: '/org',
+    url: '/orgs',
     method: 'POST',
     data
   })
 }
 
-export const updateOrg = (data) => {
+export const updateOrg = (id, data) => {
   return request({
-    url: '/org',
+    url: `/orgs/${id}`,
     method: 'PUT',
     data
   })
@@ -40,14 +40,14 @@ export const updateOrg = (data) => {
 
 export const deleteOrg = (id) => {
   return request({
-    url: `/org/${id}`,
+    url: `/orgs/${id}`,
     method: 'DELETE'
   })
 }
 
 export const getEmployeePage = (params) => {
   return request({
-    url: '/employee/page',
+    url: '/employees',
     method: 'GET',
     params
   })
@@ -55,22 +55,22 @@ export const getEmployeePage = (params) => {
 
 export const getEmployeeById = (id) => {
   return request({
-    url: `/employee/${id}`,
+    url: `/employees/${id}`,
     method: 'GET'
   })
 }
 
 export const addEmployee = (data) => {
   return request({
-    url: '/employee',
+    url: '/employees',
     method: 'POST',
     data
   })
 }
 
-export const updateEmployee = (data) => {
+export const updateEmployee = (id, data) => {
   return request({
-    url: '/employee',
+    url: `/employees/${id}`,
     method: 'PUT',
     data
   })
@@ -78,36 +78,36 @@ export const updateEmployee = (data) => {
 
 export const deleteEmployee = (id) => {
   return request({
-    url: `/employee/${id}`,
+    url: `/employees/${id}`,
     method: 'DELETE'
   })
 }
 
 export const getRoleList = () => {
   return request({
-    url: '/role/list',
+    url: '/roles',
     method: 'GET'
   })
 }
 
 export const getRoleById = (id) => {
   return request({
-    url: `/role/${id}`,
+    url: `/roles/${id}`,
     method: 'GET'
   })
 }
 
 export const addRole = (data) => {
   return request({
-    url: '/role',
+    url: '/roles',
     method: 'POST',
     data
   })
 }
 
-export const updateRole = (data) => {
+export const updateRole = (id, data) => {
   return request({
-    url: '/role',
+    url: `/roles/${id}`,
     method: 'PUT',
     data
   })
@@ -115,51 +115,21 @@ export const updateRole = (data) => {
 
 export const deleteRole = (id) => {
   return request({
-    url: `/role/${id}`,
+    url: `/roles/${id}`,
     method: 'DELETE'
   })
 }
 
 export const getMenuList = () => {
   return request({
-    url: '/menu/list',
+    url: '/auth/menu',
     method: 'GET'
-  })
-}
-
-export const getMenuById = (id) => {
-  return request({
-    url: `/menu/${id}`,
-    method: 'GET'
-  })
-}
-
-export const addMenu = (data) => {
-  return request({
-    url: '/menu',
-    method: 'POST',
-    data
-  })
-}
-
-export const updateMenu = (data) => {
-  return request({
-    url: '/menu',
-    method: 'PUT',
-    data
-  })
-}
-
-export const deleteMenu = (id) => {
-  return request({
-    url: `/menu/${id}`,
-    method: 'DELETE'
   })
 }
 
 export const getPhonePage = (params) => {
   return request({
-    url: '/phone/page',
+    url: '/phones',
     method: 'GET',
     params
   })
@@ -167,58 +137,38 @@ export const getPhonePage = (params) => {
 
 export const getPhoneById = (id) => {
   return request({
-    url: `/phone/${id}`,
+    url: `/phones/${id}`,
     method: 'GET'
   })
 }
 
 export const addPhone = (data) => {
   return request({
-    url: '/phone',
+    url: '/phones',
     method: 'POST',
     data
   })
 }
 
-export const assignPhone = (id, data) => {
+export const assignPhone = (data) => {
   return request({
-    url: `/phone/assign/${id}`,
-    method: 'PUT',
+    url: '/phones/allocate',
+    method: 'POST',
     data
   })
 }
 
-export const activatePhone = (id) => {
+export const recyclePhone = (data) => {
   return request({
-    url: `/phone/activate/${id}`,
-    method: 'PUT'
-  })
-}
-
-export const suspendPhone = (id) => {
-  return request({
-    url: `/phone/suspend/${id}`,
-    method: 'PUT'
-  })
-}
-
-export const resumePhone = (id) => {
-  return request({
-    url: `/phone/resume/${id}`,
-    method: 'PUT'
-  })
-}
-
-export const recyclePhone = (id) => {
-  return request({
-    url: `/phone/recycle/${id}`,
-    method: 'PUT'
+    url: '/phones/reclaim',
+    method: 'POST',
+    data
   })
 }
 
 export const getOrderPage = (params) => {
   return request({
-    url: '/order/page',
+    url: '/work-orders',
     method: 'GET',
     params
   })
@@ -226,61 +176,39 @@ export const getOrderPage = (params) => {
 
 export const getOrderById = (id) => {
   return request({
-    url: `/order/${id}`,
+    url: `/work-orders/${id}`,
     method: 'GET'
   })
 }
 
 export const addOrder = (data) => {
   return request({
-    url: '/order',
+    url: '/work-orders',
     method: 'POST',
     data
   })
 }
 
-export const acceptOrder = (id, data) => {
+export const acceptOrder = (id) => {
   return request({
-    url: `/order/accept/${id}`,
+    url: `/work-orders/${id}/status`,
     method: 'PUT',
-    data
+    data: { status: 'ACCEPTED' }
   })
 }
 
-export const approveOrder = (id, data) => {
+export const completeOrder = (id) => {
   return request({
-    url: `/order/approve/${id}`,
+    url: `/work-orders/${id}/status`,
     method: 'PUT',
-    data
-  })
-}
-
-export const rejectOrder = (id, data) => {
-  return request({
-    url: `/order/reject/${id}`,
-    method: 'PUT',
-    data
-  })
-}
-
-export const completeOrder = (id, data) => {
-  return request({
-    url: `/order/complete/${id}`,
-    method: 'PUT',
-    data
+    data: { status: 'COMPLETED' }
   })
 }
 
 export const cancelOrder = (id) => {
   return request({
-    url: `/order/cancel/${id}`,
-    method: 'PUT'
-  })
-}
-
-export const reopenOrder = (id) => {
-  return request({
-    url: `/order/reopen/${id}`,
-    method: 'PUT'
+    url: `/work-orders/${id}/status`,
+    method: 'PUT',
+    data: { status: 'CANCELLED' }
   })
 }

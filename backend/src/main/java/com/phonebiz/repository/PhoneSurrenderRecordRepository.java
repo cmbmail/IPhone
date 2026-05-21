@@ -1,10 +1,11 @@
 package com.phonebiz.repository;
 
-import com.phonebiz.entity.PhoneSurrenderRecord;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.phonebiz.entity.PhoneSurrenderRecord;
 
 @Repository
 public interface PhoneSurrenderRecordRepository extends JpaRepository<PhoneSurrenderRecord, Long> {
@@ -13,3 +14,4 @@ public interface PhoneSurrenderRecordRepository extends JpaRepository<PhoneSurre
 
     boolean existsByPhoneNumber(String phoneNumber);
 }
+

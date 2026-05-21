@@ -304,6 +304,9 @@ CREATE TABLE area_code_org_mapping (
 | PH-05 | Excel导入 | P0 | ≤500行；**异步处理**：上传→立即返回 batch_id → 后台逐行解析 → Ops 轮询进度 → 预览 → 确认 → 批量 INSERT（batchSize=100） |
 | PH-06 | 导入批次表 | P0 | import_batch（batch_id/file_name/status/total/success/pending/error/uploaded_by） |
 | PH-07 | 批量查询优化 | P0 | org 1次全加载 → HashMap；phone 1次 IN 查询 → HashSet；N+1 → 2次查询 |
+| PH-08 | 按号码精确查询 | P0 | GET /phones/number/{phoneNumber}；快速定位单个号码 |
+| PH-09 | 按员工查询 | P0 | GET /phones/user/{userId}；查询指定员工的所有号码 |
+| PH-10 | 空闲号码快速查询 | P1 | GET /phones/idle；获取所有空闲号码列表 |
 
 #### 4.2 Excel 导入流程
 
@@ -337,6 +340,8 @@ CREATE TABLE area_code_org_mapping (
 | PH-19 | 解除预留 | reserved→idle | P1 | FOR UPDATE 号码 |
 | PH-20 | 禁用 | idle→disabled | P1 | FOR UPDATE 号码；必须填原因 |
 | PH-21 | 解除禁用 | disabled→idle | P1 | FOR UPDATE 号码 |
+| PH-22 | 换分机号 | active→active | P1 | POST /phones/change-extension；仅更换分机号，保留原号码和使用人 |
+| PH-23 | 批量变更 | 任意→任意 | P1 | POST /phones/change；支持同时更换号码、分机号、使用人、组织等多维度变更 |
 
 #### 4.4 按钮可见性
 
@@ -360,6 +365,8 @@ CREATE TABLE area_code_org_mapping (
 | PH-34 | 号码格式校验 | P0 |
 | PH-35 | Repository 所有变更操作**必须**使用 `@Lock(PESSIMISTIC_WRITE)` + 专用 `@Query`；**禁止**普通 `findById()` 后做状态变更 | P0 |
 | PH-36 | change-number：单一 @Transactional 方法 + 双号码 `findByIdsForUpdate` 一次查询 + `ORDER BY id ASC` 防死锁 | P0 |
+| PH-37 | 通用状态变更接口 | P1 | POST /phones/status；支持任意状态转移 |
+| PH-38 | 预留/释放接口 | P1 | POST /phones/reserve + POST /phones/release |
 
 ---
 
@@ -469,6 +476,75 @@ any → retired（终态）
 | inactive | 恢复、报废 |
 | repairing | 修复、报废 |
 | retired | 仅查看+历史 |
+
+---
+
+### M11：工单系统（Phase 2）
+
+> 基于三轮需求调研，Phase 2 实现工单驱动的号码和话机操作
+
+#### 11.1 工单类型
+
+| 工单类型 | 说明 | 触发动作 |
+|---------|------|---------|
+| allocate | 号码分配 | 从idle池分配给员工 |
+| reclaim | 号码回收 | 员工离职或主动回收 |
+| change_user | 过户 | 变更号码使用人 |
+| change_number | 换号 | 更换号码 |
+| change_org | 转移 | 变更号码归属部门 |
+| surrender | 拆机 | 号码归还运营商 |
+| trouble | 停复机 | 申请停机或复机 |
+| reserve | 预留 | 号码预留特殊用途 |
+| device_allocate | 话机分配 | 话机分配给员工 |
+| device_reclaim | 话机回收 | 话机回收至库存 |
+
+#### 11.2 工单流程
+
+```
+[行政创建 pending] → [运维接收 accepted] → [运维处理 processing]
+→ [运维完成 completed] → [行政归档 archived]
+```
+
+#### 11.3 工单API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/work-orders | 工单列表（分页+状态过滤） |
+| GET | /api/work-orders/{id} | 工单详情 |
+| GET | /api/work-orders/no/{workOrderNo} | 按工单号查询 |
+| POST | /api/work-orders | 创建工单 |
+| PUT | /api/work-orders/{id} | 更新工单 |
+| DELETE | /api/work-orders/{id} | 删除工单 |
+| POST | /api/work-orders/{id}/accept | 运维接收工单 |
+| POST | /api/work-orders/{id}/process | 运维处理中 |
+| POST | /api/work-orders/{id}/complete | 运维完成工单 |
+| POST | /api/work-orders/{id}/reject | 运维驳回工单 |
+| POST | /api/work-orders/{id}/batch-split | 批量工单拆分 |
+| POST | /api/work-orders/items/{itemId}/execute | 执行工单项 |
+
+#### 11.4 功能开关
+
+| 开关Key | 说明 | 默认值 |
+|---------|------|-------|
+| phone.operation.work_order_driven | 工单驱动的号码操作 | false |
+| phone.allocate.work_order_required | 号码分配需要工单 | false |
+| phone.reclaim.work_order_required | 号码回收需要工单 | false |
+| phone.surrender.work_order_required | 号码拆机需要工单 | false |
+
+---
+
+### M12：话机工单驱动（Phase 2）
+
+#### 12.1 话机工单API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/work-order-devices | 话机工单列表 |
+| GET | /api/work-order-devices/{id} | 话机工单详情 |
+| POST | /api/work-order-devices | 创建话机工单 |
+| POST | /api/work-order-devices/{id}/accept | 接收话机工单 |
+| POST | /api/work-order-devices/{id}/process | 处理话机工单 |
+| POST | /api/work-order-devices/{id}/complete | 完成话机工单 |
 
 ---
 
@@ -596,13 +672,21 @@ any → retired（终态）
 | M1 认证鉴权 | 8 | — | 3 | 6 |
 | M2 组织架构 | 7 | org_structure | 5 | 8 |
 | M3 员工管理 | 9 | employee | 5 | 7 |
-| M4 电话目录 | 25 | phone_number + phone_history + surrender_record | 16 | 20 |
+| M4 电话目录 | 27 | phone_number + phone_history + surrender_record | 20 | 20 |
 | M5 分机号池 | 10 | extension_pool | 4 | 6 |
 | M6 区号匹配 | 4 | area_code_org_mapping | 4 | 3 |
 | M7 用户管理 | 5 | sys_user | 3 | 3 |
 | M8 系统通知 | 4 | sys_notification | — | 2 |
 | M9 Dashboard | 1 | — | 1 | 1 |
-| **🆕 M10 电话机管理** | **12** | phone_device + device_phone_mapping + device_device_history | **16** | **12** |
+| **🆕 M10 电话机管理** | **12** | phone_device + device_phone_mapping + phone_device_history | **18** | **12** |
+| M11 工单系统 | 10 | work_order + work_order_item | 14 | 7 |
+| M12 话机工单 | 6 | work_order + work_order_item | 6 | 3 |
 | — 基础设施 | — | import_batch | 4 | 6 |
 | — 风险修复 | — | — | — | 12 |
-| **合计** | **85** | **19** | **61** | **~84** |
+| **合计** | **103** | **20** | **87** | **~96** |
+
+> **更新说明**：
+> - M4 电话目录：新增3项查询功能(PH-08~10) + 2项操作(PH-22~23) + 2项接口(PH-37~38)
+> - M10 电话机：API端点补充完整至18个
+> - M11 工单系统：Phase 2新增，包含12个工单类型 + 12个API
+> - M12 话机工单：Phase 2新增，话机操作工单化

@@ -1,5 +1,13 @@
 package com.phonebiz.service;
 
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateExtensionPoolRequest;
@@ -9,12 +17,6 @@ import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.repository.ExtensionPoolRepository;
 import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.PhoneNumberRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -74,6 +76,33 @@ public class ExtensionPoolService {
     }
 
     @Transactional(readOnly = true)
+    public boolean checkOverlap(Long orgId, String startNumber, String endNumber) {
+        if (!isValidRange(startNumber, endNumber)) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Invalid number range");
+        }
+        
+        for (ExtensionPool existing : poolRepository.findByOrgId(orgId)) {
+            if (rangesOverlap(existing.getStartNumber(), existing.getEndNumber(), startNumber, endNumber)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Transactional(readOnly = true)
+    public ExtensionPool findOverlappingPool(Long orgId, String startNumber, String endNumber) {
+        for (ExtensionPool existing : poolRepository.findByOrgId(orgId)) {
+            if (rangesOverlap(existing.getStartNumber(), existing.getEndNumber(), startNumber, endNumber)) {
+                return existing;
+            }
+        }
+        return null;
+    }
+
+    private static final double WARNING_THRESHOLD = 80.0;
+    private static final double DANGER_THRESHOLD = 90.0;
+
+    @Transactional(readOnly = true)
     public ExtensionPoolUsage getPoolUsage(Long poolId) {
         ExtensionPool pool = getPoolById(poolId);
 
@@ -87,16 +116,80 @@ public class ExtensionPoolService {
         double usageRate = totalCount > 0 ? (double) usedCount / totalCount * 100 : 0;
 
         String status;
-        if (usageRate >= 90) {
+        String warningMessage = null;
+        if (usageRate >= DANGER_THRESHOLD) {
             status = "red";
-        } else if (usageRate >= 70) {
+            warningMessage = "号池即将耗尽，使用率已达" + String.format("%.1f", usageRate) + "%";
+        } else if (usageRate >= WARNING_THRESHOLD) {
             status = "yellow";
+            warningMessage = "号池使用率较高，已达" + String.format("%.1f", usageRate) + "%";
         } else {
             status = "green";
         }
 
-        return new ExtensionPoolUsage(poolId, totalCount, (int) usedCount, idleCount, usageRate, status);
+        ExtensionPoolUsage usage = new ExtensionPoolUsage(poolId, totalCount, (int) usedCount, idleCount, usageRate, status, warningMessage);
+        
+        if (warningMessage != null) {
+            log.warn("Extension pool {} warning: {}", poolId, warningMessage);
+        }
+        
+        return usage;
     }
+
+    @Transactional(readOnly = true)
+    public List<ExtensionPoolUsage> getAllPoolUsages() {
+        return poolRepository.findAll().stream()
+                .map(pool -> getPoolUsage(pool.getId()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExtensionPoolUsage> getWarningPools() {
+        return getAllPoolUsages().stream()
+                .filter(u -> "yellow".equals(u.status()) || "red".equals(u.status()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> suggestAlternatePools(Long orgId) {
+        List<String> suggestions = new java.util.ArrayList<>();
+        
+        for (ExtensionPoolUsage usage : getAllPoolUsages().stream()
+                .filter(u -> u.status().equals("green"))
+                .toList()) {
+            ExtensionPool pool = getPoolById(usage.poolId());
+            if (pool.getOrgId().equals(orgId) && usage.idleCount() > 0) {
+                suggestions.add(String.format("Pool %d (%s-%s): %d available", 
+                        usage.poolId(), pool.getStartNumber(), pool.getEndNumber(), usage.idleCount()));
+            }
+        }
+        
+        return suggestions;
+    }
+
+    @Transactional(readOnly = true)
+    public PoolExhaustionInfo checkExhaustion(Long poolId) {
+        ExtensionPoolUsage usage = getPoolUsage(poolId);
+        ExtensionPool pool = getPoolById(poolId);
+        
+        boolean isExhausted = usage.idleCount() == 0;
+        boolean isNearExhausted = usage.usageRate() >= WARNING_THRESHOLD;
+        
+        List<String> suggestions = isNearExhausted || isExhausted ? suggestAlternatePools(pool.getOrgId()) : List.of();
+        
+        return new PoolExhaustionInfo(poolId, isExhausted, isNearExhausted, usage.idleCount(), 
+                (int) usage.usedCount(), usage.totalCount(), suggestions);
+    }
+
+    public record PoolExhaustionInfo(
+            Long poolId,
+            boolean isExhausted,
+            boolean isNearExhausted,
+            int idleCount,
+            int usedCount,
+            int totalCount,
+            List<String> suggestions
+    ) {}
 
     private boolean isValidRange(String start, String end) {
         try {
@@ -137,6 +230,8 @@ public class ExtensionPoolService {
             int usedCount,
             int idleCount,
             double usageRate,
-            String status
+            String status,
+            String warningMessage
     ) {}
 }
+

@@ -1,18 +1,26 @@
 package com.phonebiz.service;
 
+import java.util.HashMap;
+import java.util.*;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateOrgRequest;
+import com.phonebiz.dto.ImportOrgItem;
 import com.phonebiz.dto.UpdateOrgRequest;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.repository.OrgStructureRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -23,7 +31,7 @@ public class OrgService {
 
     @Transactional(readOnly = true)
     public List<OrgStructure> getAllActiveOrgs() {
-        return orgRepository.findAllActiveOrderByLevelAndName();
+        return orgRepository.findAllActiveOrdered();
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +42,7 @@ public class OrgService {
 
     @Transactional(readOnly = true)
     public List<OrgStructure> getOrgTree() {
-        List<OrgStructure> allOrgs = orgRepository.findAllActiveOrderByLevelAndName();
+        List<OrgStructure> allOrgs = orgRepository.findAllActiveOrdered();
         return buildTree(allOrgs);
     }
 
@@ -45,9 +53,15 @@ public class OrgService {
         OrgStructure org = new OrgStructure();
         org.setParentId(request.getParentId());
         org.setName(request.getName());
-        org.setType(OrgStructure.OrgType.valueOf(request.getType()));
-        org.setStatus(OrgStructure.OrgStatus.valueOf(request.getStatus()));
-
+        org.setRemark(request.getRemark());
+        org.setBranchName(request.getBranchName());
+        org.setOrgCode(request.getOrgCode());
+        org.setCostCenter(request.getCostCenter());
+        
+        if (request.getType() != null) {
+            org.setType(OrgStructure.OrgType.valueOf(request.getType()));
+        }
+        
         if (request.getParentId() != null) {
             OrgStructure parent = getOrgById(request.getParentId());
             org.setLevel(parent.getLevel() + 1);
@@ -55,6 +69,15 @@ public class OrgService {
             org.setLevel(0);
         }
 
+        // Set sort_order: max sibling order + 10
+        List<OrgStructure> siblings = org.getParentId() == null
+                ? orgRepository.findByParentIdIsNull()
+                : orgRepository.findByParentId(org.getParentId());
+        int maxSort = siblings.stream().mapToInt(OrgStructure::getSortOrder).max().orElse(0);
+        org.setSortOrder(maxSort + 10);
+
+        // Set temporary path first (NOT NULL constraint), then update after save
+        org.setPath(org.getParentId() != null ? "/" + org.getParentId() + "/0" : "/0");
         OrgStructure saved = orgRepository.save(org);
         saved.setPath(calculatePath(saved));
         return orgRepository.save(saved);
@@ -75,6 +98,39 @@ public class OrgService {
 
         if (request.getStatus() != null) {
             org.setStatus(OrgStructure.OrgStatus.valueOf(request.getStatus()));
+        }
+
+        if (request.getSortOrder() != null) {
+            int position = request.getSortOrder(); // 1-based position
+            // Get all siblings (same parent), exclude current org
+            List<OrgStructure> siblings = org.getParentId() == null
+                    ? orgRepository.findByParentIdIsNull()
+                    : orgRepository.findByParentId(org.getParentId());
+            siblings.removeIf(s -> s.getId().equals(org.getId()));
+            siblings.sort((a, b) -> a.getSortOrder() - b.getSortOrder());
+
+            // Clamp position to valid range [1, siblings.size()+1]
+            position = Math.max(1, Math.min(position, siblings.size() + 1));
+
+            // Insert current org into the siblings list at the desired position
+            siblings.add(position - 1, org);
+
+            // Reassign sort_order for ALL nodes (siblings + current): position × 10
+            for (int i = 0; i < siblings.size(); i++) {
+                int newOrder = (i + 1) * 10;
+                siblings.get(i).setSortOrder(newOrder);
+                orgRepository.updateSortOrder(siblings.get(i).getId(), newOrder);
+            }
+        }
+
+        if (request.getBranchName() != null) {
+            org.setBranchName(request.getBranchName());
+        }
+        if (request.getOrgCode() != null) {
+            org.setOrgCode(request.getOrgCode());
+        }
+        if (request.getCostCenter() != null) {
+            org.setCostCenter(request.getCostCenter());
         }
 
         org.setUpdatedBy(operator);
@@ -98,6 +154,13 @@ public class OrgService {
         return orgRepository.findByParentIdAndStatus(parentId, OrgStructure.OrgStatus.active);
     }
 
+    @Transactional
+    public void updateSortOrders(Map<Long, Integer> sortOrderMap) {
+        for (Map.Entry<Long, Integer> entry : sortOrderMap.entrySet()) {
+            orgRepository.updateSortOrder(entry.getKey(), entry.getValue());
+        }
+    }
+
     private void validateDuplicateName(Long parentId, String name, Long excludeId) {
         boolean exists;
         if (parentId == null) {
@@ -117,6 +180,129 @@ public class OrgService {
         }
         OrgStructure parent = getOrgById(org.getParentId());
         return parent.getPath() + "/" + org.getId();
+    }
+
+
+    @Transactional
+    public int importOrgs(List<ImportOrgItem> items, String operator) {
+        int count = 0;
+        Map<String, Long> nameToId = new HashMap<>();
+        for (OrgStructure o : orgRepository.findAll()) {
+            nameToId.put(o.getName(), o.getId());
+        }
+        for (ImportOrgItem item : items) {
+            if (item.getName() == null || item.getName().isBlank()) continue;
+            String name = item.getName().trim();
+            String parentName = item.getParentId() != null ? String.valueOf(item.getParentId()) : null;
+            Long pid = null;
+            if (parentName != null && !parentName.isEmpty()) {
+                try { pid = Long.parseLong(parentName); } catch (NumberFormatException e) { pid = null; }
+                if (pid == null) pid = nameToId.get(parentName);
+                if (pid == null) { log.warn("Parent not found for '{}', skipping", name); continue; }
+            }
+            boolean exists = (pid == null) ? orgRepository.existsByParentIdIsNullAndName(name) : orgRepository.existsByParentIdAndName(pid, name);
+            if (exists) { log.info("Skip duplicate org: {} under parent {}", name, pid); continue; }
+            OrgStructure org = new OrgStructure();
+            org.setParentId(pid);
+            org.setName(name);
+            if (item.getType() != null && !item.getType().isBlank()) {
+                org.setType(OrgStructure.OrgType.valueOf(item.getType()));
+            } else if (pid == null) {
+                org.setType(OrgStructure.OrgType.group);
+            } else {
+                OrgStructure parent = orgRepository.findById(pid).orElse(null);
+                if (parent != null && parent.getType() == OrgStructure.OrgType.group) {
+                    org.setType(OrgStructure.OrgType.subsidiary);
+                } else {
+                    org.setType(OrgStructure.OrgType.dept);
+                }
+            }
+            org.setLevel(pid != null ? (orgRepository.findById(pid).orElse(null).getLevel() + 1) : 0);
+            // Set sort_order
+            List<OrgStructure> siblings = org.getParentId() == null
+                    ? orgRepository.findByParentIdIsNull()
+                    : orgRepository.findByParentId(org.getParentId());
+            int maxSort = siblings.stream().mapToInt(OrgStructure::getSortOrder).max().orElse(0);
+            org.setSortOrder(maxSort + 10);
+            OrgStructure saved = orgRepository.save(org);
+            saved.setPath(calculatePath(saved));
+            orgRepository.save(saved);
+            nameToId.put(name, saved.getId());
+            count++;
+        }
+        return count;
+    }
+
+
+    @Transactional
+    public Map<String, Object> importCostCenter(MultipartFile file, String operator) {
+        int updated = 0;
+        int skipped = 0;
+        List<String> errors = new ArrayList<>();
+
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            int rowCount = sheet.getPhysicalNumberOfRows();
+
+            for (int i = 1; i < rowCount; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                String deptName = getCellStringValue(row, 0);
+                if (deptName == null || deptName.isBlank()) continue;
+                deptName = deptName.trim();
+
+                String branchName = getCellStringValue(row, 1);
+                String orgCode = getCellStringValue(row, 2);
+                String costCenter = getCellStringValue(row, 3);
+
+                Optional<OrgStructure> opt = orgRepository.findByName(deptName);
+                if (opt.isEmpty()) {
+                    skipped++;
+                    errors.add("Row " + (i+1) + ": Department '" + deptName + "' not found");
+                    continue;
+                }
+
+                OrgStructure org = opt.get();
+                if (branchName != null && !branchName.isBlank()) org.setBranchName(branchName.trim());
+                if (orgCode != null && !orgCode.isBlank()) org.setOrgCode(orgCode.trim());
+                if (costCenter != null && !costCenter.isBlank()) org.setCostCenter(costCenter.trim());
+                org.setUpdatedBy(operator);
+                orgRepository.save(org);
+                updated++;
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.IMPORT_002, "Failed to parse Excel: " + e.getMessage());
+        }
+
+        return Map.of("updated", updated, "skipped", skipped, "errors", errors);
+    }
+
+    private String getCellStringValue(Row row, int cellIndex) {
+        Cell cell = row.getCell(cellIndex);
+        if (cell == null) return null;
+        switch (cell.getCellType()) {
+            case STRING: return cell.getStringCellValue();
+            case NUMERIC: return String.valueOf((long) cell.getNumericCellValue());
+            default: return null;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrgStructure> getOrgTreeByScope(Long scopeOrgId) {
+        List<OrgStructure> allOrgs;
+        if (scopeOrgId == null) {
+            allOrgs = orgRepository.findAllActiveOrdered();
+        } else {
+            OrgStructure scopeOrg = getOrgById(scopeOrgId);
+            allOrgs = orgRepository.findByPathStartingWith(scopeOrg.getPath());
+            allOrgs.add(scopeOrg);
+            allOrgs.sort(Comparator.comparingInt(OrgStructure::getSortOrder)
+                    .thenComparing(OrgStructure::getName));
+        }
+        return buildTree(allOrgs);
     }
 
     private List<OrgStructure> buildTree(List<OrgStructure> allOrgs) {

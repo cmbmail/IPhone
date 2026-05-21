@@ -21,6 +21,10 @@ checkstyle {
     maxWarnings = 0
 }
 
+tasks.named('checkstyleTest') {
+    configFile = file("${projectDir}/config/checkstyle/checkstyle-test.xml")
+}
+
 jacoco {
     toolVersion = '0.8.11'
 }
@@ -58,11 +62,14 @@ dependencies {
     compileOnly "org.projectlombok:lombok"
     runtimeOnly "com.mysql:mysql-connector-j"
     annotationProcessor "org.projectlombok:lombok"
-    
+
+    implementation "org.apache.poi:poi:5.2.5"
+    implementation "org.apache.poi:poi-ooxml:5.2.5"
+
     implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
-    
+
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.security:spring-security-test"
 }

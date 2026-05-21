@@ -1,12 +1,11 @@
 package com.phonebiz.controller;
 
-import com.phonebiz.common.ApiResponse;
-import com.phonebiz.dto.CreateEmployeeRequest;
-import com.phonebiz.dto.UpdateEmployeeRequest;
-import com.phonebiz.entity.Employee;
-import com.phonebiz.service.EmployeeService;
+import java.util.List;
+
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +13,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.phonebiz.common.ApiResponse;
+import com.phonebiz.dto.CreateEmployeeRequest;
+import com.phonebiz.dto.UpdateEmployeeRequest;
+import com.phonebiz.entity.Employee;
+import com.phonebiz.service.EmployeeService;
+import com.phonebiz.annotation.AuditLog;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/employees")
+@PreAuthorize("isAuthenticated()")
 @RequiredArgsConstructor
 public class EmployeeController {
 
@@ -52,6 +58,8 @@ public class EmployeeController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('emp:create') or hasRole('ADMIN')")
+    @AuditLog(module = "employee", operation = "创建员工", targetType = "Employee", targetId = "#request.employeeNo")
     public ApiResponse<Employee> createEmployee(
             @Valid @RequestBody CreateEmployeeRequest request,
             Authentication authentication) {
@@ -60,6 +68,8 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('emp:edit') or hasRole('ADMIN')")
+    @AuditLog(module = "employee", operation = "更新员工", targetType = "Employee", targetId = "#id")
     public ApiResponse<Employee> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody UpdateEmployeeRequest request,
@@ -69,6 +79,8 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('emp:delete') or hasRole('ADMIN')")
+    @AuditLog(module = "employee", operation = "删除员工", targetType = "Employee", targetId = "#id")
     public ApiResponse<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ApiResponse.success("Employee deactivated successfully", null);
@@ -79,3 +91,4 @@ public class EmployeeController {
         return ApiResponse.success(employeeService.countByOrg(orgId));
     }
 }
+

@@ -1,16 +1,20 @@
 package com.phonebiz.controller;
 
+import java.util.Map;
+
+import jakarta.validation.Valid;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.ChangePasswordRequest;
 import com.phonebiz.dto.LoginRequest;
 import com.phonebiz.dto.LoginResponse;
 import com.phonebiz.service.AuthService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,11 +29,13 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<LoginResponse.UserInfo> getCurrentUser(Authentication authentication) {
         return ApiResponse.success(authService.getCurrentUser(authentication.getName()));
     }
 
     @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
@@ -42,3 +48,4 @@ public class AuthController {
         return ApiResponse.success(Map.of("status", "UP", "service", "PhoneBiz Auth"));
     }
 }
+

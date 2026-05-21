@@ -1,10 +1,11 @@
 package com.phonebiz.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+
+import lombok.Data;
 
 @Data
 @Entity
@@ -45,3 +46,4 @@ public class PhoneSurrenderRecord {
     @Column(name = "archived_at", nullable = false)
     private LocalDateTime archivedAt = LocalDateTime.now();
 }
+

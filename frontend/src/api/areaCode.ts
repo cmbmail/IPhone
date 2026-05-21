@@ -1,10 +1,5 @@
-import axios from 'axios'
+import { request } from './request'
 import type { AreaCodeOrgMapping, CreateAreaCodeMappingDTO } from '@/types/areaCode'
-
-const request = axios.create({
-  baseURL: '/api',
-  timeout: 10000
-})
 
 export const areaCodeApi = {
   getAll: () => request.get<AreaCodeOrgMapping[]>('/area-codes'),

@@ -1,11 +1,12 @@
 package com.phonebiz.repository;
 
-import com.phonebiz.entity.CostCenterMapping;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.phonebiz.entity.CostCenterMapping;
 
 @Repository
 public interface CostCenterMappingRepository extends JpaRepository<CostCenterMapping, Long> {
@@ -18,3 +19,4 @@ public interface CostCenterMappingRepository extends JpaRepository<CostCenterMap
 
     boolean existsByOrgIdAndCostCenterCode(Long orgId, String costCenterCode);
 }
+
