@@ -15,6 +15,7 @@ import com.phonebiz.dto.PhoneImportRequest;
 import com.phonebiz.entity.ImportBatch;
 import com.phonebiz.service.ImportService;
 import org.springframework.security.core.Authentication;
+import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
@@ -25,6 +26,7 @@ public class ImportController {
 
     private final ImportService importService;
 
+    @AuditLog(module = "import", operation = "Import 操作")
     @PostMapping("/phone/start")
     public ApiResponse<Map<String, String>> startPhoneImport(@RequestBody PhoneImportRequest request, Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
@@ -37,6 +39,7 @@ public class ImportController {
         return ApiResponse.success(result);
     }
 
+    @AuditLog(module = "import", operation = "Import 操作")
     @PostMapping("/phone/{batchId}/upload")
     public ApiResponse<Void> uploadPhoneData(@PathVariable String batchId,
                                             @RequestBody List<Map<String, Object>> data,

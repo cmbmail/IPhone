@@ -96,6 +96,8 @@ public class DeviceOperationService {
     }
 
     private boolean simulateOperation(String deviceId, DeviceOperation.OperationType operationType) {
+        // TODO: Replace with real device API integration
+        log.warn("MOCK: Device operation {} for {} is using simulated implementation", operationType, deviceId);
         log.info("Executing {} operation for device {}", operationType, deviceId);
         return true;
     }

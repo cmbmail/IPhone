@@ -57,7 +57,8 @@ public class BillController {
     @AuditLog(module = "bill", operation = "导入账单", targetType = "BillRaw")
     public ApiResponse<Integer> importBills(@RequestParam String billMonth,
                                            @RequestParam("file") MultipartFile file,
-                                           @RequestParam(required = false, defaultValue = "admin") String operator) {
+                                           Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
         try {
             int count = billImportService.importBillRaw(billMonth, file, operator);
             return ApiResponse.success(count);
@@ -71,7 +72,8 @@ public class BillController {
     @AuditLog(module = "bill", operation = "导入并分摊账单", targetType = "BillRaw")
     public ApiResponse<Void> importAndAllocate(@RequestParam String billMonth,
                                              @RequestParam("file") MultipartFile file,
-                                             @RequestParam(required = false, defaultValue = "admin") String operator) {
+                                             Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
         try {
             billImportService.importBillRaw(billMonth, file, operator);
             billImportService.processImportAsync(billMonth, operator);

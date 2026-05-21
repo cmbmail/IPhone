@@ -14,6 +14,8 @@ import com.phonebiz.dto.ChangePasswordRequest;
 import com.phonebiz.dto.LoginRequest;
 import com.phonebiz.dto.LoginResponse;
 import com.phonebiz.service.AuthService;
+import com.phonebiz.annotation.AuditLog;
+import com.phonebiz.security.JwtUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
@@ -22,8 +24,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
+    @AuditLog(module = "auth", operation = "用户登录", targetType = "SysUser")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(authService.login(request));
     }
@@ -41,6 +45,20 @@ public class AuthController {
             Authentication authentication) {
         authService.changePassword(authentication.getName(), request);
         return ApiResponse.success("Password changed successfully", null);
+    }
+
+    @PostMapping("/refresh")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<LoginResponse> refreshToken(Authentication authentication, @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String newToken = jwtUtil.renewIfNeeded(token);
+        if (newToken != null) {
+            return ApiResponse.success(LoginResponse.builder()
+                    .token(newToken)
+                    .expiresIn(jwtUtil.getExpiration())
+                    .build());
+        }
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/health")

@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +49,7 @@ public class AreaCodeController {
         return ApiResponse.success(areaCodeService.matchOrgByAreaCode(areaCode));
     }
 
+    @AuditLog(module = "areacode", operation = "AreaCode 操作")
     @PostMapping
     public ApiResponse<AreaCodeOrgMapping> createMapping(
             @Valid @RequestBody CreateAreaCodeMappingRequest request,
@@ -56,6 +58,7 @@ public class AreaCodeController {
         return ApiResponse.success(areaCodeService.createMapping(request, operator));
     }
 
+    @AuditLog(module = "areacode", operation = "AreaCode 操作")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteMapping(@PathVariable Long id) {
         areaCodeService.deleteMapping(id);

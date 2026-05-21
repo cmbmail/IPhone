@@ -23,6 +23,11 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+
+    @Column(name = "version")
+    private Long version = 0L;
+
     @Column(name = "invoice_no", length = 100, nullable = false, unique = true)
     private String invoiceNo;
 

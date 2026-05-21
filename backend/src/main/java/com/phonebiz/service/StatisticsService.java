@@ -145,14 +145,17 @@ public class StatisticsService {
     private List<DeviceStatisticsDTO.DailyOnlineTrend> generateDeviceDailyTrend(int days) {
         List<DeviceStatisticsDTO.DailyOnlineTrend> trend = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        // Use current device counts as baseline (no historical data yet)
+        List<Device> allDevices = deviceRepository.findAll();
+        long online = allDevices.stream().filter(d -> d.getStatus() == Device.DeviceStatus.ONLINE).count();
+        long offline = allDevices.stream().filter(d -> d.getStatus() == Device.DeviceStatus.OFFLINE).count();
 
         for (int i = days - 1; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
-
             trend.add(DeviceStatisticsDTO.DailyOnlineTrend.builder()
                     .date(date.format(formatter))
-                    .online(0)
-                    .offline(0)
+                    .online(online)
+                    .offline(offline)
                     .build());
         }
 

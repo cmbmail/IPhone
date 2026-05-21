@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,7 @@ public class ExtensionPoolController {
         return ApiResponse.success(poolService.getPoolUsage(id));
     }
 
+    @AuditLog(module = "extensionpool", operation = "ExtensionPool 操作")
     @PostMapping
     public ApiResponse<ExtensionPool> createPool(
             @Valid @RequestBody CreateExtensionPoolRequest request,
@@ -51,6 +53,7 @@ public class ExtensionPoolController {
         return ApiResponse.success(poolService.createPool(request, operator));
     }
 
+    @AuditLog(module = "extensionpool", operation = "ExtensionPool 操作")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deletePool(@PathVariable Long id) {
         poolService.deletePool(id);

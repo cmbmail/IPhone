@@ -3,6 +3,7 @@ package com.phonebiz.security;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.FilterChain;
@@ -20,12 +21,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.phonebiz.repository.SysUserRepository;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final SysUserRepository sysUserRepository;
+
+    /** Endpoints allowed even when user must change password */
+    private static final Set<String> FORCE_CHANGE_PW_ALLOWED = Set.of(
+            "/auth/change-password", "/auth/me", "/auth/health", "/auth/login"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -63,10 +72,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 authentication.setDetails(new JwtAuthenticationDetails(username, role, scopeOrgId, roleId, permissions));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // S11: Force password change check
+                if (mustChangePassword(username)) {
+                    String requestUri = request.getRequestURI();
+                    // Strip context-path prefix (/api)
+                    String path = requestUri.replace("/api", "");
+                    if (!FORCE_CHANGE_PW_ALLOWED.contains(path)) {
+                        response.setStatus(403);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write(
+                            "{\"code\":1007,\"message\":\"Password change required\",\"data\":null}"
+                        );
+                        return;
+                    }
+                }
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean mustChangePassword(String username) {
+        try {
+            return sysUserRepository.findByUsername(username)
+                    .map(u -> u.needsPasswordChange())
+                    .orElse(false);
+        } catch (Exception e) {
+            log.warn("Failed to check password change status for {}: {}", username, e.getMessage());
+            return false;
+        }
     }
 
     private String extractToken(HttpServletRequest request) {

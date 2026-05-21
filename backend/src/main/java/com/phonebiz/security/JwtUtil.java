@@ -1,9 +1,7 @@
 package com.phonebiz.security;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -25,6 +23,9 @@ public class JwtUtil {
     @Value("${phonebiz.jwt.expiration}")
     private long expiration;
 
+    /** Renew token if less than this many ms remaining (1 hour) */
+    private static final long RENEW_THRESHOLD_MS = 3600_000L;
+
     public String generateToken(String username, String role, Long scopeOrgId, Long roleId, List<String> permissions) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
@@ -33,7 +34,7 @@ public class JwtUtil {
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .id(UUID.randomUUID().toString())
+                .id(java.util.UUID.randomUUID().toString())
                 .claim("role", role)
                 .claim("scopeOrgId", scopeOrgId)
                 .claim("roleId", roleId)
@@ -123,12 +124,44 @@ public class JwtUtil {
         }
     }
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+    /**
+     * S12: Check if token should be renewed and return new token if so.
+     * Returns null if renewal is not needed.
+     */
+    public String renewIfNeeded(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            Date expiration2 = claims.getExpiration();
+            long remaining = expiration2.getTime() - System.currentTimeMillis();
+
+            if (remaining > 0 && remaining < RENEW_THRESHOLD_MS) {
+                String username = claims.getSubject();
+                String role = claims.get("role", String.class);
+                Long scopeOrgId = claims.get("scopeOrgId", Long.class);
+                Long roleId = claims.get("roleId", Long.class);
+                List<String> permissions = getPermissionsFromToken(token);
+
+                String newToken = generateToken(username, role, scopeOrgId, roleId, permissions);
+                log.info("Token renewed for user={}, remaining={}ms", username, remaining);
+                return newToken;
+            }
+        } catch (Exception e) {
+            log.debug("Token renewal check failed: {}", e.getMessage());
+        }
+        return null;
     }
 
     public long getExpiration() {
         return expiration;
+    }
+
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

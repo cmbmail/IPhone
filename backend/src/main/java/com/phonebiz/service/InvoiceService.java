@@ -57,7 +57,12 @@ public class InvoiceService {
         }
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || (!originalFileName.endsWith(".pdf") && !originalFileName.endsWith(".PDF"))) {
-            throw new BusinessException(ErrorCode.SYS_001);
+            throw new BusinessException(ErrorCode.SYS_001, "Only PDF files are allowed");
+        }
+        // Validate PDF magic bytes (%PDF-)
+        byte[] fileBytes = file.getBytes();
+        if (fileBytes.length < 5 || fileBytes[0] != 0x25 || fileBytes[1] != 0x50 || fileBytes[2] != 0x44 || fileBytes[3] != 0x46 || fileBytes[4] != 0x2D) {
+            throw new BusinessException(ErrorCode.SYS_001, "Invalid PDF file format");
         }
 
         String invoiceNo = extractInvoiceNo(originalFileName);
@@ -68,9 +73,9 @@ public class InvoiceService {
         String storagePath = ensureStoragePath(billMonth);
         String storedFileName = generateStoredFileName(invoiceNo, originalFileName);
         Path filePath = Paths.get(storagePath, storedFileName);
-        Files.copy(file.getInputStream(), filePath);
+        Files.copy(new java.io.ByteArrayInputStream(fileBytes), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-        String md5 = calculateMD5(file.getBytes());
+        String md5 = calculateMD5(fileBytes);
 
         Invoice invoice = Invoice.builder()
                 .invoiceNo(invoiceNo)
@@ -170,6 +175,8 @@ public class InvoiceService {
     }
 
     private String performOcrSimulation(String fileName) {
+        // TODO: Replace with real OCR service integration
+        log.warn("MOCK: Using simulated OCR for {}", fileName);
         return """
                 发票号码: FP2024120001
                 开票日期: 2024-12-15
@@ -244,6 +251,8 @@ public class InvoiceService {
     }
 
     private String findRecipientUser(Long orgId) {
+        // TODO: Replace with real user lookup by org/role
+        log.warn("MOCK: Using hardcoded recipient for orgId={}", orgId);
         return "finance_" + orgId;
     }
 

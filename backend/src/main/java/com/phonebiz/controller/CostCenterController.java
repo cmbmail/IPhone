@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,7 @@ public class CostCenterController {
         return ApiResponse.success(costCenterService.getCostCentersByOrg(orgId));
     }
 
+    @AuditLog(module = "costcenter", operation = "CostCenter 操作")
     @PostMapping
     public ApiResponse<CostCenterMapping> createCostCenter(
             @Valid @RequestBody CreateCostCenterRequest request,
@@ -47,6 +49,7 @@ public class CostCenterController {
         return ApiResponse.success(costCenterService.createCostCenter(request, operator));
     }
 
+    @AuditLog(module = "costcenter", operation = "CostCenter 操作")
     @PutMapping("/{id}")
     public ApiResponse<CostCenterMapping> updateCostCenter(
             @PathVariable Long id,
@@ -56,6 +59,7 @@ public class CostCenterController {
         return ApiResponse.success(costCenterService.updateCostCenter(id, request, operator));
     }
 
+    @AuditLog(module = "costcenter", operation = "CostCenter 操作")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteCostCenter(@PathVariable Long id) {
         costCenterService.deleteCostCenter(id);

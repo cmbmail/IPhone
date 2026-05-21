@@ -41,10 +41,15 @@ public class BillImportService {
     public int importBillRaw(String billMonth, MultipartFile file, String operator) throws IOException {
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.endsWith(".xlsx")) {
-            throw new BusinessException(ErrorCode.SYS_001);
+            throw new BusinessException(ErrorCode.SYS_001, "Only .xlsx files are allowed");
+        }
+        // Validate file magic bytes (ZIP header for xlsx: PK\x03\x04)
+        byte[] fileBytes = file.getBytes();
+        if (fileBytes.length < 4 || fileBytes[0] != 0x50 || fileBytes[1] != 0x4B || fileBytes[2] != 0x03 || fileBytes[3] != 0x04) {
+            throw new BusinessException(ErrorCode.SYS_001, "Invalid file format, expected xlsx");
         }
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+        try (Workbook workbook = new XSSFWorkbook(new java.io.ByteArrayInputStream(fileBytes))) {
             int total = 0;
             for (int si = 0; si < workbook.getNumberOfSheets(); si++) {
                 Sheet sheet = workbook.getSheetAt(si);

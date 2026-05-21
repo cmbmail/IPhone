@@ -40,6 +40,20 @@ function getStoredToken(): string | null {
   return null
 }
 
+// Update token in Zustand persist storage
+function updateStoredToken(newToken: string): void {
+  try {
+    const raw = localStorage.getItem("auth-storage")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      parsed.state.token = newToken
+      localStorage.setItem("auth-storage", JSON.stringify(parsed))
+    }
+  } catch {
+    // ignore
+  }
+}
+
 request.interceptors.request.use(
   (config) => {
     const token = getStoredToken()
@@ -59,13 +73,47 @@ request.interceptors.response.use(
     }
     return response
   },
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+  async (error) => {
+    const originalRequest = error.config
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      try {
+        const currentToken = getStoredToken()
+        if (currentToken) {
+          const refreshRes = await axios.post(`${baseURL}/auth/refresh`, null, {
+            headers: { Authorization: `Bearer ${currentToken}` }
+          })
+          if (refreshRes.data?.data?.token) {
+            const newToken = refreshRes.data.data.token
+            updateStoredToken(newToken)
+            originalRequest.headers.Authorization = `Bearer ${newToken}`
+            return request(originalRequest)
+          }
+        }
+      } catch {
+        // Refresh failed, proceed to logout
+      }
+      // Clear auth and redirect to login
       localStorage.removeItem("auth-storage")
       localStorage.removeItem("expiresIn")
       localStorage.removeItem("loginTime")
       window.location.href = "/login"
     }
+
+    if (error.response?.status === 403) {
+      // Check if it's a force password change response
+      const data = error.response.data
+      if (data?.code === 1007) {
+        window.location.href = "/login?forceChangePassword=true"
+      } else {
+        localStorage.removeItem("auth-storage")
+        localStorage.removeItem("expiresIn")
+        localStorage.removeItem("loginTime")
+        window.location.href = "/login"
+      }
+    }
+
     return Promise.reject(error)
   },
 )

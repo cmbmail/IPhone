@@ -46,8 +46,8 @@ public class PhoneNumber extends BaseEntity {
     @Column(length = 500)
     private String remark;
 
-    @Version
     @Column(nullable = false)
+    @Version
     private Long version = 0L;
 
     public enum PhoneStatus {

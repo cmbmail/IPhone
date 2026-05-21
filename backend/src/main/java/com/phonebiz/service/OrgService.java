@@ -63,6 +63,7 @@ public class OrgService {
         }
         
         if (request.getParentId() != null) {
+            checkCycle(null, request.getParentId());
             OrgStructure parent = getOrgById(request.getParentId());
             org.setLevel(parent.getLevel() + 1);
         } else {
@@ -323,5 +324,26 @@ public class OrgService {
         }
 
         return roots;
+    }
+
+    /** S22: Check if making newParentId the parent of orgId would create a cycle */
+    private void checkCycle(Long orgId, Long newParentId) {
+        if (newParentId == null) return;
+        if (newParentId.equals(orgId)) {
+            throw new BusinessException(ErrorCode.ORG_003, "Cannot set self as parent");
+        }
+        Set<Long> visited = new HashSet<>();
+        Long current = newParentId;
+        while (current != null) {
+            if (current.equals(orgId)) {
+                throw new BusinessException(ErrorCode.ORG_003, "Cycle detected in organization structure");
+            }
+            if (visited.contains(current)) {
+                throw new BusinessException(ErrorCode.ORG_003, "Cycle detected in organization structure");
+            }
+            visited.add(current);
+            OrgStructure parent = orgRepository.findById(current).orElse(null);
+            current = parent != null ? parent.getParentId() : null;
+        }
     }
 }
