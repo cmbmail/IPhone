@@ -22,7 +22,13 @@ public interface SubsidiaryReconciliationRepository extends JpaRepository<Subsid
 
     Optional<SubsidiaryReconciliation> findByBillMonthAndSubsidiaryOrgId(String billMonth, Long subsidiaryOrgId);
 
+    Page<SubsidiaryReconciliation> findByBillMonthAndSubsidiaryOrgId(String billMonth, Long subsidiaryOrgId, Pageable pageable);
+
     List<SubsidiaryReconciliation> findByBillMonthAndReconciliationStatus(String billMonth, SubsidiaryReconciliation.ReconciliationStatus status);
+
+    List<SubsidiaryReconciliation> findBySubsidiaryOrgIdAndReconciliationStatus(Long subsidiaryOrgId, SubsidiaryReconciliation.ReconciliationStatus status);
+
+    List<SubsidiaryReconciliation> findByReconciliationStatus(SubsidiaryReconciliation.ReconciliationStatus status);
 
     @Modifying
     @Query("UPDATE SubsidiaryReconciliation r SET r.reconciliationStatus = :status, r.subsidiaryConfirmBy = :confirmBy, r.subsidiaryConfirmAt = CURRENT_TIMESTAMP WHERE r.id = :id")
@@ -36,4 +42,3 @@ public interface SubsidiaryReconciliationRepository extends JpaRepository<Subsid
 
     int countByBillMonthAndReconciliationStatus(String billMonth, SubsidiaryReconciliation.ReconciliationStatus status);
 }
-

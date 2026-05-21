@@ -19,7 +19,7 @@ const AuditLogManagement = () => {
       const res = await auditLogApi.search({ module: moduleFilter, operator: operatorFilter || undefined, page: p, size: 20 })
       const data = res.data.data
       setLogs(data.content || [])
-      setTotal(data.total_elements || 0)
+      setTotal(data.totalElements || 0)
       setPage(p)
     } catch { /* ignore */ }
     finally { setLoading(false) }

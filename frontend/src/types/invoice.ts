@@ -1,8 +1,8 @@
 export interface Invoice {
   id: number
-  bill_month: string
+  billMonth: string
   status: string
-  total_amount: number | null
+  totalAmount: number | null
   operator: string
-  created_at: string
+  createdAt: string
 }

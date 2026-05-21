@@ -63,7 +63,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('device:revoke') or hasRole('ADMIN')")
     @AuditLog(module = "device", operation = "删除设备", targetType = "Device", targetId = "#id")
     public ApiResponse<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);

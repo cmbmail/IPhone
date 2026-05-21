@@ -161,7 +161,7 @@ public class BillImportService {
     private void fillRecording(BillRaw b, String[] v, Map<String, Integer> hdr) {
         // 录音费用: 分机号(0) 号码(1) 开启时间(2) 关闭时间(3) 开始时间(4) 结束时间(5) 天数(6) 费用小计(7)
         b.setExtensionNumber(s(v, 0));
-        b.setPhoneNumber(s(v, 2));  // 子号码存入phone_number
+        b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
         b.setActivationTime(parseDate(s(v, 2)));
         b.setClosingTime(s(v, 3));
         b.setBillingStartDate(parseDate(s(v, 4)));
@@ -173,7 +173,7 @@ public class BillImportService {
     private void fillRingtone(BillRaw b, String[] v, Map<String, Integer> hdr) {
         // 彩铃费用: 分机号(0) 号码(1) 开通时间(2) 归属(3) 费用(4)
         b.setExtensionNumber(s(v, 0));
-        b.setPhoneNumber(s(v, 2));  // 子号码存入phone_number
+        b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
         b.setActivationTime(parseDate(s(v, 2)));
         b.setDepartment(s(v, 3));
         b.setChargeAmount(dec(s(v, 4)));
@@ -183,7 +183,7 @@ public class BillImportService {
         // 闪信费用: 月份(0) 主号码(1) 子号码(2) 地市(3) 下发量(4)
         // Note: billMonth already set by buildBillRaw from parameter; Excel col0 is just display
         // b.setBillMonth(s(v, 0));  // keep parameter billMonth (e.g. 2026-04) not Excel (e.g. 202601)
-        b.setPhoneNumber(s(v, 2));  // 子号码存入phone_number
+        b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
         b.setCity(s(v, 3));
         b.setSendCount(intg(s(v, 4)));
         b.setChargeAmount(BigDecimal.ZERO);  // flash SMS has no per-row charge

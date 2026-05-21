@@ -80,7 +80,7 @@ public class BillController {
     }
 
     @DeleteMapping
-    @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('bill:delete') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "删除账单", targetType = "BillRaw")
     public ApiResponse<Integer> deleteBills(
             @RequestParam String billMonth,

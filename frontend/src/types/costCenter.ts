@@ -1,10 +1,10 @@
 export interface CostCenter {
   id: number
-  parent_id: number | null
+  parentId: number | null
   name: string
   type: string
-  branch_name: string | null
-  org_code: string | null
-  cost_center: string | null
+  branchName: string | null
+  orgCode: string | null
+  costCenter: string | null
   level: number
 }

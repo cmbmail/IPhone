@@ -36,15 +36,15 @@ const Dashboard = () => {
     fetchData()
   }, [])
 
-  const totalPhones = phoneStats?.total_count || 0
-  const activePhones = phoneStats?.allocated_count || 0
-  const idlePhones = phoneStats?.idle_count || 0
+  const totalPhones = phoneStats?.totalCount || 0
+  const activePhones = phoneStats?.allocatedCount || 0
+  const idlePhones = phoneStats?.idleCount || 0
   const phoneActiveRate = totalPhones > 0 ? Math.round(activePhones / totalPhones * 100) : 0
 
-  const totalDevices = deviceStats?.total_count || 0
-  const onlineDevices = deviceStats?.online_count || 0
-  const offlineDevices = deviceStats?.offline_count || 0
-  const deviceOnlineRate = deviceStats?.online_rate || 0
+  const totalDevices = deviceStats?.totalCount || 0
+  const onlineDevices = deviceStats?.onlineCount || 0
+  const offlineDevices = deviceStats?.offlineCount || 0
+  const deviceOnlineRate = deviceStats?.onlineRate || 0
 
   const recentBills: {id: number; orgName: string; month: string; amount: number; status: string}[] = []
 
@@ -74,7 +74,7 @@ const Dashboard = () => {
             <div style={{ marginTop: 16 }}>
               <Progress percent={phoneActiveRate} status="active" strokeColor="#52c41a" />
               <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
-                在用: {activePhones} | 空闲: {idlePhones} | 停机: {phoneStats?.stopped_count || 0}
+                在用: {activePhones} | 空闲: {idlePhones} | 停机: {phoneStats?.stoppedCount || 0}
               </div>
             </div>
           </Card>
@@ -96,17 +96,17 @@ const Dashboard = () => {
             <div style={{ marginTop: 16 }}>
               <Progress percent={Math.round(deviceOnlineRate)} strokeColor="#722ed1" />
               <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
-                在线: {onlineDevices} | 离线: {offlineDevices} | 未注册: {deviceStats?.unregistered_count || 0}
+                在线: {onlineDevices} | 离线: {offlineDevices} | 未注册: {deviceStats?.unregisteredCount || 0}
               </div>
             </div>
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="号码状态分布" value={phoneStats?.status_distribution ? Object.keys(phoneStats.status_distribution).length : 0} prefix={<FileTextOutlined />} valueStyle={{ color: '#faad14' }} />
+            <Statistic title="号码状态分布" value={phoneStats?.statusDistribution ? Object.keys(phoneStats?.statusDistribution).length : 0} prefix={<FileTextOutlined />} valueStyle={{ color: '#faad14' }} />
             <div style={{ marginTop: 16 }}>
               <Space>
-                {phoneStats?.status_distribution && Object.entries(phoneStats.status_distribution).map(([k, v]) => (
+                {phoneStats?.statusDistribution && Object.entries(phoneStats?.statusDistribution).map(([k, v]) => (
                   <div key={k} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 16, fontWeight: 600, color: '#595959' }}>{v}</div>
                     <div style={{ fontSize: 11, color: '#8c8c8c' }}>{k}</div>

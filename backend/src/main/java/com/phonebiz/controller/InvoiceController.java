@@ -92,7 +92,7 @@ public class InvoiceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('inv:delete') or hasRole('ADMIN')")
     @AuditLog(module = "invoice", operation = "删除发票", targetType = "Invoice", targetId = "#id")
     public ApiResponse<Void> deleteInvoice(@PathVariable Long id) {
         invoiceService.deleteInvoice(id);

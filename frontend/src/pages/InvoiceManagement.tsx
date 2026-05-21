@@ -53,11 +53,11 @@ const InvoiceManagement = () => {
 
   const { data: statsData } = useQuery({
     queryKey: ['invoice-stats', billMonth],
-    queryFn: () => invoiceApi.getStatistics(billMonth)
+    queryFn: () => invoiceApi.getStats(billMonth)
   })
 
   const confirmMutation = useMutation({
-    mutationFn: (id: number) => invoiceApi.confirmInvoice(id),
+    mutationFn: (id: number) => invoiceApi.confirm(id),
     onSuccess: () => {
       message.success('发票已确认')
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
@@ -67,7 +67,7 @@ const InvoiceManagement = () => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => invoiceApi.deleteInvoice(id),
+    mutationFn: (id: number) => invoiceApi.delete(id),
     onSuccess: () => {
       message.success('发票已删除')
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
@@ -84,7 +84,7 @@ const InvoiceManagement = () => {
 
     setUploading(true)
     try {
-      await invoiceApi.uploadInvoice(formData)
+      await invoiceApi.upload(formData)
       message.success('发票上传成功')
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
@@ -192,7 +192,7 @@ const InvoiceManagement = () => {
           dataSource={invoices}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.total_elements }}
+          pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
         />
       </Card>
 

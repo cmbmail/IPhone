@@ -110,7 +110,7 @@ public class SubsidiaryReconciliationService {
     @Transactional(readOnly = true)
     public Page<SubsidiaryReconciliation> getReconciliations(String billMonth, Long orgId, Pageable pageable) {
         if (orgId != null) {
-            return reconciliationRepository.findByBillMonth(billMonth, pageable);
+            return reconciliationRepository.findByBillMonthAndSubsidiaryOrgId(billMonth, orgId, pageable);
         }
         return reconciliationRepository.findByBillMonth(billMonth, pageable);
     }
@@ -123,7 +123,11 @@ public class SubsidiaryReconciliationService {
 
     @Transactional(readOnly = true)
     public List<SubsidiaryReconciliation> getPendingReconciliations(Long orgId) {
-        return reconciliationRepository.findByBillMonthAndReconciliationStatus("", 
+        if (orgId != null) {
+            return reconciliationRepository.findBySubsidiaryOrgIdAndReconciliationStatus(
+                    orgId, SubsidiaryReconciliation.ReconciliationStatus.pending);
+        }
+        return reconciliationRepository.findByReconciliationStatus(
                 SubsidiaryReconciliation.ReconciliationStatus.pending);
     }
 

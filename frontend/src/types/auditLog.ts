@@ -3,10 +3,10 @@ export interface AuditLogEntry {
   module: string
   operation: string
   operator: string
-  target_type: string | null
-  target_id: string | null
-  ip_address: string | null
+  targetType: string | null
+  targetId: string | null
+  ipAddress: string | null
   status: string
-  cost_time: number
-  created_at: string
+  costTime: number
+  createdAt: string
 }

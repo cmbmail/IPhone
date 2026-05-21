@@ -94,7 +94,7 @@ const UserManagement = () => {
   }
 
   const filteredUsers = users.filter(u =>
-    !searchText || u.name?.includes(searchText) || u.username?.includes(searchText) || u.org_name?.includes(searchText)
+    !searchText || u.name?.includes(searchText) || u.username?.includes(searchText) || u.orgName?.includes(searchText)
   )
 
   const columns = [
@@ -145,7 +145,7 @@ const UserManagement = () => {
         <Table
           columns={columns}
           dataSource={filteredUsers}
-          rowKey="employee_id"
+          rowKey="employeeId"
           loading={loading}
           pagination={{ pageSize: 20, showSizeChanger: true, showTotal: t => `共 ${t} 条` }}
           scroll={{ x: 800 }}

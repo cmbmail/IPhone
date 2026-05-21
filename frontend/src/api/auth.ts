@@ -1,47 +1,15 @@
-import axios from "axios"
-import type { LoginRequest, LoginResponse } from "@/types/auth"
-
-const baseURL = import.meta.env.DEV ? "/api" : "/phonebiz"
-
-const request = axios.create({
-  baseURL,
-  timeout: 10000,
-})
-
-request.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error),
-)
-
-request.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("expiresIn")
-      localStorage.removeItem("auth-storage")
-      window.location.href = "/login"
-    }
-    return Promise.reject(error)
-  },
-)
+import { request } from './request'
 
 export const authApi = {
-  login: (data: LoginRequest) =>
-    request.post<LoginResponse>("/auth/login", data),
+  login: (username: string, password: string) =>
+    request.post('/auth/login', { username, password }),
 
   getCurrentUser: () =>
-    request.get<LoginResponse["user"]>("/auth/me"),
+    request.get('/auth/me'),
 
-  changePassword: (data: { oldPassword: string; newPassword: string }) =>
-    request.post("/auth/change-password", data),
+  changePassword: (oldPassword: string, newPassword: string) =>
+    request.post('/auth/change-password', { oldPassword, newPassword }),
 
   health: () =>
-    request.get<{ status: string; service: string }>("/auth/health"),
+    request.get('/auth/health'),
 }

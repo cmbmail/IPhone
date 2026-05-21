@@ -1,20 +1,20 @@
 export interface Device {
   id: number
-  device_id: string
-  device_type: string
+  deviceId: string
+  deviceType: string
   model: string | null
   status: string
-  ip_address: string | null
-  firmware_version: string | null
-  last_checkin: string | null
-  created_at: string
+  ipAddress: string | null
+  firmwareVersion: string | null
+  lastCheckin: string | null
+  createdAt: string
 }
 
 export interface DeviceOperation {
   id: number
-  device_id: string
-  operation_type: string
+  deviceId: string
+  operationType: string
   status: string
   operator: string
-  created_at: string
+  createdAt: string
 }

@@ -10,6 +10,7 @@ import com.phonebiz.entity.SysFeatureFlag;
 import com.phonebiz.service.FeatureFlagService;
 import com.phonebiz.service.WorkOrderDrivenPhoneService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/phone/work-orders")
@@ -43,15 +44,15 @@ public class WorkOrderDrivenPhoneController {
     public ApiResponse<WorkOrderDTO> allocatePhoneByWorkOrder(@RequestParam Long phoneId,
                                                               @RequestParam Long targetOrgId,
                                                               @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                              @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.allocatePhoneByWorkOrder(phoneId, targetOrgId, requesterId, requesterName));
+                                                              Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.allocatePhoneByWorkOrder(phoneId, targetOrgId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/surrender")
     public ApiResponse<WorkOrderDTO> surrenderPhoneByWorkOrder(@RequestParam Long phoneId,
                                                                @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                               @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.surrenderPhoneByWorkOrder(phoneId, requesterId, requesterName));
+                                                               Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.surrenderPhoneByWorkOrder(phoneId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/transfer")
@@ -59,45 +60,45 @@ public class WorkOrderDrivenPhoneController {
                                                              @RequestParam Long fromOrgId,
                                                              @RequestParam Long toOrgId,
                                                              @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                             @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.transferPhoneByWorkOrder(phoneId, fromOrgId, toOrgId, requesterId, requesterName));
+                                                             Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.transferPhoneByWorkOrder(phoneId, fromOrgId, toOrgId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/change-number")
     public ApiResponse<WorkOrderDTO> changePhoneNumberByWorkOrder(@RequestParam Long phoneId,
                                                                   @RequestParam String newPhoneNumber,
                                                                   @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                                  @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.changePhoneNumberByWorkOrder(phoneId, newPhoneNumber, requesterId, requesterName));
+                                                                  Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.changePhoneNumberByWorkOrder(phoneId, newPhoneNumber, requesterId, authentication.getName()));
     }
 
     @PostMapping("/change-org")
     public ApiResponse<WorkOrderDTO> changePhoneOrgByWorkOrder(@RequestParam Long phoneId,
                                                                @RequestParam Long newOrgId,
                                                                @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                               @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.changePhoneOrgByWorkOrder(phoneId, newOrgId, requesterId, requesterName));
+                                                               Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.changePhoneOrgByWorkOrder(phoneId, newOrgId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/reclaim")
     public ApiResponse<WorkOrderDTO> reclaimPhoneByWorkOrder(@RequestParam Long phoneId,
                                                              @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                             @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.reclaimPhoneByWorkOrder(phoneId, requesterId, requesterName));
+                                                             Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.reclaimPhoneByWorkOrder(phoneId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/enable")
     public ApiResponse<WorkOrderDTO> enablePhoneByWorkOrder(@RequestParam Long phoneId,
                                                             @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                            @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.enablePhoneByWorkOrder(phoneId, requesterId, requesterName));
+                                                            Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.enablePhoneByWorkOrder(phoneId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/disable")
     public ApiResponse<WorkOrderDTO> disablePhoneByWorkOrder(@RequestParam Long phoneId,
                                                               @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                              @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenPhoneService.disablePhoneByWorkOrder(phoneId, requesterId, requesterName));
+                                                              Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenPhoneService.disablePhoneByWorkOrder(phoneId, requesterId, authentication.getName()));
     }
 }
 

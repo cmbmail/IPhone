@@ -10,6 +10,7 @@ import com.phonebiz.entity.SysFeatureFlag;
 import com.phonebiz.service.FeatureFlagService;
 import com.phonebiz.service.WorkOrderDrivenDeviceService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/phone-device/work-orders")
@@ -43,45 +44,45 @@ public class WorkOrderDrivenDeviceController {
     public ApiResponse<WorkOrderDTO> assignDeviceByWorkOrder(@RequestParam Long deviceId,
                                                             @RequestParam String employeeNo,
                                                             @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                            @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.assignDeviceByWorkOrder(deviceId, employeeNo, requesterId, requesterName));
+                                                            Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.assignDeviceByWorkOrder(deviceId, employeeNo, requesterId, authentication.getName()));
     }
 
     @PostMapping("/reclaim")
     public ApiResponse<WorkOrderDTO> reclaimDeviceByWorkOrder(@RequestParam Long deviceId,
                                                             @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                            @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.reclaimDeviceByWorkOrder(deviceId, requesterId, requesterName));
+                                                            Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.reclaimDeviceByWorkOrder(deviceId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/repair")
     public ApiResponse<WorkOrderDTO> repairDeviceByWorkOrder(@RequestParam Long deviceId,
                                                            @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                           @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.repairDeviceByWorkOrder(deviceId, requesterId, requesterName));
+                                                           Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.repairDeviceByWorkOrder(deviceId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/retire")
     public ApiResponse<WorkOrderDTO> retireDeviceByWorkOrder(@RequestParam Long deviceId,
                                                           @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                          @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.retireDeviceByWorkOrder(deviceId, requesterId, requesterName));
+                                                          Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.retireDeviceByWorkOrder(deviceId, requesterId, authentication.getName()));
     }
 
     @PostMapping("/bind-phone")
     public ApiResponse<WorkOrderDTO> bindPhoneToDeviceByWorkOrder(@RequestParam Long deviceId,
                                                                  @RequestParam String extensionNumber,
                                                                  @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                                 @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.bindPhoneToDeviceByWorkOrder(deviceId, extensionNumber, requesterId, requesterName));
+                                                                 Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.bindPhoneToDeviceByWorkOrder(deviceId, extensionNumber, requesterId, authentication.getName()));
     }
 
     @PostMapping("/unbind-phone")
     public ApiResponse<WorkOrderDTO> unbindPhoneFromDeviceByWorkOrder(@RequestParam Long deviceId,
                                                                      @RequestParam String extensionNumber,
                                                                      @RequestParam(required = false, defaultValue = "1") Long requesterId,
-                                                                     @RequestParam(required = false, defaultValue = "admin") String requesterName) {
-        return ApiResponse.success(workOrderDrivenDeviceService.unbindPhoneFromDeviceByWorkOrder(deviceId, extensionNumber, requesterId, requesterName));
+                                                                     Authentication authentication) {
+        return ApiResponse.success(workOrderDrivenDeviceService.unbindPhoneFromDeviceByWorkOrder(deviceId, extensionNumber, requesterId, authentication.getName()));
     }
 }
 

@@ -73,7 +73,7 @@ public class ImportService {
         int failCount = 0;
         int batchSize = 100;
 
-        Map<String, PhoneNumber> existingPhones = loadExistingPhones();
+        Map<String, String> existingPhones = loadExistingPhones();
 
         for (int i = 0; i < dataList.size(); i += batchSize) {
             int end = Math.min(i + batchSize, dataList.size());
@@ -98,7 +98,7 @@ public class ImportService {
                 successCount += toSave.size();
                 
                 for (PhoneNumber phone : toSave) {
-                    existingPhones.put(phone.getPhoneNumber(), phone);
+                    existingPhones.put(phone.getPhoneNumber(), phone.getPhoneNumber());
                 }
             }
 
@@ -125,13 +125,13 @@ public class ImportService {
         log.info("Import batch {} completed: {}/{} success", batchId, successCount, dataList.size());
     }
 
-    private Map<String, PhoneNumber> loadExistingPhones() {
-        Map<String, PhoneNumber> map = new HashMap<>();
-        phoneRepository.findAll().forEach(p -> map.put(p.getPhoneNumber(), p));
+    private Map<String, String> loadExistingPhones() {
+        Map<String, String> map = new HashMap<>();
+        phoneRepository.findAllPhoneNumbers().forEach(n -> map.put(n, n));
         return map;
     }
 
-    private PhoneNumber parseAndValidate(Map<String, Object> data, Map<String, PhoneNumber> existingPhones,
+    private PhoneNumber parseAndValidate(Map<String, Object> data, Map<String, String> existingPhones,
                                          PhoneImportRequest.ConflictStrategy strategy, List<String> errors) {
         String phoneNumber = normalizePhoneNumber(String.valueOf(data.get("phoneNumber")));
         
@@ -141,7 +141,7 @@ public class ImportService {
         }
 
         if (existingPhones.containsKey(phoneNumber)) {
-            PhoneNumber existing = existingPhones.get(phoneNumber);
+            String existing = existingPhones.get(phoneNumber);
             
             switch (strategy) {
                 case ERROR:
@@ -150,10 +150,11 @@ public class ImportService {
                 case SKIP:
                     return null;
                 case OVERWRITE:
-                    if (existing.getStatus() != PhoneNumber.PhoneStatus.idle) {
+                    PhoneNumber existingPhone = phoneRepository.findByPhoneNumber(phoneNumber).orElse(null);
+                    if (existingPhone == null || existingPhone.getStatus() != PhoneNumber.PhoneStatus.idle) {
                         return null;
                     }
-                    return updateExistingPhone(existing, data);
+                    return updateExistingPhone(existingPhone, data);
                 default:
                     return null;
             }

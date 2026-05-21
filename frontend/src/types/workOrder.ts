@@ -1,11 +1,11 @@
 export interface WorkOrder {
   id: number
-  work_order_no: string
-  order_type: string
+  workOrderNo: string
+  orderType: string
   status: string
   priority: number
   title: string | null
-  requester_name: string | null
-  handler_name: string | null
-  created_at: string
+  requesterName: string | null
+  handlerName: string | null
+  createdAt: string
 }

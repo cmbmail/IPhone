@@ -1,13 +1,13 @@
 export interface PhoneStatistics {
-  total_count: number
-  allocated_count: number
-  idle_count: number
-  stopped_count: number
+  totalCount: number
+  allocatedCount: number
+  idleCount: number
+  stoppedCount: number
 }
 
 export interface DeviceStatistics {
-  total_count: number
-  online_count: number
-  offline_count: number
-  online_rate: number
+  totalCount: number
+  onlineCount: number
+  offlineCount: number
+  onlineRate: number
 }

@@ -62,28 +62,28 @@ public class PhoneDeviceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('OPS')")
+    @PreAuthorize("hasAuthority('device:assign') or hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> createDevice(@Valid @RequestBody CreatePhoneDeviceRequest request) {
         PhoneDeviceDTO device = phoneDeviceService.createDevice(request);
         return ApiResponse.success(device);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('OPS')")
+    @PreAuthorize("hasAuthority('device:assign') or hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> updateDevice(@PathVariable Long id, @Valid @RequestBody UpdatePhoneDeviceRequest request) {
         PhoneDeviceDTO device = phoneDeviceService.updateDevice(id, request);
         return ApiResponse.success(device);
     }
 
     @PostMapping("/{id}/assign")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> assignDevice(@PathVariable Long id, @Valid @RequestBody AssignPhoneDeviceRequest request) {
         PhoneDeviceDTO device = phoneDeviceService.assignDevice(id, request);
         return ApiResponse.success(device);
     }
 
     @PostMapping("/{id}/reclaim")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> reclaimDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
         PhoneDeviceDTO device = phoneDeviceService.reclaimDevice(id, remark);
@@ -91,7 +91,7 @@ public class PhoneDeviceController {
     }
 
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> deactivateDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
         PhoneDeviceDTO device = phoneDeviceService.deactivateDevice(id, remark);
@@ -99,7 +99,7 @@ public class PhoneDeviceController {
     }
 
     @PostMapping("/{id}/reactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> reactivateDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
         PhoneDeviceDTO device = phoneDeviceService.reactivateDevice(id, remark);

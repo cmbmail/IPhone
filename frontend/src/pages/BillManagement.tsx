@@ -39,8 +39,8 @@ interface BillRecord {
 
 interface PageData {
   content: BillRecord[]
-  total_elements: number
-  total_pages: number
+  totalElements: number
+  totalPages: number
   number: number
 }
 
@@ -220,7 +220,7 @@ const BillManagement = () => {
         </Col>
         <Col span={6}>
           <Card size="small">
-            <Statistic title="记录数" value={billData?.total_elements ?? 0} suffix="条" />
+            <Statistic title="记录数" value={billData?.totalElements ?? 0} suffix="条" />
           </Card>
         </Col>
         <Col span={6}>
@@ -260,7 +260,7 @@ const BillManagement = () => {
           pagination={{
             current: page + 1,
             pageSize,
-            total: billData?.total_elements ?? 0,
+            total: billData?.totalElements ?? 0,
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 条`,
             onChange: (p, ps) => { setPage(p - 1); setPageSize(ps) },
@@ -328,7 +328,7 @@ const BillManagement = () => {
           <div style={{ background: '#fff7e6', padding: 12, borderRadius: 6, fontSize: 14, lineHeight: '22px' }}>
             <div>费用类型：<strong>{tabConfig.label}</strong></div>
             <div>账单月份：<strong>{billMonth}</strong></div>
-            <div>记录数量：<strong>{billData?.total_elements ?? 0} 条</strong></div>
+            <div>记录数量：<strong>{billData?.totalElements ?? 0} 条</strong></div>
           </div>
         </div>
         <div>

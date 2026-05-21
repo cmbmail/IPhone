@@ -46,7 +46,7 @@ const DeviceManagement = () => {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: typeof formData) => deviceApi.createDevice(data),
+    mutationFn: (data: typeof formData) => deviceApi.create(data),
     onSuccess: () => {
       message.success('设备创建成功')
       queryClient.invalidateQueries({ queryKey: ['devices'] })
@@ -67,7 +67,7 @@ const DeviceManagement = () => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deviceApi.deleteDevice(id),
+    mutationFn: (id: number) => deviceApi.delete(id),
     onSuccess: () => {
       message.success('设备删除成功')
       queryClient.invalidateQueries({ queryKey: ['devices'] })
@@ -167,7 +167,7 @@ const DeviceManagement = () => {
           dataSource={devices}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: deviceData?.data?.data?.total_elements }}
+          pagination={{ pageSize: 20, total: deviceData?.data?.data?.totalElements }}
         />
       </Card>
 

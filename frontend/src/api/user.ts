@@ -2,16 +2,16 @@ import { request } from './request'
 
 export interface UserVO {
   id: number
-  employee_id: number
+  employeeId: number
   name: string
   username: string
-  org_id: number
-  org_name: string
-  role_id: number | null
-  role_name: string
-  role_code: string | null
+  orgId: number
+  orgName: string
+  roleId: number | null
+  roleName: string
+  roleCode: string | null
   status: string
-  updated_at: string
+  updatedAt: string
 }
 
 export const userApi = {

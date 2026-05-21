@@ -1,9 +1,9 @@
 export interface SubsidiaryReconciliation {
   id: number
-  bill_month: string
-  org_id: number
-  total_amount: number
-  subsidiary_confirm: string
-  group_confirm: string
-  created_at: string
+  billMonth: string
+  orgId: number
+  totalAmount: number
+  subsidiaryConfirm: string
+  groupConfirm: string
+  createdAt: string
 }

@@ -238,7 +238,7 @@ const BillAllocationManagement = () => {
           dataSource={allocations}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.total_elements }}
+          pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
         />
       </Card>
     </div>

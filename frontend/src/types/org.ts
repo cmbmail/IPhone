@@ -1,18 +1,18 @@
 export interface OrgStructure {
   id: number
-  parent_id: number | null
+  parentId: number | null
   name: string
   type: 'group' | 'subsidiary' | 'dept'
   level: number
-  sort_order: number
+  sortOrder: number
   path: string
   status: 'active' | 'inactive'
-  created_by: string
-  created_at: string
-  updated_by: string
-  branch_name: string | null
-  org_code: string | null
-  cost_center: string | null
+  createdBy: string
+  createdAt: string
+  updatedBy: string
+  branchName: string | null
+  orgCode: string | null
+  costCenter: string | null
   children?: OrgStructure[]
 }
 

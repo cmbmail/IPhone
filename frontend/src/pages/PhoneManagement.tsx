@@ -271,7 +271,7 @@ const PhoneManagement = () => {
         loading={isLoading}
         rowKey="id"
         pagination={{
-          total: phonesData?.total_elements,
+          total: phonesData?.totalElements,
           pageSize: 20
         }}
       />

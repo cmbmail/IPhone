@@ -50,5 +50,7 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PhoneNumber p WHERE p.id IN :ids ORDER BY p.id ASC")
     List<PhoneNumber> findByIdsForUpdate(@Param("ids") List<Long> ids);
-}
 
+    @Query("SELECT p.phoneNumber FROM PhoneNumber p")
+    List<String> findAllPhoneNumbers();
+}

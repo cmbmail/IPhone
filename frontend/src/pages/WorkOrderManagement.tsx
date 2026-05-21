@@ -51,7 +51,7 @@ const WorkOrderManagement = () => {
   })
 
   const acceptMutation = useMutation({
-    mutationFn: (id: number) => workOrderApi.acceptWorkOrder(id, 1, 'admin'),
+    mutationFn: (id: number) => workOrderApi.accept(id, 1, 'admin'),
     onSuccess: () => {
       message.success('工单已接受')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
@@ -60,7 +60,7 @@ const WorkOrderManagement = () => {
   })
 
   const completeMutation = useMutation({
-    mutationFn: (id: number) => workOrderApi.completeWorkOrder(id),
+    mutationFn: (id: number) => workOrderApi.complete(id),
     onSuccess: () => {
       message.success('工单已完成')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
@@ -69,7 +69,7 @@ const WorkOrderManagement = () => {
   })
 
   const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason: string }) => workOrderApi.rejectWorkOrder(id, reason),
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => workOrderApi.reject(id, reason),
     onSuccess: () => {
       message.success('工单已拒绝')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
@@ -78,7 +78,7 @@ const WorkOrderManagement = () => {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: typeof formData) => workOrderApi.createWorkOrder(data),
+    mutationFn: (data: typeof formData) => workOrderApi.create(data),
     onSuccess: () => {
       message.success('工单创建成功')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
@@ -119,7 +119,7 @@ const WorkOrderManagement = () => {
   const columns = [
     { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 150 },
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
-    { title: '类型', dataIndex: 'type', key: 'type', width: 120 },
+    { title: '类型', dataIndex: 'orderType', key: 'type', width: 120 },
     {
       title: '优先级',
       dataIndex: 'priority',
@@ -205,7 +205,7 @@ const WorkOrderManagement = () => {
           dataSource={orders}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: orderData?.data?.data?.total_elements }}
+          pagination={{ pageSize: 20, total: orderData?.data?.data?.totalElements }}
         />
       </Card>
 

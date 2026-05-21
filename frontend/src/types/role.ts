@@ -4,11 +4,11 @@ export interface SysRole {
   code: string
   description?: string
   status: 'active' | 'inactive'
-  is_system: boolean
-  created_by: string
-  created_at: string
-  updated_by: string
-  updated_at: string
+  isSystem: boolean
+  createdBy: string
+  createdAt: string
+  updatedBy: string
+  updatedAt: string
 }
 
 export interface SysPermission {
@@ -16,20 +16,20 @@ export interface SysPermission {
   code: string
   name: string
   module: string
-  sort_order: number
-  created_at: string
+  sortOrder: number
+  createdAt: string
 }
 
 export interface CreateRoleDTO {
   name: string
   code: string
   description?: string
-  permission_ids?: number[]
+  permissionIds?: number[]
 }
 
 export interface UpdateRoleDTO {
   name?: string
   description?: string
   status?: string
-  permission_ids?: number[]
+  permissionIds?: number[]
 }
