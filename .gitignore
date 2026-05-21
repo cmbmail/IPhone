@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Temp & intermediate files
+.temp/
+
+# Test data & screenshots
+*_test.xlsx
+*_test.png
+.*.png
+
+# Python cache
+__pycache__/
+*.pyc

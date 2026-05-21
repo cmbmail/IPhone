@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhoneBiz 企业内线电话管理平台 - 需求规格说明书 v2.0</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #333;
+  background: #fff;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+@media print {
+  .toc-sidebar, .back-to-top { display: none !important; }
+  .container { padding: 0 20px; max-width: 100%; }
+  body { font-size: 13px; line-height: 1.7; }
+  .cover-page { page-break-after: always; }
+  h2, h3, h4 { page-break-after: avoid; }
+  table { page-break-inside: avoid; }
+}
+
+.cover-page {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; text-align: center; padding: 80px 40px;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: #fff; margin: 0 -40px;
+}
+.cover-page .logo-area {
+  width: 90px; height: 90px; border-radius: 20px;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2);
+}
+.cover-page h1 { font-size: 42px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; }
+.cover-page h2 { font-size: 22px; font-weight: 400; opacity: 0.85; margin-bottom: 50px; }
+.cover-meta {
+  display: flex; gap: 40px; font-size: 14px; opacity: 0.7;
+  border-top: 1px solid rgba(255,255,255,0.15); padding-top: 30px;
+}
+.cover-meta span { display: flex; flex-direction: column; gap: 4px; }
+.cover-meta .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.cover-meta .value { font-size: 15px; opacity: 1; }
+
+.toc-wrapper {
+  display: flex; gap: 40px; padding: 60px 0; margin: 0 -40px; padding-left: 40px; padding-right: 40px;
+  background: #f8f9fc;
+}
+.toc-sidebar {
+  width: 240px; flex-shrink: 0; position: sticky; top: 20px; align-self: flex-start;
+  max-height: calc(100vh - 40px); overflow-y: auto;
+  background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #e8eaf0;
+}
+.toc-sidebar h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.toc-sidebar a {
+  display: block; padding: 6px 10px; color: #555; text-decoration: none;
+  font-size: 13px; border-radius: 6px; transition: all 0.2s; line-height: 1.5;
+}
+.toc-sidebar a:hover { background: #eef0f7; color: #1a1a2e; }
+.toc-sidebar a.sub { padding-left: 22px; font-size: 12px; color: #888; }
+.toc-sidebar a.sub:hover { color: #1a1a2e; }
+.toc-sidebar .toc-divider { height: 1px; background: #eef0f5; margin: 10px 0; }
+
+.toc-main { flex: 1; min-width: 0; }
+.toc-main h2 { font-size: 20px; color: #1a1a2e; margin-bottom: 20px; }
+.toc-list { list-style: none; }
+.toc-list li { padding: 10px 0; border-bottom: 1px dashed #e0e3eb; }
+.toc-list li:last-child { border-bottom: none; }
+.toc-list a { color: #333; text-decoration: none; font-size: 15px; }
+.toc-list a:hover { color: #0f3460; }
+.toc-list .sub-items { margin-top: 6px; }
+.toc-list .sub-items a { display: block; padding: 3px 0 3px 20px; font-size: 13px; color: #666; }
+.toc-list .sub-items a:hover { color: #0f3460; }
+
+.content { padding: 50px 0 100px; }
+
+h2.section-title {
+  font-size: 28px; color: #1a1a2e; font-weight: 800;
+  padding-bottom: 12px; border-bottom: 3px solid #0f3460;
+  margin: 70px 0 30px; letter-spacing: 1px;
+}
+h2.section-title:first-child { margin-top: 0; }
+
+h3 {
+  font-size: 20px; color: #16213e; font-weight: 700;
+  margin: 45px 0 18px; padding-left: 14px;
+  border-left: 4px solid #0f3460;
+}
+h4 {
+  font-size: 17px; color: #333; font-weight: 600;
+  margin: 30px 0 12px;
+}
+
+p { margin-bottom: 12px; text-align: justify; }
+
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; vertical-align: middle;
+}
+.badge-p0 { background: #ffe0e0; color: #c0392b; }
+.badge-p1 { background: #fff3cd; color: #856404; }
+.badge-p2 { background: #d4edda; color: #155724; }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0 24px;
+  font-size: 14px; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+thead th {
+  background: #1a1a2e; color: #fff; padding: 12px 16px;
+  text-align: left; font-weight: 600; font-size: 13px;
+  letter-spacing: 0.5px;
+}
+tbody td { padding: 10px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+tbody tr:hover { background: #f0f3fa; }
+
+code {
+  background: #f0f2f8; color: #c0392b; padding: 2px 7px;
+  border-radius: 4px; font-size: 13px; font-family: "SF Mono", "Fira Code", monospace;
+}
+
+blockquote {
+  border-left: 4px solid #0f3460; background: #f8f9fc;
+  padding: 16px 20px; margin: 16px 0; border-radius: 0 8px 8px 0;
+  color: #555;
+}
+
+ul, ol { margin: 8px 0 16px 20px; }
+li { margin-bottom: 6px; }
+
+.info-box {
+  background: linear-gradient(135deg, #e8f4fd, #f0f7ff);
+  border: 1px solid #b8daff; border-radius: 8px;
+  padding: 16px 20px; margin: 16px 0;
+}
+.info-box strong { color: #0f3460; }
+
+.warn-box {
+  background: linear-gradient(135deg, #fff8e1, #fffdf0);
+  border: 1px solid #ffe082; border-radius: 8px;
+  padding: 16px 20px; margin: 16px 0;
+}
+.warn-box strong { color: #856404; }
+
+.rule-list { list-style: none; margin-left: 0; }
+.rule-list li {
+  position: relative; padding: 8px 0 8px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.rule-list li::before {
+  content: "✓"; position: absolute; left: 0; color: #0f3460; font-weight: bold;
+}
+.rule-list li:last-child { border-bottom: none; }
+
+.section-intro {
+  font-size: 16px; color: #555; margin-bottom: 24px;
+  padding: 16px 20px; background: #f8f9fc; border-radius: 8px;
+  border-left: 4px solid #0f3460;
+}
+
+.role-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px; margin: 20px 0;
+}
+.role-card {
+  background: #fff; border: 1px solid #e8eaf0; border-radius: 10px;
+  padding: 20px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.role-card .role-icon { font-size: 32px; margin-bottom: 8px; }
+.role-card .role-name { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+.role-card .role-desc { font-size: 13px; color: #888; line-height: 1.6; }
+
+.back-to-top {
+  position: fixed; bottom: 30px; right: 30px; width: 44px; height: 44px;
+  background: #1a1a2e; color: #fff; border: none; border-radius: 50%;
+  cursor: pointer; font-size: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s; z-index: 999;
+}
+.back-to-top:hover { background: #0f3460; transform: translateY(-2px); }
+
+.footer {
+  text-align: center; padding: 40px 0; color: #aaa; font-size: 13px;
+  border-top: 1px solid #eee; margin-top: 60px;
+}
+</style>
+</head>
+<body>
+
+<div class="cover-page">
+  <div class="logo-area">📞</div>
+  <h1>PhoneBiz</h1>
+  <h2>企业内线电话管理平台 · 需求规格说明书 v2.0</h2>
+  <div class="cover-meta">
+    <span><span class="label">版本</span><span class="value">2.0</span></span>
+    <span><span class="label">更新日期</span><span class="value">2026-05-20</span></span>
+    <span><span class="label">状态</span><span class="value">Phase 1 已完成</span></span>
+    <span><span class="label">文档密级</span><span class="value">内部公开</span></span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ==================== 目录 ==================== -->
+<div class="toc-wrapper">
+  <div class="toc-sidebar">
+    <h3>快速导航</h3>
+    <a href="#s1">一、项目概述</a>
+    <a href="#s2" class="sub">1.1 项目背景</a>
+    <a href="#s2-2" class="sub">1.2 项目目标</a>
+    <a href="#s2-3" class="sub">1.3 用户角色</a>
+    <div class="toc-divider"></div>
+    <a href="#s3">二、业务需求</a>
+    <a href="#s3-1" class="sub">2.1 组织架构</a>
+    <a href="#s3-2" class="sub">2.2 员工管理</a>
+    <a href="#s3-3" class="sub">2.3 号码管理</a>
+    <a href="#s3-4" class="sub">2.4 设备管理</a>
+    <a href="#s3-5" class="sub">2.5 工单管理</a>
+    <a href="#s3-6" class="sub">2.6 费用管理</a>
+    <a href="#s3-7" class="sub">2.7 报表中心</a>
+    <div class="toc-divider"></div>
+    <a href="#s4">三、非功能需求</a>
+    <a href="#s5">四、界面需求</a>
+    <a href="#s6">五、角色与权限</a>
+    <a href="#s7">六、数据需求</a>
+    <a href="#s8">七、术语表</a>
+  </div>
+  <div class="toc-main">
+    <h2>目录</h2>
+    <ul class="toc-list">
+      <li><a href="#s1">一、项目概述</a>
+        <div class="sub-items">
+          <a href="#s2">1.1 项目背景</a>
+          <a href="#s2-2">1.2 项目目标</a>
+          <a href="#s2-3">1.3 用户角色</a>
+        </div>
+      </li>
+      <li><a href="#s3">二、业务需求</a>
+        <div class="sub-items">
+          <a href="#s3-1">2.1 组织架构管理</a>
+          <a href="#s3-2">2.2 员工管理</a>
+          <a href="#s3-3">2.3 号码全生命周期管理</a>
+          <a href="#s3-3-1">&nbsp;&nbsp;2.3.1 号码基础管理</a>
+          <a href="#s3-3-2">&nbsp;&nbsp;2.3.2 分机号池管理</a>
+          <a href="#s3-3-3">&nbsp;&nbsp;2.3.3 区号对照</a>
+          <a href="#s3-3-4">&nbsp;&nbsp;2.3.4 号码分配与回收</a>
+          <a href="#s3-3-5">&nbsp;&nbsp;2.3.5 号码状态变更</a>
+          <a href="#s3-3-6">&nbsp;&nbsp;2.3.6 号码变更（携号）</a>
+          <a href="#s3-3-7">&nbsp;&nbsp;2.3.7 号码批量导入</a>
+          <a href="#s3-4">2.4 话机与设备管理</a>
+          <a href="#s3-4-1">&nbsp;&nbsp;2.4.1 话机基础管理</a>
+          <a href="#s3-4-2">&nbsp;&nbsp;2.4.2 话机操作</a>
+          <a href="#s3-5">2.5 工单管理</a>
+          <a href="#s3-5-1">&nbsp;&nbsp;2.5.1 工单基础</a>
+          <a href="#s3-5-2">&nbsp;&nbsp;2.5.2 工单流转与拆单</a>
+          <a href="#s3-5-3">&nbsp;&nbsp;2.5.3 号码操作迁移工单驱动</a>
+          <a href="#s3-6">2.6 费用管理</a>
+          <a href="#s3-6-1">&nbsp;&nbsp;2.6.1 成本中心</a>
+          <a href="#s3-6-2">&nbsp;&nbsp;2.6.2 账单导入与分摊</a>
+          <a href="#s3-6-3">&nbsp;&nbsp;2.6.3 异常检测</a>
+          <a href="#s3-6-4">&nbsp;&nbsp;2.6.4 发票上传与OCR</a>
+          <a href="#s3-6-5">&nbsp;&nbsp;2.6.5 发票分发与确认</a>
+          <a href="#s3-6-6">&nbsp;&nbsp;2.6.6 子公司对账</a>
+          <a href="#s3-7">2.7 报表中心</a>
+        </div>
+      </li>
+      <li><a href="#s4">三、非功能需求</a>
+        <div class="sub-items">
+          <a href="#s4-1">3.1 安全需求</a>
+          <a href="#s4-2">3.2 性能需求</a>
+          <a href="#s4-3">3.3 审计需求</a>
+          <a href="#s4-4">3.4 数据留存需求</a>
+        </div>
+      </li>
+      <li><a href="#s5">四、界面需求</a>
+        <div class="sub-items">
+          <a href="#s5-1">4.1 整体布局</a>
+          <a href="#s5-2">4.2 侧边栏菜单</a>
+          <a href="#s5-3">4.3 页面标题栏</a>
+          <a href="#s5-4">4.4 登录页面</a>
+          <a href="#s5-5">4.5 仪表盘</a>
+        </div>
+      </li>
+      <li><a href="#s6">五、用户角色与权限</a>
+        <div class="sub-items">
+          <a href="#s6-1">5.1 角色定义</a>
+          <a href="#s6-2">5.2 权限矩阵</a>
+        </div>
+      </li>
+      <li><a href="#s7">六、数据需求</a>
+        <div class="sub-items">
+          <a href="#s7-1">6.1 核心实体关系</a>
+          <a href="#s7-2">6.2 数据字典</a>
+        </div>
+      </li>
+      <li><a href="#s8">七、术语表</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 正文 ==================== -->
+<div class="content">
+
+<!-- ==================== 一、项目概述 ==================== -->
+<h2 class="section-title" id="s1">一、项目概述</h2>
+
+<h3 id="s2">1.1 项目背景</h3>
+
+<div class="section-intro">
+企业内线电话作为日常办公的基础通信资源，涉及申请、分配、使用、回收、变更等多个环节。当前各子公司/部门的号码资源分散管理，依赖手工 Excel 台账和线下流程，存在以下痛点：
+</div>
+
+<ul>
+  <li><strong>资源不透明</strong>：号码分配回收全靠人工记录，容易出现重复分配、遗漏回收的情况，资源利用率无法量化。</li>
+  <li><strong>流程效率低</strong>：号码申请、设备变更、人员调动等操作需要跨部门协调，纸质或即时工具流转，耗时且易丢失。</li>
+  <li><strong>费用分摊难</strong>：运营商账单到手后需要人工拆分到各成本中心，工作量大且容易出错，缺乏自动化对账能力。</li>
+  <li><strong>数据孤岛</strong>：组织架构、员工信息、号码资源、设备台账分散在不同系统或文件中，无法联动查询。</li>
+</ul>
+
+<blockquote>
+  <strong>项目定位</strong>：构建统一的企业内线电话管理平台（PhoneBiz），实现号码全生命周期数字化管理、费用精准自动分摊、多维度报表自动生成，提升管理效率和数据透明度。
+</blockquote>
+
+<h3 id="s2-2">1.2 项目目标</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:40px">序号</th><th>目标</th><th>度量指标</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><strong>号码全生命周期管理</strong>：覆盖申请→分配→使用→回收→变更全流程</td><td>号码状态100%可追踪，操作全流程线上化</td></tr>
+    <tr><td>2</td><td><strong>费用自动分摊</strong>：运营商账单自动导入，按规则分摊到成本中心</td><td>分摊准确率≥99%，人工干预减少80%</td></tr>
+    <tr><td>3</td><td><strong>多维度报表</strong>：按组织、号码类型、费用维度自动生成报表</td><td>报表生成时间从天级降到分钟级</td></tr>
+    <tr><td>4</td><td><strong>工单驱动</strong>：关键号码操作通过工单驱动，可追溯、可审批</td><td>操作100%有工单记录，审批SLA≤2工作日</td></tr>
+    <tr><td>5</td><td><strong>多角色协作</strong>：运维、财务、管理层各取所需，权限分明</td><td>4类角色覆盖全部业务场景</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s2-3">1.3 用户角色</h3>
+
+<div class="role-grid">
+  <div class="role-card">
+    <div class="role-icon">🔧</div>
+    <div class="role-name">ADMIN</div>
+    <div class="role-desc">系统管理员<br>组织架构、用户账号、角色权限、系统配置</div>
+  </div>
+  <div class="role-card">
+    <div class="role-icon">📱</div>
+    <div class="role-name">OPS</div>
+    <div class="role-desc">运维人员<br>号码分配回收、设备管理、工单处理</div>
+  </div>
+  <div class="role-card">
+    <div class="role-icon">💰</div>
+    <div class="role-name">FINANCE</div>
+    <div class="role-desc">财务人员<br>成本中心、账单分摊、发票管理、对账</div>
+  </div>
+  <div class="role-card">
+    <div class="role-icon">📊</div>
+    <div class="role-name">BOSS</div>
+    <div class="role-desc">管理层<br>只读查看报表、工单统计、费用概览</div>
+  </div>
+</div>
+
+<!-- ==================== 二、业务需求 ==================== -->
+<h2 class="section-title" id="s3">二、业务需求</h2>
+
+<!-- 2.1 组织架构管理 -->
+<h3 id="s3-1">2.1 组织架构管理</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：组织架构是整个系统的基础数据，号码分配、费用分摊、员工关联均依赖组织。树形结构支持多级子公司/部门，确保资源归属清晰。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>组织创建</td><td>创建组织节点，支持设置组织名称、组织编码、上级组织、负责人、联系电话、区号等基本信息</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN</td></tr>
+    <tr><td>2</td><td>组织编辑</td><td>修改组织基本信息，组织编码创建后不可修改（作为唯一标识）</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN</td></tr>
+    <tr><td>3</td><td>组织删除/停用</td><td>删除无关联数据的叶子组织节点；非叶子节点或有关联数据时仅支持停用</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN</td></tr>
+    <tr><td>4</td><td>树形结构展示</td><td>以树形列表展示组织层级，支持展开/折叠、搜索过滤</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, FINANCE, BOSS</td></tr>
+    <tr><td>5</td><td>组织编码规则</td><td>自动生成组织编码（如 ORG-001），支持手动指定前缀</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>组织编码全局唯一，创建后不可修改</li>
+  <li>树形深度不超过 <code>6</code> 级（支持1级集团→2级子公司→3级事业部→4级部门→5级科室→6级班组）</li>
+  <li>删除组织前必须检查是否存在关联员工、号码、设备；有关联时拒绝删除并提示具体关联数量</li>
+  <li>组织停用后，其下属所有子组织一并停用，不影响已有号码的正常使用</li>
+  <li>每个组织可配置默认区号，用于该组织下号码的前缀拼接</li>
+</ul>
+
+<h4>前置条件</h4>
+<p>无外部依赖，作为基础模块首先实施。</p>
+
+<h4>用例描述</h4>
+
+<p><strong>UC-ORG-001 创建组织</strong>：ADMIN 进入组织管理页面，点击"新增组织"按钮，在弹出表单中选择上级组织（默认为根节点），填写组织名称、组织编码（可留空自动生成）、负责人姓名、联系电话、默认区号，提交后系统校验编码唯一性，创建成功后在树形列表中展示新节点。</p>
+
+<p><strong>UC-ORG-002 停用组织</strong>：ADMIN 在组织列表中选择目标组织，点击"停用"按钮，系统检查该组织下是否有活跃员工或分配中的号码，若有关联则弹出提示"该组织下有 X 名员工、Y 个活跃号码，确认停用？"。确认后组织及其子组织状态变更为停用，前端以灰色样式展示。</p>
+
+<!-- 2.2 员工管理 -->
+<h3 id="s3-2">2.2 员工管理</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：员工是号码使用者和费用承担者的关联实体。通过员工与组织的归属关系，实现"人→组织→号码→费用"的完整链路追踪。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>员工创建</td><td>录入员工基本信息：姓名、工号、手机号、邮箱、所属组织、岗位、入职日期</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>2</td><td>员工编辑</td><td>修改员工信息，工号创建后不可修改</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>3</td><td>员工删除/离职</td><td>离职时标记状态，自动触发关联号码回收流程</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>4</td><td>员工查询</td><td>按姓名、工号、手机号、所属组织等条件搜索，支持分页</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, FINANCE, BOSS</td></tr>
+    <tr><td>5</td><td>员工批量导入</td><td>通过 CSV/Excel 批量导入员工，支持模板下载和校验反馈</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>工号全局唯一，创建后不可修改</li>
+  <li>手机号格式校验：11位中国大陆手机号（<code>1[3-9]\d{9}</code>）</li>
+  <li>员工必须关联一个有效（未停用）的组织</li>
+  <li>离职操作：员工状态变更为"离职"，若该员工名下有<code>已分配</code>或<code>活跃</code>状态的号码，自动创建回收工单</li>
+  <li>组织间调动：变更所属组织时，不自动变更号码归属，需单独发起号码变更流程</li>
+</ul>
+
+<h4>前置条件</h4>
+<p>依赖组织架构管理模块（2.1），需先创建目标组织。</p>
+
+<h4>用例描述</h4>
+
+<p><strong>UC-EMP-001 员工离职处理</strong>：OPS 在员工管理页面选中目标员工，点击"离职"按钮，系统弹出确认框显示"该员工名下有 X 个活跃号码，离职后将自动创建号码回收工单"。确认后员工状态变更为离职，系统自动为每个活跃号码创建类型为"号码回收"的工单，初始状态为"待处理"，工单描述自动生成"员工[姓名]离职，号码[号码]需回收"。</p>
+
+<!-- 2.3 号码全生命周期管理 -->
+<h3 id="s3-3">2.3 号码全生命周期管理</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：号码管理是系统的核心模块，覆盖号码从录入到回收的完整生命周期。通过状态机管理、并发控制和工单驱动，确保号码资源的安全和可追溯。
+</div>
+
+<!-- 2.3.1 号码基础管理 -->
+<h4 id="s3-3-1">2.3.1 号码基础管理</h4>
+
+<p>号码是系统的核心资源实体，每条号码记录包含号码值、类型、状态、归属组织、关联员工、关联设备等信息。号码状态通过状态机严格管理，确保每个状态转换都有明确的触发条件和操作记录。</p>
+
+<p><strong>号码6种状态</strong>：</p>
+<table>
+  <thead>
+    <tr><th>状态</th><th>英文标识</th><th>说明</th><th>允许操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="badge badge-p2">空闲</span></td><td><code>IDLE</code></td><td>已录入系统但未分配给任何员工</td><td>分配、冻结、删除</td></tr>
+    <tr><td><span class="badge badge-p1">已分配</span></td><td><code>ALLOCATED</code></td><td>已分配给员工但尚未激活使用</td><td>激活、冻结、回收</td></tr>
+    <tr><td style="background:#d4edda"><strong>活跃</strong></td><td><code>ACTIVE</code></td><td>正在使用中的号码</td><td>冻结、变更、回收</td></tr>
+    <tr><td><span class="badge badge-p0">冻结</span></td><td><code>FROZEN</code></td><td>因异常或管理需要临时冻结，暂停服务</td><td>解冻、回收</td></tr>
+    <tr><td><span class="badge badge-p1">待回收</span></td><td><code>PENDING_RECOVERY</code></td><td>已发起回收但尚未完成（等待设备注销、话费结清等）</td><td>确认回收、取消回收</td></tr>
+    <tr><td style="background:#e0e0e0">已回收</span></td><td><code>RECOVERED</code></td><td>已回收至号码池，可重新分配</td><td>重新分配、归档</td></tr>
+  </tbody>
+</table>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>号码录入</td><td>手动录入号码，填写号码值、类型（外线/内线/分机）、运营商、所属组织、区号</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>号码查询</td><td>按号码值、状态、类型、组织、员工等条件组合查询，支持分页和导出</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, FINANCE, BOSS</td></tr>
+    <tr><td>3</td><td>号码详情</td><td>查看号码完整信息，包括操作历史、关联工单、关联设备、费用记录</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>4</td><td>号码删除</td><td>仅允许删除"空闲"状态且无操作记录的号码</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>号码统计</td><td>按状态、类型、组织维度统计号码数量和占比</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN, OPS, BOSS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>号码值在系统内全局唯一（同一号码值不可重复录入）</li>
+  <li>号码类型：<code>OUTER</code>（外线）、<code>INNER</code>（内线）、<code>EXTENSION</code>（分机）</li>
+  <li>状态转换必须符合状态机规则，非法转换请求返回 <code>400</code> 错误</li>
+  <li>每次状态变更记录到号码操作历史表（<code>phone_number_history</code>），含操作人、时间、原状态、新状态、备注</li>
+  <li>号码归属组织变更需通过工单流程</li>
+</ul>
+
+<h4>前置条件</h4>
+<p>依赖组织架构管理（2.1），号码必须归属于某个组织。</p>
+
+<!-- 2.3.2 分机号池管理 -->
+<h4 id="s3-3-2">2.3.2 分机号池管理</h4>
+
+<div class="info-box">
+  <strong>业务价值</strong>：分机号资源有限且复用率高，通过区间管理+用量预警，避免分机号冲突和资源耗尽，保障业务连续性。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>号池区间创建</td><td>定义分机号区间（如 8001-8100），关联组织，设置最大容量</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>号池用量监控</td><td>实时显示区间内已用/可用数量，三色预警（绿<70% / 黄70-90% / 红>90%）</td><td><span class="badge badge-p0">P0</span></td><td>OPS, ADMIN</td></tr>
+    <tr><td>3</td><td>号池区间编辑</td><td>修改区间名称、关联组织、扩展区间范围</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>号池区间回收</td><td>释放不再使用的号池区间，释放前需确认区间内号码已全部回收</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>自动分配分机号</td><td>从号池中自动选取下一个可用分机号分配给员工</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>号池区间不可交叉重叠，如已有 8001-8100 则不可创建 8050-8150</li>
+  <li>自动分配策略：按号池内最小可用号码优先分配（从小到大）</li>
+  <li>用量超过 <code>90%</code> 时触发系统告警，通知运维人员</li>
+  <li>号池关联组织后，该号池仅服务于该组织及下属组织的分机号需求</li>
+</ul>
+
+<!-- 2.3.3 区号对照 -->
+<h4 id="s3-3-3">2.3.3 区号对照</h4>
+
+<div class="info-box">
+  <strong>业务价值</strong>：不同地区的分公司使用不同区号，通过组织级区号映射，确保号码拨打和费用归集的准确性。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>区号配置</td><td>为组织配置默认区号（如 010、021、0755），支持组织级覆盖</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN</td></tr>
+    <tr><td>2</td><td>区号查询</td><td>查看组织的区号配置，支持按区号反查组织</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>3</td><td>标准区号库</td><td>内置全国标准区号库，录入时自动校验区号合法性</td><td><span class="badge badge-p2">P2</span></td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>区号必须符合国家通信标准格式（以 <code>0</code> 开头，2-4位数字）</li>
+  <li>子组织未单独配置区号时，继承上级组织的区号</li>
+  <li>区号变更不影响已有号码记录（历史数据保持不变）</li>
+</ul>
+
+<!-- 2.3.4 号码分配与回收 -->
+<h4 id="s3-3-4">2.3.4 号码分配与回收</h4>
+
+<div class="warn-box">
+  <strong>关键特性</strong>：号码分配是系统的高并发场景，必须保证幂等性和防重复分配。使用数据库唯一约束 + 乐观锁双重保障。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>手动分配号码</td><td>OPS 选择空闲号码分配给指定员工，可指定组织、备注</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>自动分配号码</td><td>指定号码类型和组织，系统自动从可用池中选取号码分配</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>号码回收</td><td>将活跃/已分配/冻结号码回收至空闲状态，支持创建回收工单</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>批量回收</td><td>按组织、员工、批量选择号码一键回收</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>回收前置检查</td><td>回收前检查是否有未结清费用、未完成工单，有则提示确认</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>分配操作通过 <code>UPDATE ... WHERE status = 'IDLE'</code> 行级锁保证并发安全</li>
+  <li>分配接口幂等：相同请求（员工+号码）重复提交返回已分配结果而非报错</li>
+  <li>一个员工同一时间最多持有 <code>5</code> 个活跃号码</li>
+  <li>回收时自动解除号码与设备、分机号的关联</li>
+  <li>回收操作写入号码操作历史，记录回收原因和操作人</li>
+</ul>
+
+<h4>前置条件</h4>
+<p>依赖员工管理（2.2）和号码基础管理（2.3.1）。</p>
+
+<!-- 2.3.5 号码状态变更 -->
+<h4 id="s3-3-5">2.3.5 号码状态变更</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>号码冻结</td><td>将活跃/已分配号码冻结，暂停通话服务，记录冻结原因</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>号码解冻</td><td>将冻结号码恢复为冻结前的状态（活跃或已分配）</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>发起回收</td><td>将号码状态变更为"待回收"，等待后续确认</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>确认回收</td><td>确认待回收号码完成回收，状态变更为"已回收"</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>取消回收</td><td>取消待回收状态，恢复为原状态</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>冻结原因分类：异常话费（疑似盗打）、员工违规、管理要求、设备故障</li>
+  <li>冻结超过 <code>30</code> 天未解冻，系统自动创建预警工单</li>
+  <li>待回收状态超过 <code>15</code> 天未确认，系统发送提醒通知</li>
+  <li>所有状态变更必须填写备注说明原因</li>
+</ul>
+
+<!-- 2.3.6 号码变更（携号） -->
+<h4 id="s3-3-6">2.3.6 号码变更（携号）</h4>
+
+<div class="warn-box">
+  <strong>高风险操作</strong>：号码变更涉及"断开旧号码→分配过渡号→激活新号码→回收过渡号"四个步骤，使用双锁机制确保数据一致性。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>号码变更申请</td><td>申请将员工A的号码X变更为号码Y（携号），说明变更原因</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>过渡号自动分配</td><td>变更期间自动分配一个临时过渡号，确保通信不中断</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>变更执行</td><td>执行四步变更流程，通过双锁（旧号码锁+新号码锁）保证一致性</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>4</td><td>变更回滚</td><td>变更失败时自动回滚到变更前状态</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>变更流程：<code>旧号码冻结</code> → <code>分配过渡号</code> → <code>新号码激活</code> → <code>旧号码回收</code> → <code>过渡号回收</code></li>
+  <li>使用数据库事务 + <code>SELECT ... FOR UPDATE</code> 对旧号码和新号码加行锁，防止并发冲突</li>
+  <li>任何步骤失败自动回滚已执行的操作，恢复到变更前状态</li>
+  <li>变更全程记录到号码操作历史，每一步都有独立记录</li>
+  <li>目标号码（新号码）必须处于"空闲"状态</li>
+</ul>
+
+<!-- 2.3.7 号码批量导入 -->
+<h4 id="s3-3-7">2.3.7 号码批量导入</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>模板下载</td><td>提供标准 CSV/Excel 模板，含字段说明和示例数据</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>文件上传</td><td>上传 CSV/Excel 文件，系统异步解析校验</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>导入预览</td><td>展示解析结果，标记校验失败的行和原因</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>确认导入</td><td>确认后异步执行导入，返回任务ID供查询进度</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>导入结果通知</td><td>导入完成后通知结果（成功数、失败数、失败原因明细）</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>单次导入上限 <code>500</code> 条，超过需分批上传</li>
+  <li>异步处理：大文件导入不阻塞前端，后台线程池处理</li>
+  <li>校验规则：号码格式、去重（与系统已有号码比对）、组织有效性、必填字段</li>
+  <li>部分失败策略：校验通过的正常导入，失败的行生成错误报告供下载</li>
+  <li>导入文件保留 <code>30</code> 天后自动清理</li>
+</ul>
+
+<!-- 2.4 话机与设备管理 -->
+<h3 id="s3-4">2.4 话机与设备管理</h3>
+
+<!-- 2.4.1 话机基础管理 -->
+<h4 id="s3-4-1">2.4.1 话机基础管理</h4>
+
+<div class="info-box">
+  <strong>业务价值</strong>：话机是内线电话的物理终端，通过管理设备的型号、MAC地址、注册状态、关联号码，实现"号码-设备-人"的端到端可追溯。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>设备录入</td><td>录入话机信息：设备名称、型号、MAC地址、SN序列号、所属组织、安装位置</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>设备编辑</td><td>修改设备信息，MAC地址和SN创建后不可修改</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>设备删除</td><td>仅允许删除未关联号码的设备</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>设备查询</td><td>按MAC地址、型号、组织、关联号码、注册状态查询</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>5</td><td>号码关联</td><td>将设备与号码关联/解除关联，一个设备同一时间仅关联一个号码</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>MAC地址全局唯一，格式校验：<code>^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$</code> 或 <code>^[0-9A-Fa-f]{12}$</code></li>
+  <li>SN序列号全局唯一</li>
+  <li>设备状态：<code>ONLINE</code>（在线）、<code>OFFLINE</code>（离线）、<code>UNREGISTERED</code>（未注册）、<code>FAULT</code>（故障）</li>
+  <li>删除设备前必须解除与号码的关联</li>
+</ul>
+
+<!-- 2.4.2 话机操作 -->
+<h4 id="s3-4-2">2.4.2 话机操作</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>重新注册</td><td>向话机发送重新注册SIP服务器的指令，用于网络变更或服务器迁移后</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>2</td><td>设备注销</td><td>从SIP服务器注销设备，暂停通话功能</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>设备重启</td><td>远程重启话机设备，用于配置更新或故障恢复</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>4</td><td>操作记录</td><td>记录每次远程操作的类型、时间、操作人、结果（成功/失败）</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>远程操作仅对 <code>ONLINE</code> 状态的设备有效</li>
+  <li>操作超时时间 <code>30</code> 秒，超时标记为失败</li>
+  <li>重启操作需二次确认，弹出提示"确定要重启设备 [MAC] 吗？"</li>
+  <li>所有操作写入设备操作日志表（<code>device_operation_log</code>）</li>
+</ul>
+
+<!-- 2.5 工单管理 -->
+<h3 id="s3-5">2.5 工单管理</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：工单是关键业务操作的审批和追踪载体，确保每个号码变更、设备操作都有记录可查、有责任人可追。通过工单驱动，实现操作规范化和流程可视化。
+</div>
+
+<!-- 2.5.1 工单基础 -->
+<h4 id="s3-5-1">2.5.1 工单基础</h4>
+
+<p>系统支持 <strong>7类工单</strong>，每类工单有独立的表单字段和审批流程：</p>
+
+<table>
+  <thead>
+    <tr><th>工单类型</th><th>英文标识</th><th>触发场景</th><th>默认审批人</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>号码申请</td><td><code>PHONE_APPLY</code></td><td>新员工入职或业务需要新号码</td><td>OPS组长</td></tr>
+    <tr><td>号码回收</td><td><code>PHONE_RECOVER</code></td><td>员工离职或号码不再使用</td><td>OPS组长</td></tr>
+    <tr><td>号码变更</td><td><code>PHONE_CHANGE</code></td><td>更换号码（携号）</td><td>OPS组长</td></tr>
+    <tr><td>号码冻结</td><td><code>PHONE_FREEZE</code></td><td>异常话费或管理需要冻结号码</td><td>OPS组长</td></tr>
+    <tr><td>设备申请</td><td><code>DEVICE_APPLY</code></td><td>新设备入库或更换设备</td><td>OPS组长</td></tr>
+    <tr><td>设备维修</td><td><code>DEVICE_REPAIR</code></td><td>设备故障需要维修</td><td>OPS组长</td></tr>
+    <tr><td>费用异常</td><td><code>BILL_ANOMALY</code></td><td>账单检测到异常费用需要核实</td><td>FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>工单状态机</h4>
+
+<table>
+  <thead>
+    <tr><th>状态</th><th>说明</th><th>可流转至</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>PENDING</code> 待处理</td><td>工单已创建，等待处理</td><td>APPROVED、REJECTED、PROCESSING</td></tr>
+    <tr><td><code>PROCESSING</code> 处理中</td><td>正在执行工单关联的操作</td><td>COMPLETED、FAILED</td></tr>
+    <tr><td><code>APPROVED</code> 已审批</td><td>审批通过，等待执行</td><td>PROCESSING、REJECTED</td></tr>
+    <tr><td><code>REJECTED</code> 已驳回</td><td>审批被驳回</td><td>PENDING（重新提交）</td></tr>
+    <tr><td><code>COMPLETED</code> 已完成</td><td>工单处理完成</td><td>—（终态）</td></tr>
+    <tr><td><code>FAILED</code> 失败</td><td>处理过程中出现异常</td><td>PENDING（重试）</td></tr>
+  </tbody>
+</table>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>工单创建</td><td>手动创建工单，选择类型、填写表单、指定审批人</td><td><span class="badge badge-p0">P0</span></td><td>OPS, FINANCE</td></tr>
+    <tr><td>2</td><td>自动创建工单</td><td>系统事件自动触发工单（如员工离职自动创建回收工单）</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>工单审批</td><td>审批人对工单进行审批/驳回，填写审批意见</td><td><span class="badge badge-p0">P0</span></td><td>OPS组长, FINANCE</td></tr>
+    <tr><td>4</td><td>工单处理</td><td>执行工单关联的操作，更新处理进度</td><td><span class="badge badge-p0">P0</span></td><td>OPS</td></tr>
+    <tr><td>5</td><td>工单查询</td><td>按类型、状态、创建人、时间范围等条件查询</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, FINANCE, BOSS</td></tr>
+  </tbody>
+</table>
+
+<!-- 2.5.2 工单流转与拆单 -->
+<h4 id="s3-5-2">2.5.2 工单流转与拆单</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>工单流转</td><td>工单在状态机定义的状态之间流转，每个转换记录操作人和时间</td><td><span class="badge badge-p0">P0</span></td><td>OPS, FINANCE</td></tr>
+    <tr><td>2</td><td>工单拆单</td><td>批量工单可拆分为多个子工单，每个子工单独立流转和跟踪</td><td><span class="badge badge-p1">P1</span></td><td>OPS</td></tr>
+    <tr><td>3</td><td>子工单合并</td><td>所有子工单完成后自动合并，更新父工单状态</td><td><span class="badge badge-p1">P1</span></td><td>系统自动</td></tr>
+    <tr><td>4</td><td>工单催办</td><td>工单超时未处理时发送催办通知</td><td><span class="badge badge-p1">P1</span></td><td>系统自动</td></tr>
+    <tr><td>5</td><td>工单SLA</td><td>设置工单处理时效，超时自动升级通知</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>拆单场景：批量号码回收（一次离职回收多个号码）、批量设备维修</li>
+  <li>父工单状态跟随子工单：全部完成→父工单完成；任一失败→父工单标记失败</li>
+  <li>工单处理时效默认 <code>2</code> 个工作日，超时自动发送催办通知</li>
+  <li>驳回的工单可重新编辑后再次提交</li>
+</ul>
+
+<!-- 2.5.3 号码操作迁移工单驱动 -->
+<h4 id="s3-5-3">2.5.3 号码操作迁移工单驱动</h4>
+
+<div class="info-box">
+  <strong>业务价值</strong>：将直接操作迁移为工单驱动模式，确保每个号码操作都经过审批流程，提升操作规范性和可审计性。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>操作转工单</td><td>号码分配、回收、冻结、变更操作自动创建对应工单</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>2</td><td>工单执行操作</td><td>工单审批通过后自动执行关联的号码操作</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>操作回滚</td><td>工单执行失败时自动回滚已执行的号码操作</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>工单驱动模式下，号码操作不再支持直接执行（绕过工单），必须走工单流程</li>
+  <li>紧急情况：ADMIN 角色可使用"紧急通道"跳过审批直接执行，但事后仍需补录工单</li>
+  <li>工单与操作的关联关系记录在工单操作关联表中</li>
+</ul>
+
+<!-- 2.6 费用管理 -->
+<h3 id="s3-6">2.6 费用管理</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：费用管理是财务和运营的核心关注点。通过自动化的账单导入、智能分摊、异常检测和发票管理，大幅降低人工处理成本，提升费用透明度。
+</div>
+
+<!-- 2.6.1 成本中心 -->
+<h4 id="s3-6-1">2.6.1 成本中心</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>成本中心创建</td><td>创建成本中心，关联组织，设置负责人和预算额度</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE, ADMIN</td></tr>
+    <tr><td>2</td><td>成本中心编辑</td><td>修改成本中心信息，调整预算额度</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>3</td><td>成本中心查询</td><td>查看成本中心列表及费用汇总</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE, ADMIN, BOSS</td></tr>
+    <tr><td>4</td><td>预算预警</td><td>费用超过预算阈值时触发预警</td><td><span class="badge badge-p1">P1</span></td><td>系统自动</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>成本中心与组织一对一或一对多关联</li>
+  <li>预算阈值可配置为绝对金额或同比/环比增长率</li>
+  <li>成本中心的费用汇总数据实时更新（基于已分摊账单）</li>
+</ul>
+
+<!-- 2.6.2 账单导入与分摊 -->
+<h4 id="s3-6-2">2.6.2 账单导入与分摊</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>账单上传</td><td>上传运营商账单文件（CSV/Excel），解析号码和费用明细</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>2</td><td>账单校验</td><td>校验账单数据完整性：号码有效性、费用合理性、与上月对比</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>自动分摊</td><td>按号码归属组织自动分摊费用到成本中心</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>4</td><td>手动调整</td><td>支持人工调整分摊金额和归属</td><td><span class="badge badge-p1">P1</span></td><td>FINANCE</td></tr>
+    <tr><td>5</td><td>分摊确认</td><td>分摊完成后提交确认，锁定当月数据不可修改</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>分摊规则：按号码→组织→成本中心 的链路自动归集费用</li>
+  <li>账单金额与分摊总额差异 ≤ <code>0.01</code> 元，超出时将差额分摊到最大成本中心</li>
+  <li>分摊确认后数据锁定，如需修改需走"分摊调整"审批流程</li>
+  <li>账单导入保留原始文件，支持随时查看和重新解析</li>
+</ul>
+
+<!-- 2.6.3 异常检测 -->
+<h4 id="s3-6-3">2.6.3 异常检测</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>费用异常检测</td><td>自动检测：费用突增（环比>50%）、零费用号码、超出预算</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>2</td><td>异常工单生成</td><td>检测到异常自动创建费用异常工单</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>异常处理</td><td>FINANCE 人员核实异常并处理，更新工单状态</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>4</td><td>异常规则配置</td><td>自定义异常检测阈值和规则</td><td><span class="badge badge-p1">P1</span></td><td>FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>默认异常阈值：单号费用环比增长 > <code>50%</code>、月费用 > <code>500</code> 元、连续3个月零费用</li>
+  <li>异常检测结果随账单导入同步生成</li>
+  <li>异常工单需在 <code>5</code> 个工作日内处理完成</li>
+</ul>
+
+<!-- 2.6.4 发票上传与OCR -->
+<h4 id="s3-6-4">2.6.4 发票上传与OCR</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>发票上传</td><td>上传发票图片（PDF/JPG/PNG），支持批量上传</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>2</td><td>OCR识别</td><td>自动识别发票关键字段：发票号、金额、税额、开票日期、销售方</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>识别结果校对</td><td>人工校对OCR识别结果，修正错误字段</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>4</td><td>发票查重</td><td>上传时自动检查发票号是否已存在，防止重复录入</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>5</td><td>发票归档</td><td>校对完成后归档，关联对应账单和成本中心</td><td><span class="badge badge-p1">P1</span></td><td>FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>发票文件大小限制 <code>10MB</code>，单次批量上传不超过 <code>20</code> 张</li>
+  <li>OCR 识别准确率要求 ≥ <code>95%</code>（关键字段）</li>
+  <li>发票号全局唯一，重复上传拒绝并提示已有记录</li>
+  <li>发票图片和OCR结果永久保存，支持随时查看原图</li>
+</ul>
+
+<!-- 2.6.5 发票分发与确认 -->
+<h4 id="s3-6-5">2.6.5 发票分发与确认</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>发票分发</td><td>将发票按成本中心分发到对应组织的确认人</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>2</td><td>分发通知</td><td>分发后自动发送通知（站内信/邮件）给确认人</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>发票确认</td><td>确认人查看发票详情并确认或驳回</td><td><span class="badge badge-p0">P0</span></td><td>各组织确认人</td></tr>
+    <tr><td>4</td><td>确认状态跟踪</td><td>FINANCE 查看所有分发发票的确认状态，催办未确认的</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>发票分发后 <code>7</code> 个工作日内需确认，超时自动催办</li>
+  <li>驳回的发票需填写驳回原因，FINANCE 收到后可重新分发</li>
+  <li>所有发票确认完成后才可进行对账操作</li>
+</ul>
+
+<!-- 2.6.6 子公司对账 -->
+<h4 id="s3-6-6">2.6.6 子公司对账</h4>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>对账单生成</td><td>按子公司/成本中心生成月度对账单，汇总费用明细</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE</td></tr>
+    <tr><td>2</td><td>对账差异分析</td><td>自动对比运营商账单与系统分摊结果，标出差异项</td><td><span class="badge badge-p0">P0</span></td><td>系统自动</td></tr>
+    <tr><td>3</td><td>对账确认</td><td>子公司确认人对账单，确认无误后归档</td><td><span class="badge badge-p0">P0</span></td><td>子公司确认人</td></tr>
+    <tr><td>4</td><td>对账历史</td><td>查看历史对账记录，支持按月度查询和导出</td><td><span class="badge badge-p1">P1</span></td><td>FINANCE, BOSS</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>对账周期：每月 <code>1</code> 号至 <code>10</code> 号为上月对账窗口期</li>
+  <li>差异金额 ≤ <code>0.01</code> 元视为一致，> <code>0.01</code> 元标记为差异项</li>
+  <li>对账确认后数据锁定，生成对账报告存档</li>
+</ul>
+
+<!-- 2.7 报表中心 -->
+<h3 id="s3-7">2.7 报表中心</h3>
+
+<div class="info-box">
+  <strong>业务价值</strong>：报表是管理层决策的核心依据。通过预置报表模板和灵活的查询条件，满足不同角色的数据分析需求。
+</div>
+
+<h4>功能清单</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>功能</th><th>描述</th><th>优先级</th><th>角色</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>号码统计报表</td><td>按状态、类型、组织维度的号码分布统计</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, BOSS</td></tr>
+    <tr><td>2</td><td>费用汇总报表</td><td>按组织、成本中心、月度的费用汇总和趋势</td><td><span class="badge badge-p0">P0</span></td><td>FINANCE, ADMIN, BOSS</td></tr>
+    <tr><td>3</td><td>工单统计报表</td><td>工单数量、完成率、平均处理时长、按类型分布</td><td><span class="badge badge-p0">P0</span></td><td>ADMIN, OPS, BOSS</td></tr>
+    <tr><td>4</td><td>设备使用报表</td><td>设备在线率、故障率、型号分布</td><td><span class="badge badge-p1">P1</span></td><td>OPS, ADMIN</td></tr>
+    <tr><td>5</td><td>员工号码报表</td><td>按员工统计号码数量、费用、使用时长</td><td><span class="badge badge-p1">P1</span></td><td>ADMIN, OPS</td></tr>
+    <tr><td>6</td><td>报表导出</td><td>支持导出为 Excel/PDF 格式</td><td><span class="badge badge-p0">P0</span></td><td>所有角色</td></tr>
+    <tr><td>7</td><td>自定义报表</td><td>用户选择维度和指标自定义报表</td><td><span class="badge badge-p2">P2</span></td><td>ADMIN, FINANCE</td></tr>
+  </tbody>
+</table>
+
+<h4>业务规则</h4>
+
+<ul class="rule-list">
+  <li>报表数据延迟不超过 <code>5</code> 分钟（准实时）</li>
+  <li>BOSS 角色仅可查看汇总数据，不可查看明细行（数据脱敏）</li>
+  <li>导出文件保留 <code>30</code> 天后自动清理</li>
+  <li>报表可设置定时生成和邮件推送（P2 阶段）</li>
+</ul>
+
+<!-- ==================== 三、非功能需求 ==================== -->
+<h2 class="section-title" id="s4">三、非功能需求</h2>
+
+<h3 id="s4-1">3.1 安全需求</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:40px">序号</th><th>需求项</th><th>描述</th><th>实现方式</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>身份认证</td><td>基于 JWT Token 的无状态认证，Access Token 有效期 2h，Refresh Token 7d</td><td>Spring Security + JWT</td></tr>
+    <tr><td>2</td><td>密码安全</td><td>密码使用 bcrypt 加密存储（strength=10），强制首次登录修改密码，密码强度校验</td><td>BCryptPasswordEncoder</td></tr>
+    <tr><td>3</td><td>权限控制</td><td>基于角色的访问控制（RBAC），接口级权限校验</td><td>自定义注解 @RequireRole</td></tr>
+    <tr><td>4</td><td>审计日志</td><td>关键操作记录审计日志（登录、权限变更、号码操作、账单提交）</td><td>AOP + AuditLogInterceptor</td></tr>
+    <tr><td>5</td><td>数据脱敏</td><td>手机号中间4位脱敏（138****1234），身份证号脱敏</td><td>自定义脱敏注解</td></tr>
+    <tr><td>6</td><td>安全扫描</td><td>通过 OWASP 依赖检查，无高危漏洞</td><td>OWASP Dependency-Check Maven Plugin</td></tr>
+    <tr><td>7</td><td>XSS 防护</td><td>输入参数过滤和输出编码，防止跨站脚本攻击</td><td>HttpOnly Cookie + 输入过滤</td></tr>
+    <tr><td>8</td><td>CSRF 防护</td><td>前后端分离架构下使用 Token 机制替代传统 CSRF Token</td><td>JWT Token 验证</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s4-2">3.2 性能需求</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:40px">序号</th><th>场景</th><th>性能指标</th><th>保障措施</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>列表查询</td><td>常规列表（1000条以内）响应时间 <code><2s</code></td><td>分页查询 + 索引优化</td></tr>
+    <tr><td>2</td><td>组织树加载</td><td>组织树（≤6级，≤500节点）响应时间 <code><1s</code></td><td>一次性加载 + 前端渲染</td></tr>
+    <tr><td>3</td><td>号码并发分配</td><td>100并发请求无重复分配</td><td>数据库唯一约束 + 乐观锁</td></tr>
+    <tr><td>4</td><td>批量导入</td><td>100条数据异步导入 <code><5min</code></td><td>线程池异步处理</td></tr>
+    <tr><td>5</td><td>报表生成</td><td>月度汇总报表 <code><3s</code></td><td>预计算 + 缓存</td></tr>
+    <tr><td>6</td><td>工单批量拆单</td><td>50个子工单拆分 <code><2s</code></td><td>批量插入优化</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s4-3">3.3 审计需求</h3>
+
+<table>
+  <thead>
+    <tr><th>审计事件</th><th>记录内容</th><th>保留期限</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>用户登录/登出</td><td>用户ID、登录时间、IP地址、User-Agent、成功/失败</td><td>永久</td></tr>
+    <tr><td>权限变更</td><td>操作人、目标用户、变更前角色、变更后角色、时间</td><td>永久</td></tr>
+    <tr><td>号码操作</td><td>操作人、号码、操作类型、原状态、新状态、备注</td><td>永久</td></tr>
+    <tr><td>账单操作</td><td>操作人、账单ID、操作类型（导入/分摊/确认）、时间</td><td>永久</td></tr>
+    <tr><td>发票分发</td><td>操作人、发票ID、分发目标、分发时间</td><td>永久</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s4-4">3.4 数据留存需求</h3>
+
+<table>
+  <thead>
+    <tr><th>数据类型</th><th>保留策略</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>核心业务数据（号码、组织、员工）</td><td>永久保留</td><td>历史数据通过状态标记（已归档）而非物理删除</td></tr>
+    <tr><td>审计日志</td><td>永久保留</td><td>按月分表存储，支持历史查询</td></tr>
+    <tr><td>账单/发票原始文件</td><td>永久保留</td><td>文件存储服务保存，数据库记录元信息</td></tr>
+    <tr><td>导入临时文件</td><td><code>30</code> 天</td><td>导入完成后保留30天，过期自动清理</td></tr>
+    <tr><td>导出文件</td><td><code>30</code> 天</td><td>用户下载的导出文件保留30天后自动清理</td></tr>
+    <tr><td>工单附件</td><td>随工单永久保留</td><td>工单归档后附件一并归档</td></tr>
+    <tr><td>操作缓存数据</td><td><code>3</code> 个月</td><td>临时缓存数据定期清理</td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== 四、界面需求 ==================== -->
+<h2 class="section-title" id="s5">四、界面需求</h2>
+
+<h3 id="s5-1">4.1 整体布局</h3>
+
+<p>系统采用经典的后台管理布局：</p>
+
+<ul>
+  <li><strong>固定侧边栏</strong>：左侧 <code>200px</code> 宽度的导航栏，可折叠/展开，包含系统 Logo 和菜单分组</li>
+  <li><strong>固定标题栏</strong>：顶部 <code>64px</code> 高度的标题栏，包含当前页面标题、全局搜索框、通知铃铛、用户信息</li>
+  <li><strong>内容区域</strong>：剩余空间为可滚动的内容区域，支持面包屑导航</li>
+  <li><strong>配色方案</strong>：主色 <code>#1a1a2e</code>（深蓝）、辅助色 <code>#0f3460</code>、强调色 <code>#e94560</code>（错误/警告）</li>
+  <li><strong>响应式</strong>：最小支持 <code>1280px</code> 宽度，侧边栏可收起为图标模式（<code>64px</code>）</li>
+</ul>
+
+<h3 id="s5-2">4.2 侧边栏菜单</h3>
+
+<p>菜单分为 <strong>5个可折叠分组</strong>，默认全部收起，点击组标题展开/收起：</p>
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>图标</th><th>菜单项</th><th>排序</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>工单管理</td><td>📋</td><td>工单列表、我的工单</td><td>1</td></tr>
+    <tr><td>号码资源</td><td>📞</td><td>号码管理、分机号池、区号对照、号码导入</td><td>2</td></tr>
+    <tr><td>费用管理</td><td>💰</td><td>成本中心、账单管理、发票管理、对账管理</td><td>3</td></tr>
+    <tr><td>组织人员</td><td>👥</td><td>组织架构、员工管理</td><td>4</td></tr>
+    <tr><td>系统</td><td>⚙️</td><td>用户管理、角色权限、审计日志</td><td>5</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Logo 区域</strong>：左侧最顶部为系统 Logo 和名称"PhoneBiz"，点击 Logo 返回系统看板（仪表盘）。系统看板不在菜单中显示为独立菜单项，而是作为登录后的默认首页。</p>
+
+<h3 id="s5-3">4.3 页面标题栏</h3>
+
+<p>顶部标题栏从左到右包含：</p>
+
+<ol>
+  <li><strong>侧边栏折叠按钮</strong>：点击切换侧边栏展开/收起</li>
+  <li><strong>当前页面标题</strong>：面包屑导航（如"费用管理 > 账单管理"）</li>
+  <li><strong>全局搜索框</strong>：支持搜索号码、员工、工单，单层边框设计</li>
+  <li><strong>通知铃铛</strong>：显示未读通知数量，点击展开通知列表</li>
+  <li><strong>用户信息</strong>：显示当前用户名，点击弹出下拉菜单（修改密码、退出系统）</li>
+</ol>
+
+<h3 id="s5-4">4.4 登录页面</h3>
+
+<ul>
+  <li>居中显示登录表单卡片，包含系统 Logo、标题</li>
+  <li>表单字段：用户名（必填）、密码（必填，密码输入框支持显示/隐藏切换）</li>
+  <li>登录按钮：点击后提交认证，成功后跳转到系统看板</li>
+  <li>首次登录强制修改密码：登录成功后检测 <code>forceChangePassword</code> 标志，为 <code>true</code> 时弹出修改密码模态框</li>
+  <li>错误提示：统一在表单上方显示错误信息（如"用户名或密码错误"）</li>
+</ul>
+
+<h3 id="s5-5">4.5 仪表盘（系统看板）</h3>
+
+<p>登录后的默认首页，提供全局概览和快速操作入口：</p>
+
+<h4>统计卡片（4个）</h4>
+
+<table>
+  <thead>
+    <tr><th>卡片</th><th>指标</th><th>数据来源</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>号码总数</td><td>系统内号码总数 + 活跃号码占比</td><td>phone_number 表 COUNT + 活跃比例</td></tr>
+    <tr><td>活跃组织</td><td>未停用的组织数量</td><td>organization 表 COUNT WHERE status='ACTIVE'</td></tr>
+    <tr><td>待处理工单</td><td>状态为"待处理"+"处理中"的工单数量</td><td>work_order 表 COUNT WHERE status IN ('PENDING','PROCESSING')</td></tr>
+    <tr><td>本月账单</td><td>当月已导入账单总金额</td><td>bill 表 SUM WHERE month=CURRENT_MONTH</td></tr>
+  </tbody>
+</table>
+
+<h4>快速操作</h4>
+<p>提供常用操作的快捷入口：新建工单、号码分配、账单导入、员工管理。</p>
+
+<h4>最近账单表</h4>
+<p>显示最近 5 条账单记录，包含月份、运营商、金额、分摊状态，点击可跳转账单详情。</p>
+
+<!-- ==================== 五、用户角色与权限 ==================== -->
+<h2 class="section-title" id="s6">五、用户角色与权限</h2>
+
+<h3 id="s6-1">5.1 角色定义</h3>
+
+<table>
+  <thead>
+    <tr><th>角色</th><th>英文名</th><th>职责范围</th><th>权限级别</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>系统管理员</td><td><code>ADMIN</code></td><td>组织架构、用户账号、角色权限、系统配置、全部数据只读</td><td>全权限</td></tr>
+    <tr><td>运维人员</td><td><code>OPS</code></td><td>号码分配回收、设备管理、工单处理、员工信息维护</td><td>号码/设备/工单读写</td></tr>
+    <tr><td>财务人员</td><td><code>FINANCE</code></td><td>成本中心管理、账单导入分摊、发票管理、对账</td><td>费用模块读写</td></tr>
+    <tr><td>管理层</td><td><code>BOSS</code></td><td>查看报表、工单统计、费用概览</td><td>全部模块只读</td></tr>
+  </tbody>
+</table>
+
+<h3 id="s6-2">5.2 权限矩阵</h3>
+
+<table>
+  <thead>
+    <tr><th>功能模块</th><th>操作</th><th style="text-align:center">ADMIN</th><th style="text-align:center">OPS</th><th style="text-align:center">FINANCE</th><th style="text-align:center">BOSS</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="2">组织架构</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">员工管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">号码管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">设备管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">工单管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">成本中心</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">账单管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">发票管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">对账管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td rowspan="2">报表中心</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td>导出</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#d4edda">✓</td></tr>
+    <tr><td rowspan="2">用户管理</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td>增删改</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+    <tr><td>审计日志</td><td>查看</td><td style="text-align:center;background:#d4edda">✓</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td><td style="text-align:center;background:#ffe0e0">✗</td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== 六、数据需求 ==================== -->
+<h2 class="section-title" id="s7">六、数据需求</h2>
+
+<h3 id="s7-1">6.1 核心实体关系</h3>
+
+<p>系统核心实体及其关联关系如下：</p>
+
+<blockquote>
+<strong>组织（Organization）</strong> → 树形自关联，支持多级组织层级<br>
+<strong>员工（Employee）</strong> → 多对一关联组织（一个组织下多个员工）<br>
+<strong>号码（PhoneNumber）</strong> → 多对一关联组织，多对一关联员工（可选），多对一关联设备（可选）<br>
+<strong>设备（PhoneDevice）</strong> → 多对一关联组织，多对一关联号码（可选）<br>
+<strong>工单（WorkOrder）</strong> → 多对一关联创建人，多对一关联审批人，多对多关联号码<br>
+<strong>账单（Bill）</strong> → 多对一关联成本中心，一对多关联账单明细（BillItem）<br>
+<strong>成本中心（CostCenter）</strong> → 多对一关联组织<br>
+<strong>发票（Invoice）</strong> → 多对一关联账单，多对一关联成本中心
+</blockquote>
+
+<p><strong>关键关联说明</strong>：</p>
+<ul>
+  <li>号码和员工是可选关联：空闲状态的号码不关联员工，已分配/活跃状态必须关联员工</li>
+  <li>号码和设备是可选关联：并非所有号码都有物理设备（如虚拟分机号）</li>
+  <li>工单与号码是多对多：一个工单可涉及多个号码（如批量回收），一个号码可出现在多个工单（如先申请后回收）</li>
+  <li>账单明细与号码是一对一：每条账单明细对应一个具体号码的当月费用</li>
+</ul>
+
+<h3 id="s7-2">6.2 数据字典</h3>
+
+<p>系统共包含 <strong>24张核心表</strong>，按模块分组如下：</p>
+
+<h4>组织与员工模块（3张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>organization</code></td><td>组织架构</td><td>id, name, code, parent_id, leader, phone, area_code, status</td><td>组织节点，树形结构</td></tr>
+    <tr><td>2</td><td><code>employee</code></td><td>员工管理</td><td>id, name, emp_no, mobile, email, org_id, position, status</td><td>员工基本信息</td></tr>
+    <tr><td>3</td><td><code>user</code></td><td>系统管理</td><td>id, username, password, role, employee_id, force_change_password</td><td>系统登录用户</td></tr>
+  </tbody>
+</table>
+
+<h4>号码管理模块（5张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>4</td><td><code>phone_number</code></td><td>号码管理</td><td>id, number, type, status, org_id, employee_id, device_id, carrier</td><td>号码主表</td></tr>
+    <tr><td>5</td><td><code>phone_number_history</code></td><td>号码管理</td><td>id, phone_number_id, from_status, to_status, operator_id, remark</td><td>号码状态变更历史</td></tr>
+    <tr><td>6</td><td><code>extension_pool</code></td><td>号码管理</td><td>id, org_id, start_number, end_number, current_index, max_capacity</td><td>分机号池区间</td></tr>
+    <tr><td>7</td><td><code>area_code_mapping</code></td><td>号码管理</td><td>id, org_id, area_code, is_active</td><td>组织区号映射</td></tr>
+    <tr><td>8</td><td><code>import_task</code></td><td>号码管理</td><td>id, task_type, file_name, status, total_count, success_count, fail_count</td><td>批量导入任务</td></tr>
+  </tbody>
+</table>
+
+<h4>设备管理模块（2张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>9</td><td><code>phone_device</code></td><td>设备管理</td><td>id, name, model, mac_address, sn, org_id, phone_number_id, status</td><td>话机设备</td></tr>
+    <tr><td>10</td><td><code>device_operation_log</code></td><td>设备管理</td><td>id, device_id, operation_type, operator_id, result, error_message</td><td>设备操作日志</td></tr>
+  </tbody>
+</table>
+
+<h4>工单管理模块（3张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>11</td><td><code>work_order</code></td><td>工单管理</td><td>id, order_no, type, title, status, creator_id, assignee_id, priority</td><td>工单主表</td></tr>
+    <tr><td>12</td><td><code>work_order_item</code></td><td>工单管理</td><td>id, work_order_id, parent_id, type, status, phone_number_id, description</td><td>工单子项（拆单）</td></tr>
+    <tr><td>13</td><td><code>work_order_history</code></td><td>工单管理</td><td>id, work_order_id, from_status, to_status, operator_id, comment</td><td>工单流转历史</td></tr>
+  </tbody>
+</table>
+
+<h4>费用管理模块（6张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>14</td><td><code>cost_center</code></td><td>费用管理</td><td>id, name, org_id, manager_id, budget_amount, alert_threshold</td><td>成本中心</td></tr>
+    <tr><td>15</td><td><code>bill</code></td><td>费用管理</td><td>id, month, carrier, total_amount, org_id, status, file_path</td><td>运营商账单</td></tr>
+    <tr><td>16</td><td><code>bill_item</code></td><td>费用管理</td><td>id, bill_id, phone_number, amount, org_id, cost_center_id</td><td>账单明细行</td></tr>
+    <tr><td>17</td><td><code>invoice</code></td><td>费用管理</td><td>id, invoice_no, amount, tax_amount, invoice_date, vendor, file_path, status</td><td>发票</td></tr>
+    <tr><td>18</td><td><code>invoice_distribution</code></td><td>费用管理</td><td>id, invoice_id, cost_center_id, confirmer_id, status, confirm_time</td><td>发票分发记录</td></tr>
+    <tr><td>19</td><td><code>reconciliation</code></td><td>费用管理</td><td>id, month, org_id, bill_amount, allocated_amount, difference, status</td><td>对账记录</td></tr>
+  </tbody>
+</table>
+
+<h4>系统与审计模块（5张）</h4>
+
+<table>
+  <thead>
+    <tr><th style="width:30px">序号</th><th>表名</th><th>所属模块</th><th>关键字段</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>20</td><td><code>role</code></td><td>系统管理</td><td>id, name, code, description</td><td>角色定义</td></tr>
+    <tr><td>21</td><td><code>permission</code></td><td>系统管理</td><td>id, code, name, module, action</td><td>权限定义</td></tr>
+    <tr><td>22</td><td><code>role_permission</code></td><td>系统管理</td><td>id, role_id, permission_id</td><td>角色-权限关联</td></tr>
+    <tr><td>23</td><td><code>audit_log</code></td><td>审计</td><td>id, user_id, action, module, entity_type, entity_id, detail, ip_address</td><td>审计日志</td></tr>
+    <tr><td>24</td><td><code>notification</code></td><td>系统</td><td>id, user_id, title, content, type, is_read, created_at</td><td>系统通知</td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== 七、术语表 ==================== -->
+<h2 class="section-title" id="s8">七、术语表</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:160px">术语</th><th>英文</th><th>定义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>号码全生命周期</td><td>Phone Number Lifecycle</td><td>号码从录入系统到最终归档的完整过程，包括：录入→分配→激活→使用→冻结/变更→回收→再分配/归档</td></tr>
+    <tr><td>外线号码</td><td>Outer Line</td><td>由运营商提供的外部电话号码，可直接拨打外部电话</td></tr>
+    <tr><td>内线号码</td><td>Inner Line</td><td>企业内部使用的电话号码，通过PBX交换机转接</td></tr>
+    <tr><td>分机号</td><td>Extension</td><td>PBX系统内部分配的短号码，通常3-4位数字，通过拨0或特定前缀转接外线</td></tr>
+    <tr><td>号码池</td><td>Number Pool</td><td>预定义的号码区间，用于管理和分配特定范围的号码资源</td></tr>
+    <tr><td>携号</td><td>Number Porting</td><td>更换员工使用的号码（保持员工不变，号码变化），需要通过过渡号保证通信不中断</td></tr>
+    <tr><td>过渡号</td><td>Transition Number</td><td>号码变更过程中的临时号码，用于保证通信连续性，变更完成后自动回收</td></tr>
+    <tr><td>成本中心</td><td>Cost Center</td><td>费用归集单元，通常对应一个组织或部门，用于费用分摊和预算管理</td></tr>
+    <tr><td>工单驱动</td><td>Workflow Driven</td><td>所有关键操作必须通过创建工单→审批→执行的流程，确保可追溯和可审计</td></tr>
+    <tr><td>拆单</td><td>Order Splitting</td><td>将一个批量工单拆分为多个独立子工单，每个子工单可独立流转</td></tr>
+    <tr><td>状态机</td><td>State Machine</td><td>定义对象（如号码、工单）可能的状态及状态间合法转换规则的模型</td></tr>
+    <tr><td>幂等</td><td>Idempotent</td><td>同一操作执行多次与执行一次的效果相同，常用于防止重复提交</td></tr>
+    <tr><td>OCR</td><td>Optical Character Recognition</td><td>光学字符识别，用于从发票图片中自动提取文字信息</td></tr>
+    <tr><td>SIP</td><td>Session Initiation Protocol</td><td>会话初始协议，用于IP电话的注册和通话建立</td></tr>
+    <tr><td>PBX</td><td>Private Branch Exchange</td><td>用户级交换机，企业内部电话交换系统</td></tr>
+    <tr><td>RBAC</td><td>Role-Based Access Control</td><td>基于角色的访问控制，通过角色定义权限集合</td></tr>
+    <tr><td>JWT</td><td>JSON Web Token</td><td>基于JSON的开放标准令牌，用于身份认证和信息传递</td></tr>
+    <tr><td>SLA</td><td>Service Level Agreement</td><td>服务级别协议，定义工单处理的时效要求</td></tr>
+    <tr><td>数据脱敏</td><td>Data Masking</td><td>对敏感数据（如手机号、身份证）进行部分隐藏处理</td></tr>
+    <tr><td>乐观锁</td><td>Optimistic Lock</td><td>通过版本号机制实现并发控制，不加数据库行锁</td></tr>
+  </tbody>
+</table>
+
+</div><!-- end .content -->
+
+<div class="footer">
+  PhoneBiz 企业内线电话管理平台 · 需求规格说明书 v2.0<br>
+  文档生成日期：2026-05-20 · 内部公开
+</div>
+
+</div><!-- end .container -->
+
+<button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="返回顶部">↑</button>
+
+</body>
+</html>
