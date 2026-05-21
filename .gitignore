@@ -52,3 +52,12 @@ backend/bin/
 
 # Old project reference (not part of new project)
 data/apps/phonebiz/
+
+# Task artifacts
+2026-05-14-task-11*
+admin/
+environment_checklist.md
+
+# Runtime
+*.pid
+*.log
