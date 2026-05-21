@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phonebiz.entity.Device;
 import com.phonebiz.entity.DeviceOperation;
 import com.phonebiz.repository.DeviceOperationRepository;
@@ -114,8 +115,15 @@ public class DeviceOperationService {
 
     @Transactional
     public DeviceOperation upgradeFirmware(String deviceId, String firmwareVersion, String operator) {
-        return createOperation(deviceId, DeviceOperation.OperationType.FIRMWARE_UPGRADE, 
-                "{\"firmwareVersion\": \"" + firmwareVersion + "\"}", operator);
+        // M-06: Use proper JSON encoding to prevent injection
+        String params;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            params = mapper.writeValueAsString(java.util.Map.of("firmwareVersion", firmwareVersion));
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid firmware version");
+        }
+        return createOperation(deviceId, DeviceOperation.OperationType.FIRMWARE_UPGRADE, params, operator);
     }
 
     @Transactional

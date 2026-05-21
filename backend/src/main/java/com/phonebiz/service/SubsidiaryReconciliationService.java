@@ -39,6 +39,19 @@ public class SubsidiaryReconciliationService {
 
     @Transactional
     public void generateReconciliation(String billMonth) {
+        // P1-07: Delete existing reconciliation records for this month before regenerating
+        List<SubsidiaryReconciliation> existing = reconciliationRepository.findByBillMonth(billMonth);
+        if (!existing.isEmpty()) {
+            // Only delete pending ones, keep confirmed records
+            List<SubsidiaryReconciliation> pending = existing.stream()
+                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.pending)
+                .toList();
+            if (!pending.isEmpty()) {
+                reconciliationRepository.deleteAll(pending);
+                log.info("Deleted {} pending reconciliation records for month {}", pending.size(), billMonth);
+            }
+        }
+        
         List<BillAllocation> allocations = billAllocationRepository.findByBillMonth(billMonth);
         
         Map<Long, BigDecimal> orgAmountMap = allocations.stream()

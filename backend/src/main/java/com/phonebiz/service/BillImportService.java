@@ -103,7 +103,7 @@ public class BillImportService {
         if (v.isEmpty()) return true;
         if (SKIP_VALUES.contains(v)) return true;
         // Skip rows where first cell is not a valid identifier (e.g. AIGC watermarks)
-        if (!Character.isDigit(v.charAt(0))) return true;
+        if (!Character.isDigit(v.charAt(0)) && v.charAt(0) != '+') return true;
         return false;
     }
 
@@ -142,6 +142,7 @@ public class BillImportService {
     private Map<String, Integer> buildHeaderMap(Row row) {
         // We use index-based column reading, but also build a map for flexibility
         // Not strictly needed since we use positional matching based on known Excel layouts
+        // TODO: Implement header mapping or remove dead code
         return new HashMap<>();
     }
 

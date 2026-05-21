@@ -251,9 +251,15 @@ public class WorkOrderDrivenDeviceService {
                 phoneDeviceService.bindPhone(deviceId, bindRequest);
             }
             case "unbind_phone" -> {
-                // 解绑操作需要先查找绑定记录
-                // 这里简化处理，实际需要更精确的解绑逻辑
-                log.warn("Unbind phone from device {}: extension={}", deviceId, item.getFromValue());
+                // P1-08: Unbind phone from device using extension number lookup
+                String extensionNumber = item.getFromValue();
+                if (extensionNumber != null) {
+                    // Find mapping by extension and unbind
+                    phoneDeviceService.unbindPhoneByExtension(deviceId, extensionNumber);
+                } else {
+                    // If no extension specified, unbind all
+                    phoneDeviceService.unbindAllPhonesForDevice(deviceId);
+                }
             }
             default -> throw new BusinessException(ErrorCode.SYS_001);
         }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
+@Slf4j
 @RestController
 @RequestMapping("/invoices")
 @PreAuthorize("hasAuthority('inv:view') or hasRole('ADMIN') or hasRole('FINANCE')")
@@ -39,7 +41,8 @@ public class InvoiceController {
             Invoice invoice = invoiceService.uploadInvoice(file, billMonth, sourceOrgId, authentication != null ? authentication.getName() : "system");
             return ApiResponse.success(invoice);
         } catch (IOException e) {
-            return ApiResponse.error(500, "文件上传失败: " + e.getMessage());
+            log.error("Invoice upload failed", e);
+            return ApiResponse.error(500, "文件上传失败，请稍后重试");
         }
     }
 
@@ -51,18 +54,17 @@ public class InvoiceController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<Invoice> result;
-        if (orgId != null) {
-            if (status != null) {
-                result = invoiceService.getInvoicesByOrg(orgId, pageable);
-            } else {
-                result = invoiceService.getInvoicesByOrg(orgId, pageable);
-            }
+        if (orgId != null && status != null) {
+            result = invoiceService.getInvoicesByOrgAndStatus(orgId, 
+                com.phonebiz.common.EnumHelper.parse(Invoice.InvoiceStatus.class, status), pageable);
+        } else if (orgId != null) {
+            result = invoiceService.getInvoicesByOrg(orgId, pageable);
         } else if (billMonth != null && status != null) {
             result = invoiceService.getInvoicesByBillMonth(billMonth, pageable);
         } else if (billMonth != null) {
             result = invoiceService.getInvoicesByBillMonth(billMonth, pageable);
         } else if (status != null) {
-            result = invoiceService.getInvoicesByStatus(Invoice.InvoiceStatus.valueOf(status.toUpperCase()), pageable);
+            result = invoiceService.getInvoicesByStatus(com.phonebiz.common.EnumHelper.parse(Invoice.InvoiceStatus.class, status), pageable);
         } else {
             result = invoiceService.getInvoicesByOrg(null, pageable);
         }

@@ -133,8 +133,18 @@ public class AuthService {
             throw new BusinessException(ErrorCode.AUTH_002, "Old password incorrect");
         }
 
+        // L-03: Prevent password reuse
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.AUTH_002, "\u65b0\u5bc6\u7801\u4e0d\u80fd\u4e0e\u5f53\u524d\u5bc6\u7801\u76f8\u540c");
+        }
+
         String newPasswordHash = passwordEncoder.encode(request.getNewPassword());
-        userRepository.updatePassword(username, newPasswordHash, LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        userRepository.updatePassword(username, newPasswordHash, now);
+        // M-02: Update passwordChangedAt for token invalidation (re-read to avoid overwriting password hash)
+        SysUser freshUser = userRepository.findByUsername(username).orElseThrow();
+        freshUser.setPasswordChangedAt(now);
+        userRepository.save(freshUser);
     }
 
     @Transactional(readOnly = true)

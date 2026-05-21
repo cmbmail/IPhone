@@ -20,7 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/statistics")
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAuthority('phone:view') or hasAuthority('device:view') or hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class StatisticsController {
 
@@ -40,7 +40,7 @@ public class StatisticsController {
     public ApiResponse<Page<PhoneNumber>> getPhonesByStatus(
             @PathVariable String status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        PhoneNumber.PhoneStatus phoneStatus = PhoneNumber.PhoneStatus.valueOf(status.toLowerCase());
+        PhoneNumber.PhoneStatus phoneStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, status);
         return ApiResponse.success(statisticsService.getPhonesByStatus(phoneStatus, pageable));
     }
 

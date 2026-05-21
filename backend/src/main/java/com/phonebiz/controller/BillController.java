@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.common.BusinessException;
+import lombok.extern.slf4j.Slf4j;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.entity.BillRaw;
 import com.phonebiz.repository.BillRawRepository;
@@ -24,6 +26,7 @@ import com.phonebiz.service.BillImportService;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+@Slf4j
 @RestController
 @RequestMapping("/bills")
 @PreAuthorize("hasAuthority('bill:view') or hasRole('ADMIN') or hasRole('FINANCE')")
@@ -62,8 +65,11 @@ public class BillController {
         try {
             int count = billImportService.importBillRaw(billMonth, file, operator);
             return ApiResponse.success(count);
+        } catch (BusinessException e) {
+            return ApiResponse.error(e.getErrorCode().getCode(), e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error(500, e.getMessage());
+            log.error("Bill import failed", e);
+            return ApiResponse.error(500, "账单导入失败，请检查文件格式");
         }
     }
 
@@ -78,8 +84,11 @@ public class BillController {
             billImportService.importBillRaw(billMonth, file, operator);
             billImportService.processImportAsync(billMonth, operator);
             return ApiResponse.success(null);
+        } catch (BusinessException e) {
+            return ApiResponse.error(e.getErrorCode().getCode(), e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error(500, e.getMessage());
+            log.error("Bill import and allocate failed", e);
+            return ApiResponse.error(500, "账单导入并分摊失败，请检查文件格式");
         }
     }
 

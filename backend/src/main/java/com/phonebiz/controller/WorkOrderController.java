@@ -14,12 +14,16 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.common.BusinessException;
+import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateWorkOrderRequest;
 import com.phonebiz.dto.UpdateWorkOrderRequest;
 import com.phonebiz.dto.WorkOrderDTO;
 import com.phonebiz.dto.WorkOrderItemDTO;
 import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.service.WorkOrderService;
+import com.phonebiz.repository.SysUserRepository;
+import com.phonebiz.entity.SysUser;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -30,6 +34,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
+    private final SysUserRepository sysUserRepository;
 
     @GetMapping
     public ApiResponse<Page<WorkOrderDTO>> getWorkOrders(
@@ -37,7 +42,7 @@ public class WorkOrderController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<WorkOrderDTO> result;
         if (status != null) {
-            WorkOrder.WorkOrderStatus workOrderStatus = WorkOrder.WorkOrderStatus.valueOf(status.toUpperCase());
+            WorkOrder.WorkOrderStatus workOrderStatus = com.phonebiz.common.EnumHelper.parse(WorkOrder.WorkOrderStatus.class, status);
             result = workOrderService.getWorkOrdersByStatus(workOrderStatus, pageable);
         } else {
             result = workOrderService.getWorkOrders(pageable);
@@ -73,7 +78,12 @@ public class WorkOrderController {
     @PreAuthorize("hasAuthority('wo:create') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "创建工单", targetType = "WorkOrder")
     public ApiResponse<WorkOrderDTO> createWorkOrder(@Valid @RequestBody CreateWorkOrderRequest request, Authentication authentication) {
-        WorkOrderDTO result = workOrderService.createWorkOrder(request, 1L, authentication != null ? authentication.getName() : "system");
+        // L-04: Get requesterId from authenticated user
+        String username = authentication != null ? authentication.getName() : "system";
+        Long requesterId = sysUserRepository.findByUsername(username)
+                .map(SysUser::getId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004));
+        WorkOrderDTO result = workOrderService.createWorkOrder(request, requesterId, username);
         return ApiResponse.success(result);
     }
 

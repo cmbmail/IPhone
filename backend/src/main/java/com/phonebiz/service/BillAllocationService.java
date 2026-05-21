@@ -125,7 +125,7 @@ public class BillAllocationService {
             return BigDecimal.ZERO;
         }
         BigDecimal sum = values.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        return sum.divide(new BigDecimal(values.size()), 2, BigDecimal.ROUND_HALF_UP);
+        return sum.divide(new BigDecimal(values.size()), 2, java.math.RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateStandardDeviation(List<BigDecimal> values, BigDecimal mean) {
@@ -138,7 +138,7 @@ public class BillAllocationService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal variance = sumOfSquaredDifferences.divide(
-                new BigDecimal(values.size() - 1), 2, BigDecimal.ROUND_HALF_UP);
+                new BigDecimal(values.size() - 1), 2, java.math.RoundingMode.HALF_UP);
 
         return new BigDecimal(Math.sqrt(variance.doubleValue()));
     }

@@ -56,6 +56,7 @@ public class ImportService {
         } catch (Exception e) {
             log.error("Import batch {} failed: {}", batchId, e.getMessage(), e);
             updateBatchStatus(batchId, ImportBatch.ImportStatus.FAILED, e.getMessage());
+            progressMap.remove(batchId);  // P3-08: Clean up on failure too
         }
     }
 
@@ -102,7 +103,7 @@ public class ImportService {
                 }
             }
 
-            progressMap.put(batchId, (int) ((i + batchSize) * 100.0 / dataList.size()));
+            progressMap.put(batchId, Math.min(99, (int) ((i + batchSize) * 100.0 / dataList.size())));
         }
 
         batch.setSuccessCount(successCount);

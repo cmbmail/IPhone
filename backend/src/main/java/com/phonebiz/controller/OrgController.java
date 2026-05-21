@@ -82,6 +82,8 @@ public class OrgController {
     }
 
     @PostMapping("/import")
+    @PreAuthorize("hasAuthority('org:create') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "批量导入组织", targetType = "OrgStructure")
     public ApiResponse<Map<String, Object>> importOrgs(
             @RequestBody List<ImportOrgItem> items,
             Authentication authentication) {
@@ -91,6 +93,8 @@ public class OrgController {
     }
 
     @PostMapping("/import-cost-center")
+    @PreAuthorize("hasAuthority('org:import') or hasRole('ADMIN')")
+    @AuditLog(module = "org", operation = "导入成本中心", targetType = "OrgStructure")
     public ApiResponse<Map<String, Object>> importCostCenter(
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
@@ -109,6 +113,13 @@ public class OrgController {
     @AuditLog(module = "org", operation = "调整排序", targetType = "OrgStructure")
     public ApiResponse<Void> updateSortOrders(
             @RequestBody Map<Long, Integer> sortOrderMap) {
+        // M-10: Validate map size to prevent DoS
+        if (sortOrderMap == null || sortOrderMap.isEmpty()) {
+            throw new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.SYS_002, "Sort order map cannot be empty");
+        }
+        if (sortOrderMap.size() > 500) {
+            throw new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.SYS_002, "Sort order map too large, max 500 entries");
+        }
         orgService.updateSortOrders(sortOrderMap);
         return ApiResponse.success("Sort order updated", null);
     }

@@ -14,6 +14,7 @@ import com.phonebiz.repository.BillAllocationRepository;
 import com.phonebiz.service.BillAllocationService;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/bill-allocations")
@@ -72,7 +73,7 @@ public class BillAllocationController {
     public ApiResponse<Void> confirmOrg(@PathVariable Long id,
                                        @RequestParam String status,
                                        @RequestParam(required = false, defaultValue = "admin") String confirmBy) {
-        billAllocationService.adminConfirmOrg(id, BillAllocation.ConfirmStatus.valueOf(status.toLowerCase()), confirmBy);
+        billAllocationService.adminConfirmOrg(id, com.phonebiz.common.EnumHelper.parse(BillAllocation.ConfirmStatus.class, status), confirmBy);
         return ApiResponse.success(null);
     }
 
@@ -82,7 +83,7 @@ public class BillAllocationController {
     public ApiResponse<Void> confirmAmount(@PathVariable Long id,
                                           @RequestParam String status,
                                           @RequestParam(required = false, defaultValue = "admin") String confirmBy) {
-        billAllocationService.adminConfirmAmount(id, BillAllocation.ConfirmStatus.valueOf(status.toLowerCase()), confirmBy);
+        billAllocationService.adminConfirmAmount(id, com.phonebiz.common.EnumHelper.parse(BillAllocation.ConfirmStatus.class, status), confirmBy);
         return ApiResponse.success(null);
     }
 
@@ -92,7 +93,7 @@ public class BillAllocationController {
     public ApiResponse<Void> confirmAnomaly(@PathVariable Long id,
                                            @RequestParam String status,
                                            @RequestParam(required = false, defaultValue = "admin") String confirmBy) {
-        billAllocationService.financeConfirmAnomaly(id, BillAllocation.FinanceConfirmStatus.valueOf(status.toLowerCase()), confirmBy);
+        billAllocationService.financeConfirmAnomaly(id, com.phonebiz.common.EnumHelper.parse(BillAllocation.FinanceConfirmStatus.class, status), confirmBy);
         return ApiResponse.success(null);
     }
 
@@ -100,7 +101,8 @@ public class BillAllocationController {
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "提交账单", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> submit(@PathVariable Long id,
-                                  @RequestParam(required = false, defaultValue = "admin") String submitBy) {
+                                  Authentication authentication) {
+        String submitBy = authentication != null ? authentication.getName() : "system";
         billAllocationService.financeSubmit(id, submitBy);
         return ApiResponse.success(null);
     }

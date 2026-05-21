@@ -13,6 +13,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+
 @Slf4j
 @Component
 public class JwtUtil {
@@ -23,8 +25,22 @@ public class JwtUtil {
     @Value("${phonebiz.jwt.expiration}")
     private long expiration;
 
+    private static final int MIN_SECRET_LENGTH = 32;
+
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.length() < MIN_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                "JWT secret must be at least " + MIN_SECRET_LENGTH + " characters, got " 
+                + (secret == null ? "null" : secret.length()));
+        }
+    }
+
     /** Renew token if less than this many ms remaining (1 hour) */
     private static final long RENEW_THRESHOLD_MS = 3600_000L;
+
+    /** Maximum number of times a token can be renewed */
+    private static final int MAX_RENEWALS = 7;
 
     public String generateToken(String username, String role, Long scopeOrgId, Long roleId, List<String> permissions) {
         Date now = new Date();
@@ -43,14 +59,10 @@ public class JwtUtil {
                 .compact();
     }
 
-    /** Legacy method for backward compatibility */
+    /** @deprecated Use generateToken with permissions list instead */
+    @Deprecated
     public String generateToken(String username, String role, Long scopeOrgId) {
         return generateToken(username, role, scopeOrgId, null, List.of());
-    }
-
-    /** Legacy method */
-    public String generateToken(String username) {
-        return generateToken(username, null, null, null, List.of());
     }
 
     public String extractUsername(String token) {
@@ -136,6 +148,14 @@ public class JwtUtil {
                     .parseSignedClaims(token)
                     .getPayload();
 
+            // M-03: Enforce maximum renewal count
+            Integer renewalCount = claims.get("renewalCount", Integer.class);
+            if (renewalCount == null) renewalCount = 0;
+            if (renewalCount >= MAX_RENEWALS) {
+                log.debug("Token renewal limit reached for user={}, forcing re-login", claims.getSubject());
+                return null;
+            }
+
             Date expiration2 = claims.getExpiration();
             long remaining = expiration2.getTime() - System.currentTimeMillis();
 
@@ -146,14 +166,41 @@ public class JwtUtil {
                 Long roleId = claims.get("roleId", Long.class);
                 List<String> permissions = getPermissionsFromToken(token);
 
-                String newToken = generateToken(username, role, scopeOrgId, roleId, permissions);
-                log.info("Token renewed for user={}, remaining={}ms", username, remaining);
+                String newToken = generateTokenWithRenewalCount(username, role, scopeOrgId, roleId, permissions, renewalCount + 1);
+                log.info("Token renewed for user={}, remaining={}ms, renewalCount={}", username, remaining, renewalCount + 1);
                 return newToken;
             }
         } catch (Exception e) {
             log.debug("Token renewal check failed: {}", e.getMessage());
         }
         return null;
+    }
+
+    private String generateTokenWithRenewalCount(String username, String role, Long scopeOrgId, Long roleId, List<String> permissions, int renewalCount) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .id(java.util.UUID.randomUUID().toString())
+                .claim("role", role)
+                .claim("scopeOrgId", scopeOrgId)
+                .claim("roleId", roleId)
+                .claim("permissions", permissions)
+                .claim("renewalCount", renewalCount)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    /** M-02: Parse claims without full validation (for internal checks in filter) */
+    public Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public long getExpiration() {

@@ -304,7 +304,10 @@ public class WorkOrderDrivenPhoneService {
                 PhoneAllocationRequest request = new PhoneAllocationRequest();
                 request.setPhoneId(phoneId);
                 request.setOrgId(Long.parseLong(item.getToValue()));
-                request.setUserId("WORK_ORDER");
+                // Use the toValue as the target userId (item carries the target user/employee info)
+            if (item.getToValue() != null && !item.getToValue().isEmpty()) {
+                request.setUserId(item.getToValue());
+            }
                 phoneService.allocatePhone(request, operator);
             }
             case "surrender" -> {

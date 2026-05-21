@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.phonebiz.entity.Notification;
+import com.phonebiz.entity.SysUser;
 import com.phonebiz.repository.NotificationRepository;
+import com.phonebiz.repository.SysUserRepository;
 
 @Slf4j
 @Service
@@ -19,6 +21,7 @@ import com.phonebiz.repository.NotificationRepository;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final SysUserRepository sysUserRepository;
 
     @Transactional(readOnly = true)
     public Page<Notification> getNotifications(Long userId, Pageable pageable) {
@@ -96,6 +99,18 @@ public class NotificationService {
     @Transactional
     public void cleanArchived(Long userId) {
         notificationRepository.deleteByUserIdAndStatus(userId, Notification.NotificationStatus.ARCHIVED);
+    }
+
+    @Transactional(readOnly = true)
+    public Long getUserIdByUsername(String username) {
+        return sysUserRepository.findByUsername(username)
+                .map(SysUser::getId)
+                .orElseThrow(() -> new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.AUTH_004));
+    }
+
+    @Transactional(readOnly = true)
+    public Notification getNotificationById(Long notificationId) {
+        return notificationRepository.findById(notificationId).orElse(null);
     }
 
     public void sendPhoneAllocatedNotification(Long userId, String phoneNumber) {

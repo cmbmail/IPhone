@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const baseURL = import.meta.env.DEV ? "/api" : "/phonebiz"
+const baseURL = "/api"
 
 // Convert snake_case string to camelCase
 function toCamelCase(str: string): string {

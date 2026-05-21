@@ -29,6 +29,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // CSRF is disabled because this is a stateless JWT-based API.
+                // The frontend uses Authorization bearer token (not cookies) for authentication,
+                // so CSRF protection is not required. CORS restricts cross-origin requests.
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -38,7 +41,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers
-                        .contentTypeOptions(cto -> cto.disable())
+                        .contentTypeOptions(cto -> {}) // L-02: Re-enabled X-Content-Type-Options: nosniff
                         .frameOptions(fo -> fo.sameOrigin())
                 )
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

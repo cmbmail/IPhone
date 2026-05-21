@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { request } from '../api/request'
+
 import { Table, Button, Modal, Form, Input, Checkbox, Tag, Space, message, Popconfirm, Tooltip, Badge } from 'antd'
 import { PlusCircleOutlined, EditOutlined, DeleteOutlined, SafetyCertificateOutlined, ReloadOutlined, UserOutlined, LockOutlined } from '@ant-design/icons'
 import type { SysRole, SysPermission, CreateRoleDTO, UpdateRoleDTO } from '@/types/role'
@@ -164,11 +166,8 @@ const RoleManagement: React.FC = () => {
     setUserModalOpen(true)
     setUserLoading(true)
     try {
-      // Use raw fetch since we don't have a dedicated API
-      const token = localStorage.getItem('token')
-      const res = await fetch('/phonebiz/roles/' + role.id + '/user-count', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      })
+      // Use request utility instead of raw fetch
+      const res = await request.get('/roles/' + role.id + '/user-count')
       const countData = await res.json()
       const count = countData?.data
       if (count > 0) {

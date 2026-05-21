@@ -490,6 +490,10 @@ public class PhoneService {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.active && phone.getStatus() != PhoneNumber.PhoneStatus.idle) {
+            throw new BusinessException(ErrorCode.PHONE_003, "Cannot change number of phone in " + phone.getStatus() + " status");
+        }
+
         if (phone.getPhoneNumber().equals(newPhoneNumber)) {
             throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "New number is the same as current");
         }
@@ -584,6 +588,10 @@ public class PhoneService {
     public PhoneNumber changeExtension(Long phoneId, String newExtension, String operator, String workOrderNo, String remark) {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
+
+        if (phone.getStatus() != PhoneNumber.PhoneStatus.active && phone.getStatus() != PhoneNumber.PhoneStatus.idle) {
+            throw new BusinessException(ErrorCode.PHONE_003, "Cannot change extension of phone in " + phone.getStatus() + " status");
+        }
 
         if (newExtension != null && phoneRepository.existsByExtensionNumber(newExtension)) {
             throw new BusinessException(ErrorCode.PHONE_101);

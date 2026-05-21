@@ -2,7 +2,6 @@ package com.phonebiz.service;
 
 import java.util.HashMap;
 import java.util.*;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -218,7 +217,7 @@ public class OrgService {
                     org.setType(OrgStructure.OrgType.dept);
                 }
             }
-            org.setLevel(pid != null ? (orgRepository.findById(pid).orElse(null).getLevel() + 1) : 0);
+            org.setLevel(pid != null ? (orgRepository.findById(pid).map(o -> o.getLevel() + 1).orElse(0)) : 0);
             // Set sort_order
             List<OrgStructure> siblings = org.getParentId() == null
                     ? orgRepository.findByParentIdIsNull()
@@ -240,6 +239,18 @@ public class OrgService {
         int updated = 0;
         int skipped = 0;
         List<String> errors = new ArrayList<>();
+
+        // M-13: Validate Excel file magic bytes (PK header for xlsx)
+        try {
+            byte[] fileBytes = file.getBytes();
+            if (fileBytes.length < 4 || fileBytes[0] != 0x50 || fileBytes[1] != 0x4B) {
+                throw new BusinessException(ErrorCode.SYS_001, "Invalid Excel file format");
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYS_001, "Failed to read file");
+        }
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);

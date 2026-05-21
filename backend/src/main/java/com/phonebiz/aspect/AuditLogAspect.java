@@ -97,14 +97,15 @@ public class AuditLogAspect {
             ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
                 HttpServletRequest request = attrs.getRequest();
-                String ip = request.getHeader("X-Forwarded-For");
-                if (ip == null || ip.isEmpty()) {
-                    ip = request.getHeader("X-Real-IP");
+                String remoteAddr = request.getRemoteAddr();
+                // Only trust X-Real-IP from our nginx proxy (localhost)
+                if ("127.0.0.1".equals(remoteAddr) || "0:0:0:0:0:0:0:1".equals(remoteAddr)) {
+                    String realIp = request.getHeader("X-Real-IP");
+                    if (realIp != null && !realIp.isEmpty()) {
+                        return realIp.trim();
+                    }
                 }
-                if (ip == null || ip.isEmpty()) {
-                    ip = request.getRemoteAddr();
-                }
-                return ip;
+                return remoteAddr;
             }
         } catch (Exception e) {
             // Ignore

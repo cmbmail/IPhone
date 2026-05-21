@@ -13,8 +13,12 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.dto.CreateDeviceRequest;
+import com.phonebiz.dto.UpdateDeviceRequest;
 import com.phonebiz.entity.Device;
 import com.phonebiz.service.DeviceService;
+import com.phonebiz.common.BusinessException;
+import com.phonebiz.common.ErrorCode;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -44,22 +48,45 @@ public class DeviceController {
 
     @GetMapping("/status/{status}")
     public ApiResponse<List<Device>> getDevicesByStatus(@PathVariable String status) {
-        Device.DeviceStatus deviceStatus = Device.DeviceStatus.valueOf(status.toUpperCase());
+        Device.DeviceStatus deviceStatus = com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, status);
         return ApiResponse.success(deviceService.getDevicesByStatus(deviceStatus));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('device:assign') or hasRole('ADMIN')")
     @AuditLog(module = "device", operation = "创建设备", targetType = "Device")
-    public ApiResponse<Device> createDevice(@Valid @RequestBody Device device) {
+    public ApiResponse<Device> createDevice(@Valid @RequestBody CreateDeviceRequest request) {
+        Device device = Device.builder()
+                .deviceId(request.getDeviceId())
+                .deviceName(request.getDeviceName())
+                .deviceType(com.phonebiz.common.EnumHelper.parse(Device.DeviceType.class, request.getDeviceType()))
+                .model(request.getModel())
+                .macAddress(request.getMacAddress())
+                .ipAddress(request.getIpAddress())
+                .phoneNumber(request.getPhoneNumber())
+                .extensionNumber(request.getExtensionNumber())
+                .status(com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, request.getStatus()))
+                .firmwareVersion(request.getFirmwareVersion())
+                .remark(request.getRemark())
+                .build();
         return ApiResponse.success(deviceService.createDevice(device));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('device:assign') or hasRole('ADMIN')")
     @AuditLog(module = "device", operation = "更新设备", targetType = "Device", targetId = "#id")
-    public ApiResponse<Device> updateDevice(@PathVariable Long id, @RequestBody Device device) {
-        return ApiResponse.success(deviceService.updateDevice(id, device));
+    public ApiResponse<Device> updateDevice(@PathVariable Long id, @Valid @RequestBody UpdateDeviceRequest request) {
+        Device existing = deviceService.getDeviceById(id);
+        if (request.getDeviceName() != null) existing.setDeviceName(request.getDeviceName());
+        if (request.getModel() != null) existing.setModel(request.getModel());
+        if (request.getMacAddress() != null) existing.setMacAddress(request.getMacAddress());
+        if (request.getIpAddress() != null) existing.setIpAddress(request.getIpAddress());
+        if (request.getPhoneNumber() != null) existing.setPhoneNumber(request.getPhoneNumber());
+        if (request.getExtensionNumber() != null) existing.setExtensionNumber(request.getExtensionNumber());
+        if (request.getStatus() != null) existing.setStatus(com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, request.getStatus()));
+        if (request.getFirmwareVersion() != null) existing.setFirmwareVersion(request.getFirmwareVersion());
+        if (request.getRemark() != null) existing.setRemark(request.getRemark());
+        return ApiResponse.success(deviceService.updateDevice(id, existing));
     }
 
     @DeleteMapping("/{id}")
@@ -75,7 +102,7 @@ public class DeviceController {
     @AuditLog(module = "device", operation = "变更设备状态", targetType = "Device", targetId = "#deviceId")
     public ApiResponse<Device> updateStatus(@PathVariable String deviceId, 
                                            @RequestParam String status) {
-        Device.DeviceStatus deviceStatus = Device.DeviceStatus.valueOf(status.toUpperCase());
+        Device.DeviceStatus deviceStatus = com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, status);
         return ApiResponse.success(deviceService.updateStatus(deviceId, deviceStatus));
     }
 
@@ -85,6 +112,10 @@ public class DeviceController {
     public ApiResponse<Device> checkin(@PathVariable String deviceId,
                                       @RequestParam String ipAddress,
                                       @RequestParam(required = false) String firmwareVersion) {
+        // C-03: Validate IP address format to prevent SSRF
+        if (!ipAddress.matches("^[0-9a-fA-F.:]+$")) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid IP address format");
+        }
         return ApiResponse.success(deviceService.checkin(deviceId, ipAddress, firmwareVersion));
     }
 }

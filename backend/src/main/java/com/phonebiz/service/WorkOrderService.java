@@ -117,7 +117,7 @@ public class WorkOrderService {
             }
         }
         
-        log.info("Work order created: {} by {}", workOrderNo, requesterName);
+        log.info("Work order created: {}", workOrderNo);
         
         return getWorkOrderById(saved.getId());
     }
@@ -181,13 +181,15 @@ public class WorkOrderService {
                 .collect(Collectors.toList());
     }
 
-    private String generateWorkOrderNo() {
+    private synchronized String generateWorkOrderNo() {
         String dateStr = LocalDateTime.now().format(ORDER_NO_FORMATTER);
         String prefix = "WO" + dateStr;
         
+        // L-07: Use count + UUID suffix to avoid race condition
         long count = workOrderRepository.countByWorkOrderNoStartingWith(prefix);
+        String randomSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         
-        return String.format("%s%06d", prefix, count + 1);
+        return String.format("%s%04d%s", prefix, count + 1, randomSuffix);
     }
 
     private boolean isValidStatusTransition(WorkOrder.WorkOrderStatus from, WorkOrder.WorkOrderStatus to) {
@@ -251,7 +253,7 @@ public class WorkOrderService {
         workOrder.setUpdatedAt(LocalDateTime.now());
 
         WorkOrder saved = workOrderRepository.save(workOrder);
-        log.info("Work order accepted: {} by {}", saved.getWorkOrderNo(), handlerName);
+        log.info("Work order accepted: {}", saved.getWorkOrderNo());
 
         return getWorkOrderById(saved.getId());
     }
@@ -299,7 +301,7 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
-        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.PENDING) {
+        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.PENDING && workOrder.getStatus() != WorkOrder.WorkOrderStatus.ACCEPTED) {
             throw new BusinessException(ErrorCode.WO_002);
         }
 
@@ -359,13 +361,14 @@ public class WorkOrderService {
                 workOrderItemRepository.save(newItem);
             }
 
-            parentWorkOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
-            parentWorkOrder.setCompletedAt(LocalDateTime.now());
-            parentWorkOrder.setBatchId(batchId);
-            workOrderRepository.save(parentWorkOrder);
-
             result.add(getWorkOrderById(savedChild.getId()));
         }
+
+        // Save parent as COMPLETED once after all children created
+        parentWorkOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
+        parentWorkOrder.setCompletedAt(LocalDateTime.now());
+        parentWorkOrder.setBatchId(batchId);
+        workOrderRepository.save(parentWorkOrder);
 
         log.info("Batch split work order {} into {} child orders", id, result.size());
         return result;

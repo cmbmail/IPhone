@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.phonebiz.repository.SysUserRepository;
+import com.phonebiz.entity.SysUser;
 
 @Slf4j
 @Component
@@ -87,10 +88,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return;
                     }
                 }
+
+                // M-02: Invalidate tokens issued before password change
+                if (isTokenInvalidatedByPasswordChange(token, username)) {
+                    response.setStatus(401);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write(
+                        "{\"code\":10401,\"message\":\"Token invalidated by password change\",\"data\":null}"
+                    );
+                    return;
+                }
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isTokenInvalidatedByPasswordChange(String token, String username) {
+        try {
+            var claims = jwtUtil.parseClaims(token);
+            var issuedAt = claims.getIssuedAt();
+            if (issuedAt == null) return false;
+            var userOpt = sysUserRepository.findByUsername(username);
+            if (userOpt.isEmpty()) return false;
+            SysUser user = userOpt.get();
+            var pwdChangedAt = user.getPasswordChangedAt();
+            if (pwdChangedAt == null) return false;
+            // If token was issued before password change, it's invalid
+            return issuedAt.toInstant().isBefore(pwdChangedAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        } catch (Exception e) {
+            log.debug("Token password-change check failed: {}", e.getMessage());
+            return false;
+        }
     }
 
     private boolean mustChangePassword(String username) {

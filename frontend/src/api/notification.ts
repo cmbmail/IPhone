@@ -1,12 +1,13 @@
 import { request } from './request'
 
 export const notificationApi = {
-  getList: (userId: number, page = 0, size = 20) =>
-    request.get('/notifications', { params: { userId, page, size } }),
-  getUnreadCount: (userId: number) =>
-    request.get('/notifications/unread-count', { params: { userId } }),
+  // H-08: userId removed - server now resolves from JWT token to prevent IDOR
+  getList: (page = 0, size = 20) =>
+    request.get('/notifications', { params: { page, size } }),
+  getUnreadCount: () =>
+    request.get('/notifications/unread-count'),
   markAsRead: (id: number) =>
     request.post(`/notifications/${id}/read`),
-  markAllAsRead: (userId: number) =>
-    request.post('/notifications/read-all', null, { params: { userId } }),
+  markAllAsRead: () =>
+    request.post('/notifications/read-all'),
 }

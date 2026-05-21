@@ -369,6 +369,24 @@ public class PhoneDeviceService {
         log.info("话机{}解绑号码{}成功", deviceId, phoneId);
     }
 
+    @Transactional
+    public void unbindPhoneByExtension(Long deviceId, String extensionNumber) {
+        phoneDeviceRepository.findById(deviceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
+        // Look up phone by extension number, then find and delete the mapping
+        com.phonebiz.entity.PhoneNumber phone = phoneNumberRepository.findByExtensionNumber(extensionNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SYS_002, "Phone with extension " + extensionNumber + " not found"));
+        devicePhoneMappingRepository.findByDeviceIdAndPhoneId(deviceId, phone.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.SYS_002, "Binding not found for extension " + extensionNumber));
+        devicePhoneMappingRepository.deleteByDeviceIdAndPhoneId(deviceId, phone.getId());
+        log.info("话机{}解绑分机{}成功", deviceId, extensionNumber);
+    }
+
+    @Transactional
+    public void unbindAllPhonesForDevice(Long deviceId) {
+        unbindAllPhones(deviceId);
+    }
+
     private void unbindAllPhones(Long deviceId) {
         List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByDeviceId(deviceId);
         if (!mappings.isEmpty()) {

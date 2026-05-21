@@ -3,6 +3,7 @@ package com.phonebiz.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.common.EnumHelper;
+import com.phonebiz.dto.PhoneImportDataRequest;
 import com.phonebiz.dto.PhoneImportRequest;
 import com.phonebiz.entity.ImportBatch;
 import com.phonebiz.service.ImportService;
@@ -42,11 +45,23 @@ public class ImportController {
     @AuditLog(module = "import", operation = "Import 操作")
     @PostMapping("/phone/{batchId}/upload")
     public ApiResponse<Void> uploadPhoneData(@PathVariable String batchId,
-                                            @RequestBody List<Map<String, Object>> data,
+                                            @Valid @RequestBody List<PhoneImportDataRequest> data,
                                             @RequestParam(defaultValue = "ERROR") String conflictStrategy,
                                             Authentication authentication) {
-        PhoneImportRequest.ConflictStrategy strategy = PhoneImportRequest.ConflictStrategy.valueOf(conflictStrategy.toUpperCase());
-        importService.processImportAsync(batchId, data, strategy, authentication != null ? authentication.getName() : "system");
+        PhoneImportRequest.ConflictStrategy strategy = EnumHelper.parse(
+                PhoneImportRequest.ConflictStrategy.class, conflictStrategy);
+        // M-07: Convert validated DTO to Map for service compatibility
+        List<Map<String, Object>> dataList = data.stream().map(d -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("phoneNumber", d.getPhoneNumber());
+            map.put("extensionNumber", d.getExtensionNumber());
+            map.put("orgName", d.getOrgName());
+            map.put("employeeNo", d.getEmployeeNo());
+            map.put("status", d.getStatus());
+            map.put("remark", d.getRemark());
+            return map;
+        }).collect(Collectors.toList());
+        importService.processImportAsync(batchId, dataList, strategy, authentication != null ? authentication.getName() : "system");
         
         return ApiResponse.success("Import started", null);
     }
@@ -64,4 +79,3 @@ public class ImportController {
         return ApiResponse.success(result);
     }
 }
-

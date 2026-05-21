@@ -34,7 +34,7 @@ public class SysUserService {
     private final SysRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${phonebiz.default-password:Password@123}")
+    @Value("${phonebiz.default-password}")
     private String defaultPassword;
 
     // ======== Legacy methods ========

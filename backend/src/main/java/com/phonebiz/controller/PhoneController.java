@@ -38,7 +38,7 @@ public class PhoneController {
     private final PhoneService phoneService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<Page<PhoneNumber>> getPhones(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -47,36 +47,36 @@ public class PhoneController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> getPhoneById(@PathVariable Long id) {
         return ApiResponse.success(phoneService.getPhoneById(id));
     }
 
     @GetMapping("/number/{phoneNumber}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> getPhoneByNumber(@PathVariable String phoneNumber) {
         return ApiResponse.success(phoneService.getPhoneByNumber(phoneNumber));
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<List<PhoneNumber>> getPhonesByUser(@PathVariable String userId) {
         return ApiResponse.success(phoneService.getPhonesByUser(userId));
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<Page<PhoneNumber>> getPhonesByStatus(
             @PathVariable String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PhoneNumber.PhoneStatus phoneStatus = PhoneNumber.PhoneStatus.valueOf(status.toLowerCase());
+        PhoneNumber.PhoneStatus phoneStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, status);
         Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.success(phoneService.getPhonesByStatus(phoneStatus, pageable));
     }
 
     @GetMapping("/{id}/history")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<Page<PhoneHistory>> getPhoneHistory(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int page,
@@ -86,13 +86,13 @@ public class PhoneController {
     }
 
     @GetMapping("/idle")
-    @PreAuthorize("hasAuthority('phone:view') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<List<PhoneNumber>> getIdlePhones() {
         return ApiResponse.success(phoneService.getIdlePhones());
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('phone:import') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:import') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "创建号码", targetType = "PhoneNumber")
     public ApiResponse<PhoneNumber> createPhone(
             @Valid @RequestBody CreatePhoneRequest request,
@@ -102,7 +102,7 @@ public class PhoneController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "更新号码", targetType = "PhoneNumber", targetId = "#id")
     public ApiResponse<PhoneNumber> updatePhone(
             @PathVariable Long id,
@@ -113,7 +113,7 @@ public class PhoneController {
     }
 
     @PostMapping("/allocate")
-    @PreAuthorize("hasAuthority('phone:assign') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:assign') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "分配号码", targetType = "PhoneNumber", targetId = "#phoneId")
     public ApiResponse<PhoneNumber> allocatePhone(
             @Valid @RequestBody PhoneAllocationRequest request,
@@ -123,7 +123,7 @@ public class PhoneController {
     }
 
     @PostMapping("/reclaim")
-    @PreAuthorize("hasAuthority('phone:revoke') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:revoke') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "回收号码", targetType = "PhoneNumber", targetId = "#phoneId")
     public ApiResponse<PhoneNumber> reclaimPhone(
             @Valid @RequestBody PhoneReclaimRequest request,
@@ -133,17 +133,17 @@ public class PhoneController {
     }
 
     @PostMapping("/status")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> changeStatus(
             @Valid @RequestBody PhoneStatusChangeRequest request,
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
-        PhoneNumber.PhoneStatus newStatus = PhoneNumber.PhoneStatus.valueOf(request.getNewStatus().toLowerCase());
+        PhoneNumber.PhoneStatus newStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, request.getNewStatus());
         return ApiResponse.success(phoneService.changeStatus(request.getPhoneId(), newStatus, operator, request.getWorkOrderNo(), request.getRemark()));
     }
 
     @PostMapping("/surrender")
-    @PreAuthorize("hasAuthority('phone:surrender') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:surrender') or hasAuthority('phone:view') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "交回号码", targetType = "PhoneNumber", targetId = "#phoneId")
     public ApiResponse<PhoneSurrenderRecord> surrenderPhone(
             @Valid @RequestBody PhoneSurrenderRequest request,
@@ -153,7 +153,7 @@ public class PhoneController {
     }
 
     @PostMapping("/reserve")
-    @PreAuthorize("hasAuthority('phone:reserve') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:reserve') or hasAuthority('phone:view') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "预留号码", targetType = "PhoneNumber", targetId = "#phoneId")
     public ApiResponse<PhoneNumber> reservePhone(
             @Valid @RequestBody PhoneReserveRequest request,
@@ -163,7 +163,7 @@ public class PhoneController {
     }
 
     @PostMapping("/release")
-    @PreAuthorize("hasAuthority('phone:revoke') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:revoke') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "释放号码", targetType = "PhoneNumber", targetId = "#phoneId")
     public ApiResponse<PhoneNumber> releasePhone(
             @Valid @RequestBody PhoneReleaseRequest request,
@@ -173,7 +173,7 @@ public class PhoneController {
     }
 
     @PostMapping("/change-user")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> changeUser(
             @Valid @RequestBody PhoneChangeRequest request,
             Authentication authentication) {
@@ -182,7 +182,7 @@ public class PhoneController {
     }
 
     @PostMapping("/change-org")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> changeOrg(
             @Valid @RequestBody PhoneChangeRequest request,
             Authentication authentication) {
@@ -191,7 +191,7 @@ public class PhoneController {
     }
 
     @PostMapping("/change-number")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> changeNumber(
             @Valid @RequestBody PhoneChangeRequest request,
             Authentication authentication) {
@@ -200,7 +200,7 @@ public class PhoneController {
     }
 
     @PostMapping("/change-extension")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> changeExtension(
             @Valid @RequestBody PhoneChangeRequest request,
             Authentication authentication) {
@@ -209,7 +209,7 @@ public class PhoneController {
     }
 
     @PostMapping("/change")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "批量变更号码", targetType = "PhoneNumber")
     public ApiResponse<PhoneNumber> batchChange(
             @Valid @RequestBody PhoneChangeRequest request,
@@ -219,7 +219,7 @@ public class PhoneController {
     }
 
     @PostMapping("/batch-change")
-    @PreAuthorize("hasAuthority('phone:change') or hasAnyRole('ADMIN', 'OPS')")
+    @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     public ApiResponse<Integer> batchChangeMultiple(
             @RequestParam List<Long> phoneIds,
             @Valid @RequestBody PhoneChangeRequest request,

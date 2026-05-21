@@ -75,7 +75,7 @@ public class InvoiceService {
         Path filePath = Paths.get(storagePath, storedFileName);
         Files.copy(new java.io.ByteArrayInputStream(fileBytes), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-        String md5 = calculateMD5(fileBytes);
+        String fileHash = calculateSHA256(fileBytes);
 
         Invoice invoice = Invoice.builder()
                 .invoiceNo(invoiceNo)
@@ -92,13 +92,13 @@ public class InvoiceService {
                 .fileName(originalFileName)
                 .filePath(filePath.toString())
                 .fileSize(file.getSize())
-                .md5(md5)
+                .md5(fileHash)
                 .build();
         invoiceFileRepository.save(invoiceFile);
 
         processOcrAndDistribute(invoice.getId(), filePath);
 
-        log.info("Invoice uploaded: invoiceNo={}, billMonth={}, file={}", invoiceNo, billMonth, originalFileName);
+        log.info("Invoice uploaded: billMonth={}, invoiceId={}", billMonth, invoice.getId());
         return invoice;
     }
 
@@ -125,13 +125,20 @@ public class InvoiceService {
     }
 
     private String generateStoredFileName(String invoiceNo, String originalFileName) {
-        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        return invoiceNo + extension;
+        // M-14: Sanitize invoiceNo to prevent path traversal
+        String sanitized = invoiceNo.replaceAll("[^A-Za-z0-9_-]", "_");
+        // Validate extension is safe
+        int dotIndex = originalFileName.lastIndexOf(".");
+        String extension = dotIndex >= 0 ? originalFileName.substring(dotIndex) : "";
+        if (!extension.matches("\\.[a-zA-Z0-9]{1,10}")) {
+            extension = ".pdf"; // fallback to safe default
+        }
+        return sanitized + extension;
     }
 
-    private String calculateMD5(byte[] data) {
+    private String calculateSHA256(byte[] data) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(data);
             StringBuilder sb = new StringBuilder();
             for (byte b : digest) {
@@ -247,7 +254,7 @@ public class InvoiceService {
                 "Invoice"
         );
 
-        log.info("Invoice distributed: invoiceNo={}, recipient={}", invoice.getInvoiceNo(), recipientUser);
+        log.info("Invoice distributed: invoiceId={}, recipientOrgId={}", invoice.getId(), invoice.getRecipientOrgId());
     }
 
     private String findRecipientUser(Long orgId) {
@@ -285,6 +292,11 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Invoice> getInvoicesByOrgAndStatus(Long orgId, Invoice.InvoiceStatus status, Pageable pageable) {
+        return invoiceRepository.findByRecipientOrgIdAndStatus(orgId, status, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Page<Invoice> getInvoicesByStatus(Invoice.InvoiceStatus status, Pageable pageable) {
         return invoiceRepository.findByStatus(status, pageable);
     }
@@ -318,7 +330,7 @@ public class InvoiceService {
         invoiceDistributionRepository.deleteAll(invoiceDistributionRepository.findByInvoiceId(id));
         invoiceRepository.delete(invoice);
 
-        log.info("Invoice deleted: id={}, invoiceNo={}", id, invoice.getInvoiceNo());
+        log.info("Invoice deleted: id={}", id);
     }
 
     @Transactional(readOnly = true)

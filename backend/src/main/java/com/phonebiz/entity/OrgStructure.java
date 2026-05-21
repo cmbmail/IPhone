@@ -56,7 +56,7 @@ public class OrgStructure extends BaseEntity {
     @Column(nullable = false)
     private OrgStatus status = OrgStatus.active;
 
-    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.EAGER)
     @OrderBy("sortOrder ASC")
     private List<OrgStructure> children = new ArrayList<>();
 

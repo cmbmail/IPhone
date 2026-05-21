@@ -35,6 +35,13 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    /** Maximum entries in the rate limit map to prevent memory leak */
+    private static final int MAX_ENTRIES = 10_000;
+
+    /** Cleanup interval in seconds */
+    private static final long CLEANUP_INTERVAL_SECONDS = 300;
+    private volatile long lastCleanupTime = Instant.now().getEpochSecond();
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -44,6 +51,13 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         if (!requestUri.endsWith("/auth/login") || !"POST".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        // M-04: Periodic cleanup to prevent memory leak
+        long cleanupNow = Instant.now().getEpochSecond();
+        if (cleanupNow - lastCleanupTime > CLEANUP_INTERVAL_SECONDS) {
+            cleanupExpiredEntries(cleanupNow);
+            lastCleanupTime = cleanupNow;
         }
 
         String clientIp = getClientIp(request);
@@ -78,19 +92,34 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) {
-            return xff.split(",")[0].trim();
+        // Only trust X-Real-IP from our known nginx proxy (127.0.0.1)
+        // Never trust X-Forwarded-For from external clients
+        String remoteAddr = request.getRemoteAddr();
+        if ("127.0.0.1".equals(remoteAddr) || "0:0:0:0:0:0:0:1".equals(remoteAddr)) {
+            String realIp = request.getHeader("X-Real-IP");
+            if (realIp != null && !realIp.isEmpty()) {
+                return realIp.trim();
+            }
         }
-        String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isEmpty()) {
-            return realIp;
-        }
-        return request.getRemoteAddr();
+        return remoteAddr;
     }
 
     private static class AttemptTracker {
         long windowStart = Instant.now().getEpochSecond();
         AtomicInteger count = new AtomicInteger(0);
+    }
+
+    private void cleanupExpiredEntries(long now) {
+        attemptMap.entrySet().removeIf(entry -> {
+            AttemptTracker tracker = entry.getValue();
+            synchronized (tracker) {
+                return now - tracker.windowStart > windowSeconds * 2;
+            }
+        });
+        // Also limit total entries
+        if (attemptMap.size() > MAX_ENTRIES) {
+            attemptMap.clear();
+            log.info("Rate limit map cleared due to size exceeding {}", MAX_ENTRIES);
+        }
     }
 }
