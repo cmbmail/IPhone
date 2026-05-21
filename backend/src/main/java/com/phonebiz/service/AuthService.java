@@ -51,15 +51,14 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         SysUser user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004, "Authentication failed"));
 
         if (user.isLocked()) {
-            throw new BusinessException(ErrorCode.AUTH_003,
-                    "Account locked until " + user.getLockedUntil());
+            throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         }
 
         if (user.getStatus() == SysUser.UserStatus.inactive) {
-            throw new BusinessException(ErrorCode.AUTH_004, "Account is inactive");
+            throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         }
 
         try {
@@ -77,14 +76,12 @@ public class AuthService {
             if (failCount >= maxFailCount) {
                 LocalDateTime lockedUntil = LocalDateTime.now().plusMinutes(lockDurationMinutes);
                 userRepository.updateLockedUntil(user.getUsername(), lockedUntil);
-                throw new BusinessException(ErrorCode.AUTH_003,
-                        "Account locked due to " + failCount + " failed attempts. Locked until " + lockedUntil);
+                throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
             }
 
-            throw new BusinessException(ErrorCode.AUTH_002,
-                    "Invalid credentials. " + (maxFailCount - failCount) + " attempts remaining");
+            throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         } catch (LockedException e) {
-            throw new BusinessException(ErrorCode.AUTH_003);
+            throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         }
 
         // Load permissions from role_id
@@ -130,7 +127,7 @@ public class AuthService {
     @Transactional
     public void changePassword(String username, ChangePasswordRequest request) {
         SysUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004, "Authentication failed"));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.AUTH_002, "Old password incorrect");
@@ -143,7 +140,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public void verifyPassword(String username, String rawPassword) {
         SysUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004, "Authentication failed"));
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.AUTH_002, "密码错误");
         }
@@ -152,7 +149,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse.UserInfo getCurrentUser(String username) {
         SysUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_001));
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004, "Authentication failed"));
 
         return LoginResponse.UserInfo.builder()
                 .id(user.getId())

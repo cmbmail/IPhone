@@ -10,10 +10,10 @@ public enum ErrorCode {
     SYSTEM_ERROR(500, "System error"),
     PARAM_VALIDATION_FAILED(400, "Parameter validation failed"),
 
-    AUTH_001(1001, "Username not found"),
-    AUTH_002(1002, "Password incorrect"),
+    AUTH_001(1001, "Authentication failed"),
+    AUTH_002(1002, "Authentication failed"),
     AUTH_003(1003, "Account locked"),
-    AUTH_004(1004, "Unauthorized"),
+    AUTH_004(1004, "Authentication failed"),
     AUTH_005(1005, "Token expired"),
     AUTH_006(1006, "Token invalid"),
     AUTH_007(1007, "First login must change password"),

@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/phonebiz?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: ${DB_PASSWORD:Cmb@123456}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -47,8 +47,13 @@ management:
 
 phonebiz:
   jwt:
-    secret: ${JWT_SECRET:yG-K6za6s941O78p2sQkeMBWop5Bg6r9hhEwQ8GDljeMQs7v57sWgmIiwePpGF_q}
+    secret: ${JWT_SECRET}
     expiration: 86400000
   lock:
     max-fail-count: 5
     lock-duration-minutes: 30
+  cors:
+    allowed-origins: "http://192.168.139.161,http://localhost:5173"
+  rate-limit:
+    max-attempts: 10
+    window-seconds: 60

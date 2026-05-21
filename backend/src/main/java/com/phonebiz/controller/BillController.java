@@ -18,6 +18,8 @@ import com.phonebiz.common.ErrorCode;
 import com.phonebiz.entity.BillRaw;
 import com.phonebiz.repository.BillRawRepository;
 import com.phonebiz.service.AuthService;
+import com.phonebiz.dto.DeleteBillRequest;
+import jakarta.validation.Valid;
 import com.phonebiz.service.BillImportService;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -83,13 +85,11 @@ public class BillController {
     @PreAuthorize("hasAuthority('bill:delete') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "删除账单", targetType = "BillRaw")
     public ApiResponse<Integer> deleteBills(
-            @RequestParam String billMonth,
-            @RequestParam String chargeType,
-            @RequestParam String password,
+            @Valid @RequestBody DeleteBillRequest request,
             Authentication authentication) {
         String username = authentication.getName();
-        authService.verifyPassword(username, password);
-        List<BillRaw> bills = billRawRepository.findByBillMonthAndChargeType(billMonth, chargeType);
+        authService.verifyPassword(username, request.getPassword());
+        List<BillRaw> bills = billRawRepository.findByBillMonthAndChargeType(request.getBillMonth(), request.getChargeType());
         billRawRepository.deleteAll(bills);
         return ApiResponse.success(bills.size());
     }

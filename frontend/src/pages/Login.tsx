@@ -15,8 +15,8 @@ const Login = () => {
       const response = await authApi.login(values)
       const { token, user, expiresIn } = response.data.data
 
-      localStorage.setItem('token', token)
       localStorage.setItem('expiresIn', String(expiresIn))
+      localStorage.setItem('loginTime', String(Date.now()))
 
       setAuth(token, user)
 

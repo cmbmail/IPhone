@@ -26,9 +26,23 @@ const request = axios.create({
   timeout: 10000,
 })
 
+// Read token from Zustand persist storage (auth-storage in localStorage)
+function getStoredToken(): string | null {
+  try {
+    const raw = localStorage.getItem("auth-storage")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return parsed?.state?.token || null
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
 request.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token")
+    const token = getStoredToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -47,9 +61,9 @@ request.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("expiresIn")
       localStorage.removeItem("auth-storage")
+      localStorage.removeItem("expiresIn")
+      localStorage.removeItem("loginTime")
       window.location.href = "/login"
     }
     return Promise.reject(error)

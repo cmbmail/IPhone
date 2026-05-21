@@ -27,5 +27,5 @@ export const billApi = {
     })
   },
 
-  delete: (billMonth: string, chargeType: string, password: string) => request.delete('/bills', { params: { billMonth, chargeType, password } }),
+  delete: (billMonth: string, chargeType: string, password: string) => request.delete('/bills', { data: { billMonth, chargeType, password } }),
 }

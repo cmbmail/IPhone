@@ -37,7 +37,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .headers(headers -> headers
+                        .contentTypeOptions(cto -> cto.disable())
+                        .frameOptions(fo -> fo.sameOrigin())
+                )
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

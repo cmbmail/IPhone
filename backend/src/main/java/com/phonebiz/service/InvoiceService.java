@@ -48,8 +48,13 @@ public class InvoiceService {
     private static final Pattern AMOUNT_PATTERN = Pattern.compile("(\\d{1,10}(?:\\.\\d{1,2})?)");
     private static final Pattern COMPANY_NAME_PATTERN = Pattern.compile("[\\u4e00-\\u9fa5]{2,50}");
 
+    private static final Pattern BILL_MONTH_PATTERN = Pattern.compile("^\\d{6}$");
+
     @Transactional
     public Invoice uploadInvoice(MultipartFile file, String billMonth, Long sourceOrgId, String operator) throws IOException {
+        if (!BILL_MONTH_PATTERN.matcher(billMonth).matches()) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid billMonth format, expected yyyyMM");
+        }
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || (!originalFileName.endsWith(".pdf") && !originalFileName.endsWith(".PDF"))) {
             throw new BusinessException(ErrorCode.SYS_001);
@@ -101,7 +106,13 @@ public class InvoiceService {
     }
 
     private String ensureStoragePath(String billMonth) throws IOException {
-        Path path = Paths.get(INVOICE_STORAGE_PATH, billMonth);
+        if (!BILL_MONTH_PATTERN.matcher(billMonth).matches()) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid billMonth format");
+        }
+        Path path = Paths.get(INVOICE_STORAGE_PATH, billMonth).normalize();
+        if (!path.startsWith(INVOICE_STORAGE_PATH)) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid storage path");
+        }
         if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
