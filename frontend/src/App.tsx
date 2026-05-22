@@ -35,7 +35,7 @@ const menuItems = [
     { key: '/work-orders', icon: <CarryOutOutlined />, label: '工单管理' },
   ]},
   { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码资源', children: [
-    { key: '/phones', icon: <PhoneOutlined />, label: '号码管理' },
+    { key: '/phones', icon: <PhoneOutlined />, label: '电话号码' },
     { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
     { key: '/extension-pools', icon: <AppstoreOutlined />, label: '分机池' },
     { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理' },
@@ -60,7 +60,7 @@ const menuItems = [
 const pageTitleMap: Record<string, string> = {
   '/dashboard': '系统看板',
   '/work-orders': '工单管理',
-  '/phones': '号码管理',
+  '/phones': '电话号码',
   '/phone-ownership': '号码归属',
   '/extension-pools': '分机池',
   '/area-codes': '区号管理',
