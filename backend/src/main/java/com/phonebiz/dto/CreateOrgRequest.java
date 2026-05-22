@@ -12,7 +12,7 @@ public class CreateOrgRequest {
 
     private Long parentId;
 
-    private String type;
+    private Integer type;
 
     private String remark;
 

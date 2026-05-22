@@ -88,7 +88,7 @@ public class PhoneDeviceService {
                     dto.setPhoneId(phone.getId());
                     dto.setPhoneNumber(phone.getPhoneNumber());
                     dto.setExtensionNumber(phone.getExtensionNumber());
-                    dto.setStatus(String.valueOf(phone.getStatus()));
+                    dto.setStatus(phone.getStatus());
                     dto.setUserId(phone.getUserId());
                     dto.setLineOrder(mapping.getLineOrder());
                     dto.setCreatedAt(mapping.getCreatedAt());

@@ -23,7 +23,7 @@ public class UpdateEmployeeRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    private String status;
+    private Integer status;
 
     private String leaveDate;
 }

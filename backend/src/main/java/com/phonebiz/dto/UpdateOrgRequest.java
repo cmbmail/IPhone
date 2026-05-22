@@ -7,9 +7,9 @@ public class UpdateOrgRequest {
 
     private String name;
 
-    private String type;
+    private Integer type;
 
-    private String status;
+    private Integer status;
 
     private Integer sortOrder;
 

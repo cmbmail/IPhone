@@ -29,9 +29,7 @@ public class CostCenterMapping extends BaseEntity {
     @Column(name = "cost_center_code", nullable = false, length = 50)
     private String costCenterCode;
     @Column(nullable = false)
-    private CostCenterStatus status = CostCenterStatus.active;
+    private Integer status = CC_ACTIVE;
 
-    public enum CostCenterStatus {
-        active, inactive
-    }
+
 }

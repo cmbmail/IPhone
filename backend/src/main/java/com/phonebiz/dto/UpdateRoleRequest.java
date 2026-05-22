@@ -15,7 +15,7 @@ public class UpdateRoleRequest {
     @Size(max = 200, message = "描述不能超过200个字符")
     private String description;
 
-    private String status;
+    private Integer status;
 
     private List<Long> permissionIds;
 }

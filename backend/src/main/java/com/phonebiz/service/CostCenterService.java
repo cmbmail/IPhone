@@ -56,7 +56,7 @@ public class CostCenterService {
         costCenter.setOrgId(request.getOrgId());
         costCenter.setCostCenterName(request.getCostCenterName());
         costCenter.setCostCenterCode(request.getCostCenterCode());
-        costCenter.setStatus(CostCenterMapping.CostCenterStatus.valueOf(request.getStatus()));
+        costCenter.setStatus(request.getStatus());
         costCenter.setCreatedBy(operator);
         costCenter.setUpdatedBy(operator);
 
@@ -79,7 +79,7 @@ public class CostCenterService {
         }
 
         if (request.getStatus() != null) {
-            costCenter.setStatus(CostCenterMapping.CostCenterStatus.valueOf(request.getStatus()));
+            costCenter.setStatus(request.getStatus());
         }
 
         costCenter.setUpdatedBy(operator);

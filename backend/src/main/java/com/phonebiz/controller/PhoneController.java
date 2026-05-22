@@ -138,7 +138,7 @@ public class PhoneController {
             @Valid @RequestBody PhoneStatusChangeRequest request,
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
-        Integer newStatus = Integer.parseInt(request.getNewStatus());
+        Integer newStatus = request.getNewStatus();
         return ApiResponse.success(phoneService.changeStatus(request.getPhoneId(), newStatus, operator, request.getWorkOrderNo(), request.getRemark()));
     }
 

@@ -13,7 +13,7 @@ public interface CostCenterMappingRepository extends JpaRepository<CostCenterMap
 
     List<CostCenterMapping> findByOrgId(Long orgId);
 
-    List<CostCenterMapping> findByStatus(CostCenterMapping.CostCenterStatus status);
+    List<CostCenterMapping> findByStatus(Integer status);
 
     Optional<CostCenterMapping> findByOrgIdAndCostCenterCode(Long orgId, String costCenterCode);
 

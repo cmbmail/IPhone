@@ -59,13 +59,13 @@ public class DeviceController {
         Device device = Device.builder()
                 .deviceId(request.getDeviceId())
                 .deviceName(request.getDeviceName())
-                .deviceType(Integer.parseInt(request.getDeviceType()))
+                .deviceType(request.getDeviceType())
                 .model(request.getModel())
                 .macAddress(request.getMacAddress())
                 .ipAddress(request.getIpAddress())
                 .phoneNumber(request.getPhoneNumber())
                 .extensionNumber(request.getExtensionNumber())
-                .status(Integer.parseInt(request.getStatus()))
+                .status(request.getStatus())
                 .firmwareVersion(request.getFirmwareVersion())
                 .remark(request.getRemark())
                 .build();
@@ -83,7 +83,7 @@ public class DeviceController {
         if (request.getIpAddress() != null) existing.setIpAddress(request.getIpAddress());
         if (request.getPhoneNumber() != null) existing.setPhoneNumber(request.getPhoneNumber());
         if (request.getExtensionNumber() != null) existing.setExtensionNumber(request.getExtensionNumber());
-        if (request.getStatus() != null) existing.setStatus(Integer.parseInt(request.getStatus()));
+        if (request.getStatus() != null) existing.setStatus(request.getStatus());
         if (request.getFirmwareVersion() != null) existing.setFirmwareVersion(request.getFirmwareVersion());
         if (request.getRemark() != null) existing.setRemark(request.getRemark());
         return ApiResponse.success(deviceService.updateDevice(id, existing));

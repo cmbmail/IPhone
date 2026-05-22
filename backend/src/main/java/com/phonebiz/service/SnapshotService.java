@@ -146,7 +146,7 @@ public class SnapshotService {
 
     private Map<Long, String> buildCostCenterMap() {
         Map<Long, String> map = new HashMap<>();
-        List<CostCenterMapping> mappings = costCenterMappingRepository.findByStatus(CostCenterMapping.CostCenterStatus.active);
+        List<CostCenterMapping> mappings = costCenterMappingRepository.findByStatus(CostCenterMapping.CC_ACTIVE);
         for (CostCenterMapping mapping : mappings) {
             map.put(mapping.getOrgId(), mapping.getCostCenterCode());
         }

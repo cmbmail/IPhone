@@ -13,7 +13,7 @@ public class CreateDeviceRequest {
     private String deviceName;
 
     @NotNull(message = "Device type cannot be null")
-    private String deviceType;
+    private Integer deviceType;
 
     private String model;
 
@@ -26,7 +26,7 @@ public class CreateDeviceRequest {
     private String extensionNumber;
 
     @NotNull(message = "Status cannot be null")
-    private String status;
+    private Integer status;
 
     private String firmwareVersion;
 

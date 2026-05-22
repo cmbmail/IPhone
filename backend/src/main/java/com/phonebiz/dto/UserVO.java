@@ -14,6 +14,6 @@ public class UserVO {
     private Long roleId;
     private String roleName;
     private String roleCode;
-    private String status;
+    private Integer status;
     private LocalDateTime updatedAt;
 }

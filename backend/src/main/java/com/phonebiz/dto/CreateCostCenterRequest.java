@@ -17,5 +17,5 @@ public class CreateCostCenterRequest {
     @NotBlank(message = "Cost center code is required")
     private String costCenterCode;
 
-    private String status = "active";
+    private Integer status = 1;
 }

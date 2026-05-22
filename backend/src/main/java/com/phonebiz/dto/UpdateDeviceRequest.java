@@ -17,7 +17,7 @@ public class UpdateDeviceRequest {
 
     private String extensionNumber;
 
-    private String status;
+    private Integer status;
 
     private String firmwareVersion;
 

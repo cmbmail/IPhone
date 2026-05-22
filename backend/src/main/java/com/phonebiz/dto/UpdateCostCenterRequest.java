@@ -6,5 +6,5 @@ import lombok.Data;
 public class UpdateCostCenterRequest {
     private String costCenterName;
     private String costCenterCode;
-    private String status;
+    private Integer status;
 }

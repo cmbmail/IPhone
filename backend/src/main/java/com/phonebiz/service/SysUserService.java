@@ -150,11 +150,11 @@ public class SysUserService {
                 vo.setId(user.getId());
                 vo.setUsername(user.getUsername());
                 vo.setRoleId(user.getRoleId());
-                vo.setStatus(String.valueOf(user.getStatus()));
+                vo.setStatus(user.getStatus());
                 vo.setUpdatedAt(user.getUpdatedAt());
             } else {
                 vo.setUsername(emp.getEmployeeNo());
-                vo.setStatus("active");
+                vo.setStatus(Employee.EMP_ACTIVE);
                 vo.setUpdatedAt(emp.getUpdatedAt());
             }
 
