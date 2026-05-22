@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Progress, Table, Space, Tag, Spin, List } from 'antd'
+import { Card, Row, Col, Statistic, Progress, Table, Space, Tag, Spin, List, Modal } from 'antd'
 import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '@ant-design/icons'
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
 import { request } from '@/api/request'
@@ -43,6 +43,7 @@ const Dashboard = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -194,14 +195,14 @@ const Dashboard = () => {
               <List
                 dataSource={announcements}
                 renderItem={(item: Announcement) => (
-                  <List.Item style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+                  <List.Item style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }} onClick={() => setSelectedAnnouncement(item)}>
                     <div style={{ width: '100%' }}>
                       <div style={{ marginBottom: 4 }}>
                         <Tag color={ANNOUNCEMENT_TYPE_COLORS[item.announcementType] || 'default'} style={{ fontSize: 11 }}>
                           {ANNOUNCEMENT_TYPE_NAMES[item.announcementType] || item.announcementType}
                         </Tag>
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#1890ff' }}>
                         {item.title}
                       </div>
                       <div style={{ fontSize: 12, color: '#999' }}>
@@ -230,6 +231,34 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      <Modal
+        open={!!selectedAnnouncement}
+        title={
+          selectedAnnouncement ? (
+            <Space>
+              <Tag color={ANNOUNCEMENT_TYPE_COLORS[selectedAnnouncement.announcementType] || 'default'}>
+                {ANNOUNCEMENT_TYPE_NAMES[selectedAnnouncement.announcementType] || selectedAnnouncement.announcementType}
+              </Tag>
+              {selectedAnnouncement.title}
+            </Space>
+          ) : ''
+        }
+        onCancel={() => setSelectedAnnouncement(null)}
+        footer={null}
+        width={600}
+      >
+        {selectedAnnouncement && (
+          <div>
+            <div style={{ marginBottom: 12, fontSize: 12, color: '#999' }}>
+              发布人: {selectedAnnouncement.createdBy || '系统'} | 发布时间: {selectedAnnouncement.createdAt ? selectedAnnouncement.createdAt.replace('T', ' ').substring(0, 16) : '-'}
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+              {selectedAnnouncement.content}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
