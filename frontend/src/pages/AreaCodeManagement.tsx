@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Table, Button, Modal, Form, Input, InputNumber, Select, Tag, message } from 'antd'
+import { Table, Button, Modal, Form, Input, InputNumber, Select, Tag, message, Space } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { areaCodeApi } from '@/api/areaCode'
 import { orgApi } from '@/api/org'
+import { EditOutlined } from '@ant-design/icons'
 import type { AreaCodeOrgMapping, CreateAreaCodeMappingDTO } from '@/types/areaCode'
 import type { OrgStructure } from '@/types/org'
 
@@ -10,6 +11,7 @@ const { Option } = Select
 
 const AreaCodeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editRecord, setEditRecord] = useState<AreaCodeOrgMapping | null>(null)
   const [form] = Form.useForm()
   const queryClient = useQueryClient()
 
@@ -34,8 +36,16 @@ const AreaCodeManagement = () => {
     onSuccess: () => {
       message.success('区号映射创建成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
-      setIsModalOpen(false)
-      form.resetFields()
+      closeModal()
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => areaCodeApi.update(id, data),
+    onSuccess: () => {
+      message.success('区号映射更新成功')
+      queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
+      closeModal()
     }
   })
 
@@ -47,8 +57,28 @@ const AreaCodeManagement = () => {
     }
   })
 
-  const handleSubmit = (values: any) => {
-    createMutation.mutate(values as CreateAreaCodeMappingDTO)
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditRecord(null)
+    form.resetFields()
+  }
+
+  const handleSubmit = (values: Record<string, unknown>) => {
+    if (editRecord) {
+      updateMutation.mutate({ id: editRecord.id, data: values })
+    } else {
+      createMutation.mutate(values as CreateAreaCodeMappingDTO)
+    }
+  }
+
+  const handleEdit = (record: AreaCodeOrgMapping) => {
+    setEditRecord(record)
+    form.setFieldsValue({
+      areaCode: record.areaCode,
+      orgId: record.orgId,
+      priority: record.priority,
+    })
+    setIsModalOpen(true)
   }
 
   const handleDelete = (id: number) => {
@@ -61,7 +91,7 @@ const AreaCodeManagement = () => {
 
   const getOrgName = (orgId: number) => {
     const org = orgs?.find((o: OrgStructure) => o.id === orgId)
-    return org ? org.name : orgId
+    return org ? org.name : String(orgId)
   }
 
   const columns = [
@@ -90,11 +120,16 @@ const AreaCodeManagement = () => {
     {
       title: '操作',
       key: 'actions',
-      width: 100,
-      render: (_: any, record: AreaCodeOrgMapping) => (
-        <Button size="small" danger onClick={() => handleDelete(record.id)}>
-          删除
-        </Button>
+      width: 160,
+      render: (_: unknown, record: AreaCodeOrgMapping) => (
+        <Space>
+          <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+            编辑
+          </Button>
+          <Button size="small" danger onClick={() => handleDelete(record.id)}>
+            删除
+          </Button>
+        </Space>
       )
     }
   ]
@@ -104,6 +139,7 @@ const AreaCodeManagement = () => {
       <Button
         type="primary"
         onClick={() => {
+          setEditRecord(null)
           form.resetFields()
           setIsModalOpen(true)
         }}
@@ -120,9 +156,9 @@ const AreaCodeManagement = () => {
       />
 
       <Modal
-        title="添加区号映射"
+        title={editRecord ? '编辑区号映射' : '添加区号映射'}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={closeModal}
         onOk={() => form.submit()}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical">

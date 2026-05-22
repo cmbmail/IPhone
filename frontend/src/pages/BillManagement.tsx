@@ -135,6 +135,7 @@ const BillManagement = () => {
   const [activeTab, setActiveTab] = useState('PHONE')
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [uploadMode, setUploadMode] = useState<'import' | 'importAndAllocate'>('import')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [page, setPage] = useState(0)
@@ -158,6 +159,18 @@ const BillManagement = () => {
       })
       return res.data.data
     },
+  })
+
+  const { data: allocationStatus } = useQuery({
+    queryKey: ['bill-allocation-status', billMonth, chargeType],
+    queryFn: async () => {
+      const res = await request.get('/bills/allocation-status', {
+        params: { billMonth, chargeType }
+      })
+      return res.data?.data
+    },
+    enabled: importAndAllocateMutation.isPending || importAndAllocateMutation.isSuccess,
+    refetchInterval: importAndAllocateMutation.isPending ? 2000 : false,
   })
 
   const deleteMutation = useMutation({
@@ -191,9 +204,26 @@ const BillManagement = () => {
   })
 
   const handleUpload = (file: File) => {
-    importMutation.mutate({ file, month: billMonth })
+    if (uploadMode === 'importAndAllocate') {
+      importAndAllocateMutation.mutate({ file, month: billMonth })
+    } else {
+      importMutation.mutate({ file, month: billMonth })
+    }
     return false
   }
+
+  const importAndAllocateMutation = useMutation({
+    mutationFn: ({ file, month }: { file: File; month: string }) =>
+      billApi.importAndAllocate(month, file),
+    onSuccess: () => {
+      message.success('导入并分摊成功')
+      setIsUploadModalOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
+    },
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || '导入分摊失败')
+    },
+  })
 
   const tabItems = CHARGE_TABS.map(tab => ({
     key: tab.key,
@@ -291,6 +321,26 @@ const BillManagement = () => {
               {activeTab === 'FLASH_SMS' && <li>闪信费用按季度结算，请单独上传闪信费用文件</li>}
               {activeTab === 'FLASH_SMS' && <li>Sheet名需含「闪信」，列：月份、主号码、子号码、地市、下发量</li>}
             </ul>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <Space>
+              <Button
+                type={uploadMode === 'import' ? 'primary' : 'default'}
+                onClick={() => setUploadMode('import')}
+              >
+                仅导入
+              </Button>
+              <Button
+                type={uploadMode === 'importAndAllocate' ? 'primary' : 'default'}
+                onClick={() => setUploadMode('importAndAllocate')}
+              >
+                导入并分摊
+              </Button>
+            </Space>
+            <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4 }}>
+              {uploadMode === 'import' ? '仅导入账单数据，不自动分摊' : '导入账单后自动执行费用分摊到各组织'}
+            </div>
           </div>
 
           <Upload.Dragger

@@ -23,7 +23,6 @@ const BillAllocationManagement = () => {
   const [tabKey, setTabKey] = useState<string>('all')
   const queryClient = useQueryClient()
 
-  const currentMonth = new Date().toISOString().slice(0, 7)
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
     d.setMonth(d.getMonth() - i)
@@ -75,6 +74,16 @@ const BillAllocationManagement = () => {
     onError: () => message.error('更新确认失败')
   })
 
+  const confirmAnomalyMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      billAllocationApi.confirmAnomaly(id, status),
+    onSuccess: () => {
+      message.success('异常确认已更新')
+      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
+    },
+    onError: () => message.error('异常确认失败')
+  })
+
   const submitMutation = useMutation({
     mutationFn: (id: number) => billAllocationApi.submit(id),
     onSuccess: () => {
@@ -85,7 +94,8 @@ const BillAllocationManagement = () => {
   })
 
   const rejectMutation = useMutation({
-    mutationFn: (id: number) => billAllocationApi.reject(id),
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
+      billAllocationApi.reject(id, reason),
     onSuccess: () => {
       message.success('拒绝成功')
       queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
@@ -104,8 +114,17 @@ const BillAllocationManagement = () => {
   const handleConfirmAmount = (record: BillAllocation) => {
     Modal.confirm({
       title: '确认金额',
-      content: `确认金额 ${record.allocateAmount}?`,
+      content: `确认金额 ¥${record.allocateAmount}?`,
       onOk: () => confirmAmountMutation.mutate({ id: record.id, status: 'APPROVED' })
+    })
+  }
+
+  const handleConfirmAnomaly = (record: BillAllocation, action: 'APPROVED' | 'REJECTED') => {
+    const text = action === 'APPROVED' ? '确认' : '驳回'
+    Modal.confirm({
+      title: `${text}异常`,
+      content: `${text}组织 ${record.orgName} 的异常分摊？`,
+      onOk: () => confirmAnomalyMutation.mutate({ id: record.id, status: action })
     })
   }
 
@@ -121,58 +140,78 @@ const BillAllocationManagement = () => {
     Modal.confirm({
       title: '拒绝',
       content: '拒绝此分摊并重置？',
-      onOk: () => rejectMutation.mutate(record.id)
+      onOk: () => rejectMutation.mutate({ id: record.id })
     })
   }
 
   const columns = [
     { title: '组织', dataIndex: 'orgName', key: 'orgName', width: 150 },
-    { title: '总金额', dataIndex: 'totalAmount', key: 'totalAmount', width: 120, 
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '分摊金额', dataIndex: 'allocateAmount', key: 'allocateAmount', width: 120,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '差异金额', dataIndex: 'diffAmount', key: 'diffAmount', width: 120,
-      render: (val: number, record: BillAllocation) => {
+    {
+      title: '总金额',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      width: 120,
+      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}`
+    },
+    {
+      title: '分摊金额',
+      dataIndex: 'allocateAmount',
+      key: 'allocateAmount',
+      width: 120,
+      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}`
+    },
+    {
+      title: '差异金额',
+      dataIndex: 'diffAmount',
+      key: 'diffAmount',
+      width: 120,
+      render: (val: number) => {
         const diff = val || 0
         const color = diff === 0 ? 'green' : diff > 0 ? 'red' : 'orange'
         return <span style={{ color }}>¥{diff.toFixed(2)}</span>
-      }},
+      }
+    },
     {
       title: '异常',
       dataIndex: 'anomalyFlag',
       key: 'anomalyFlag',
-      width: 100,
-      render: (flag: boolean, record: BillAllocation) => (
-        flag ? <Tag color="error">异常</Tag> : <Tag color="success">正常</Tag>
-      )
+      width: 80,
+      render: (flag: boolean) => flag ? <Tag color="error">异常</Tag> : <Tag color="success">正常</Tag>
+    },
+    {
+      title: '异常原因',
+      dataIndex: 'anomalyReason',
+      key: 'anomalyReason',
+      width: 150,
+      render: (v: string) => v || '-'
     },
     {
       title: '组织确认',
       dataIndex: 'adminConfirmOrg',
       key: 'adminConfirmOrg',
-      width: 120,
+      width: 100,
       render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
     },
     {
       title: '金额确认',
       dataIndex: 'adminConfirmAmount',
       key: 'adminConfirmAmount',
-      width: 120,
+      width: 100,
       render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
     },
     {
       title: '财务确认',
       dataIndex: 'financeConfirmAnomaly',
       key: 'financeConfirmAnomaly',
-      width: 120,
+      width: 100,
       render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
     },
     {
       title: '操作',
       key: 'actions',
-      width: 200,
-      render: (_: any, record: BillAllocation) => (
-        <Space>
+      width: 320,
+      render: (_: unknown, record: BillAllocation) => (
+        <Space size="small" wrap>
           {record.adminConfirmOrg === 'PENDING' && (
             <>
               <Button size="small" type="primary" onClick={() => handleConfirmOrg(record)}>确认组织</Button>
@@ -185,6 +224,12 @@ const BillAllocationManagement = () => {
               <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>
             </>
           )}
+          {record.anomalyFlag && !record.financeConfirmAnomaly && (
+            <>
+              <Button size="small" style={{ background: '#52c41a', color: '#fff', borderColor: '#52c41a' }} onClick={() => handleConfirmAnomaly(record, 'APPROVED')}>确认异常</Button>
+              <Button size="small" danger onClick={() => handleConfirmAnomaly(record, 'REJECTED')}>驳回异常</Button>
+            </>
+          )}
           {record.financeConfirmSubmit === 'PENDING' && (
             <Button size="small" type="primary" onClick={() => handleSubmit(record)}>提交</Button>
           )}
@@ -193,10 +238,10 @@ const BillAllocationManagement = () => {
     }
   ]
 
-  const allocations = allocationData?.data?.data?.content || []
+  const allocations: BillAllocation[] = allocationData?.data?.data?.content || []
   const totalAmount = allocations.reduce((sum: number, a: BillAllocation) => sum + (a.totalAmount || 0), 0)
   const anomalyCount = allocations.filter((a: BillAllocation) => a.anomalyFlag).length
-  const pendingCount = allocations.filter((a: BillAllocation) => 
+  const pendingCount = allocations.filter((a: BillAllocation) =>
     a.adminConfirmOrg === 'PENDING' || a.adminConfirmAmount === 'PENDING' || a.financeConfirmSubmit === 'PENDING'
   ).length
 
@@ -238,6 +283,7 @@ const BillAllocationManagement = () => {
           dataSource={allocations}
           loading={isLoading}
           rowKey="id"
+          scroll={{ x: 1500 }}
           pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
         />
       </Card>

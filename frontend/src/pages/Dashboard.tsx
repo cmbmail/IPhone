@@ -4,29 +4,48 @@ import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
 import { request } from '@/api/request'
 
-interface OrgStat { id: number; name: string; sort_order: number }
+interface RecentBill {
+  id: number
+  orgName: string
+  month: string
+  amount: number
+  status: string
+}
 
 const Dashboard = () => {
   const [phoneStats, setPhoneStats] = useState<PhoneStatistics | null>(null)
   const [deviceStats, setDeviceStats] = useState<DeviceStatistics | null>(null)
   const [orgCount, setOrgCount] = useState(0)
   const [userCount, setUserCount] = useState(0)
+  const [recentBills, setRecentBills] = useState<RecentBill[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [phoneRes, deviceRes, orgRes, userRes] = await Promise.allSettled([
+        const [phoneRes, deviceRes, orgRes, userRes, billRes] = await Promise.allSettled([
           statisticsApi.getPhoneStats(),
           statisticsApi.getDeviceStats(),
           request.get('/orgs'),
           request.get('/users'),
+          request.get('/bill-allocations', { params: { billMonth: new Date().toISOString().slice(0, 7), page: 0, size: 5 } }),
         ])
         if (phoneRes.status === 'fulfilled') setPhoneStats(phoneRes.value.data.data)
         if (deviceRes.status === 'fulfilled') setDeviceStats(deviceRes.value.data.data)
         if (orgRes.status === 'fulfilled') setOrgCount((orgRes.value.data.data || []).length)
         if (userRes.status === 'fulfilled') setUserCount((userRes.value.data.data || []).length)
+        if (billRes.status === 'fulfilled') {
+          const billData = billRes.value.data?.data?.content || []
+          const mapped: RecentBill[] = billData.map((b: Record<string, unknown>) => ({
+            id: b.id as number,
+            orgName: (b.orgName as string) || '-',
+            month: (b.billMonth as string) || '-',
+            amount: (b.allocateAmount as number) || 0,
+            status: b.financeConfirmSubmit === 'APPROVED' ? '已确认' : b.adminConfirmOrg === 'APPROVED' ? '已分摊' : '已导入',
+          }))
+          setRecentBills(mapped)
+        }
       } catch {
         // Silently fail, show zeros
       } finally {
@@ -45,8 +64,6 @@ const Dashboard = () => {
   const onlineDevices = deviceStats?.onlineCount || 0
   const offlineDevices = deviceStats?.offlineCount || 0
   const deviceOnlineRate = deviceStats?.onlineRate || 0
-
-  const recentBills: {id: number; orgName: string; month: string; amount: number; status: string}[] = []
 
   const columns = [
     { title: '组织', dataIndex: 'orgName', key: 'orgName' },
@@ -83,7 +100,7 @@ const Dashboard = () => {
           <Card>
             <Statistic title="组织数量" value={orgCount} prefix={<TeamOutlined />} valueStyle={{ color: '#52c41a' }} />
             <div style={{ marginTop: 16 }}>
-              <Progress percent={orgCount > 0 ? Math.round(orgCount / 15 * 100) : 0} strokeColor="#52c41a" />
+              <Progress percent={orgCount > 0 ? Math.min(Math.round(orgCount / 15 * 100), 100) : 0} strokeColor="#52c41a" />
               <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>
                 用户总数: {userCount}
               </div>
@@ -103,10 +120,10 @@ const Dashboard = () => {
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="号码状态分布" value={phoneStats?.statusDistribution ? Object.keys(phoneStats?.statusDistribution).length : 0} prefix={<FileTextOutlined />} valueStyle={{ color: '#faad14' }} />
+            <Statistic title="号码状态分布" value={phoneStats?.statusDistribution ? Object.keys(phoneStats.statusDistribution).length : 0} prefix={<FileTextOutlined />} valueStyle={{ color: '#faad14' }} />
             <div style={{ marginTop: 16 }}>
               <Space>
-                {phoneStats?.statusDistribution && Object.entries(phoneStats?.statusDistribution).map(([k, v]) => (
+                {phoneStats?.statusDistribution && Object.entries(phoneStats.statusDistribution).map(([k, v]) => (
                   <div key={k} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 16, fontWeight: 600, color: '#595959' }}>{v}</div>
                     <div style={{ fontSize: 11, color: '#8c8c8c' }}>{k}</div>
@@ -121,7 +138,7 @@ const Dashboard = () => {
       <Row gutter={16}>
         <Col span={24}>
           <Card title="最近账单">
-            <Table columns={columns} dataSource={recentBills} rowKey="id" pagination={false} />
+            <Table columns={columns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} />
           </Card>
         </Col>
       </Row>
