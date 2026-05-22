@@ -1,27 +1,27 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Tag, Space, Modal, message, Statistic, Row, Col } from 'antd'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { billAllocationApi, BillAllocation } from '@/api/billAllocation'
-import { orgApi } from '@/api/org'
+import { Table, Button, Card, Select, Tag, Space, Statistic, Row, Col } from 'antd'
+import { useQuery } from '@tanstack/react-query'
+import { request } from '@/api/request'
 
 const { Option } = Select
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'error'
-}
-
-const STATUS_NAMES: Record<string, string> = {
-  PENDING: '待处理',
-  APPROVED: '已批准',
-  REJECTED: '已拒绝'
+interface BillAllocationSummary {
+  branchName: string
+  platformUsageFee: number
+  numberMonthlyRent: number
+  outboundDuration: number
+  transferOutboundDuration: number
+  domesticCharge: number
+  internationalCharge: number
+  feeSubtotal: number
+  recordingFee: number
+  ringtoneFee: number
+  flashSmsFee: number
+  totalAmount: number
 }
 
 const BillAllocationManagement = () => {
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
-  const [tabKey, setTabKey] = useState<string>('all')
-  const queryClient = useQueryClient()
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
@@ -29,221 +29,129 @@ const BillAllocationManagement = () => {
     return d.toISOString().slice(0, 7)
   })
 
-  const { data: orgsData } = useQuery({
-    queryKey: ['orgs'],
+  const { data: summaryData, isLoading, refetch } = useQuery({
+    queryKey: ['bill-allocation-summary', billMonth],
     queryFn: async () => {
-      const response = await orgApi.getAll()
-      return response.data.data
+      const res = await request.get('/bill-allocations/allocation-summary', { params: { billMonth } })
+      return (res.data?.data || []) as BillAllocationSummary[]
     }
   })
 
-  const getQueryFn = () => {
-    const params = { billMonth, page: 0, size: 100 }
-    switch (tabKey) {
-      case 'anomalies': return () => billAllocationApi.getAnomalies(params)
-      case 'pendingOrg': return () => billAllocationApi.getPendingOrgConfirm(params)
-      case 'pendingAmount': return () => billAllocationApi.getPendingAmountConfirm(params)
-      case 'pendingFinance': return () => billAllocationApi.getPendingFinanceConfirm(params)
-      case 'pendingSubmit': return () => billAllocationApi.getPendingSubmit(params)
-      default: return () => billAllocationApi.getAllocations(params)
-    }
-  }
-
-  const { data: allocationData, isLoading, refetch } = useQuery({
-    queryKey: ['bill-allocations', billMonth, tabKey],
-    queryFn: getQueryFn()
-  })
-
-  const confirmOrgMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      billAllocationApi.confirmOrg(id, status),
-    onSuccess: () => {
-      message.success('组织确认已更新')
-      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
-    },
-    onError: () => message.error('更新确认失败')
-  })
-
-  const confirmAmountMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      billAllocationApi.confirmAmount(id, status),
-    onSuccess: () => {
-      message.success('金额确认已更新')
-      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
-    },
-    onError: () => message.error('更新确认失败')
-  })
-
-  const confirmAnomalyMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      billAllocationApi.confirmAnomaly(id, status),
-    onSuccess: () => {
-      message.success('异常确认已更新')
-      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
-    },
-    onError: () => message.error('异常确认失败')
-  })
-
-  const submitMutation = useMutation({
-    mutationFn: (id: number) => billAllocationApi.submit(id),
-    onSuccess: () => {
-      message.success('提交成功')
-      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
-    },
-    onError: () => message.error('提交失败')
-  })
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      billAllocationApi.reject(id, reason),
-    onSuccess: () => {
-      message.success('拒绝成功')
-      queryClient.invalidateQueries({ queryKey: ['bill-allocations'] })
-    },
-    onError: () => message.error('拒绝失败')
-  })
-
-  const handleConfirmOrg = (record: BillAllocation) => {
-    Modal.confirm({
-      title: '确认组织',
-      content: `确认组织 ${record.orgName}?`,
-      onOk: () => confirmOrgMutation.mutate({ id: record.id, status: 'APPROVED' })
-    })
-  }
-
-  const handleConfirmAmount = (record: BillAllocation) => {
-    Modal.confirm({
-      title: '确认金额',
-      content: `确认金额 ¥${record.allocateAmount}?`,
-      onOk: () => confirmAmountMutation.mutate({ id: record.id, status: 'APPROVED' })
-    })
-  }
-
-  const handleConfirmAnomaly = (record: BillAllocation, action: 'APPROVED' | 'REJECTED') => {
-    const text = action === 'APPROVED' ? '确认' : '驳回'
-    Modal.confirm({
-      title: `${text}异常`,
-      content: `${text}组织 ${record.orgName} 的异常分摊？`,
-      onOk: () => confirmAnomalyMutation.mutate({ id: record.id, status: action })
-    })
-  }
-
-  const handleSubmit = (record: BillAllocation) => {
-    Modal.confirm({
-      title: '提交',
-      content: '提交此分摊进行最终审批？',
-      onOk: () => submitMutation.mutate(record.id)
-    })
-  }
-
-  const handleReject = (record: BillAllocation) => {
-    Modal.confirm({
-      title: '拒绝',
-      content: '拒绝此分摊并重置？',
-      onOk: () => rejectMutation.mutate({ id: record.id })
-    })
+  const fmtMoney = (val: number) => `¥${(val || 0).toFixed(2)}`
+  const fmtDuration = (val: number) => {
+    if (!val) return '-'
+    const h = Math.floor(val / 3600)
+    const m = Math.floor((val % 3600) / 60)
+    const s = val % 60
+    return h > 0 ? `${h}h${m}m${s}s` : m > 0 ? `${m}m${s}s` : `${s}s`
   }
 
   const columns = [
-    { title: '组织', dataIndex: 'orgName', key: 'orgName', width: 150 },
     {
-      title: '总金额',
+      title: '分行',
+      dataIndex: 'branchName',
+      key: 'branchName',
+      width: 120,
+      fixed: 'left' as const,
+      render: (v: string) => v || '未分配',
+    },
+    {
+      title: '平台使用费',
+      dataIndex: 'platformUsageFee',
+      key: 'platformUsageFee',
+      width: 120,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '码号月租费',
+      dataIndex: 'numberMonthlyRent',
+      key: 'numberMonthlyRent',
+      width: 120,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '国内外呼时长',
+      dataIndex: 'outboundDuration',
+      key: 'outboundDuration',
+      width: 130,
+      align: 'right' as const,
+      render: (v: number) => fmtDuration(v),
+    },
+    {
+      title: '转接呼叫时长',
+      dataIndex: 'transferOutboundDuration',
+      key: 'transferOutboundDuration',
+      width: 130,
+      align: 'right' as const,
+      render: (v: number) => fmtDuration(v),
+    },
+    {
+      title: '国内费用',
+      dataIndex: 'domesticCharge',
+      key: 'domesticCharge',
+      width: 110,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '国际费用',
+      dataIndex: 'internationalCharge',
+      key: 'internationalCharge',
+      width: 110,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '费用小计',
+      dataIndex: 'feeSubtotal',
+      key: 'feeSubtotal',
+      width: 120,
+      align: 'right' as const,
+      render: (v: number) => <span style={{ fontWeight: 600 }}>{fmtMoney(v)}</span>,
+    },
+    {
+      title: '录音费用',
+      dataIndex: 'recordingFee',
+      key: 'recordingFee',
+      width: 110,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '彩铃费用',
+      dataIndex: 'ringtoneFee',
+      key: 'ringtoneFee',
+      width: 110,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '闪信费用',
+      dataIndex: 'flashSmsFee',
+      key: 'flashSmsFee',
+      width: 110,
+      align: 'right' as const,
+      render: (v: number) => fmtMoney(v),
+    },
+    {
+      title: '合计',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      width: 120,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}`
+      width: 130,
+      align: 'right' as const,
+      fixed: 'right' as const,
+      render: (v: number) => <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span>,
     },
-    {
-      title: '分摊金额',
-      dataIndex: 'allocateAmount',
-      key: 'allocateAmount',
-      width: 120,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}`
-    },
-    {
-      title: '差异金额',
-      dataIndex: 'diffAmount',
-      key: 'diffAmount',
-      width: 120,
-      render: (val: number) => {
-        const diff = val || 0
-        const color = diff === 0 ? 'green' : diff > 0 ? 'red' : 'orange'
-        return <span style={{ color }}>¥{diff.toFixed(2)}</span>
-      }
-    },
-    {
-      title: '异常',
-      dataIndex: 'anomalyFlag',
-      key: 'anomalyFlag',
-      width: 80,
-      render: (flag: boolean) => flag ? <Tag color="error">异常</Tag> : <Tag color="success">正常</Tag>
-    },
-    {
-      title: '异常原因',
-      dataIndex: 'anomalyReason',
-      key: 'anomalyReason',
-      width: 150,
-      render: (v: string) => v || '-'
-    },
-    {
-      title: '组织确认',
-      dataIndex: 'adminConfirmOrg',
-      key: 'adminConfirmOrg',
-      width: 100,
-      render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
-    },
-    {
-      title: '金额确认',
-      dataIndex: 'adminConfirmAmount',
-      key: 'adminConfirmAmount',
-      width: 100,
-      render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
-    },
-    {
-      title: '财务确认',
-      dataIndex: 'financeConfirmAnomaly',
-      key: 'financeConfirmAnomaly',
-      width: 100,
-      render: (status: string) => status ? <Tag color={STATUS_COLORS[status]}>{STATUS_NAMES[status]}</Tag> : '-'
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 320,
-      render: (_: unknown, record: BillAllocation) => (
-        <Space size="small" wrap>
-          {record.adminConfirmOrg === 'PENDING' && (
-            <>
-              <Button size="small" type="primary" onClick={() => handleConfirmOrg(record)}>确认组织</Button>
-              <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>
-            </>
-          )}
-          {record.adminConfirmAmount === 'PENDING' && (
-            <>
-              <Button size="small" type="primary" onClick={() => handleConfirmAmount(record)}>确认金额</Button>
-              <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>
-            </>
-          )}
-          {record.anomalyFlag && !record.financeConfirmAnomaly && (
-            <>
-              <Button size="small" style={{ background: '#52c41a', color: '#fff', borderColor: '#52c41a' }} onClick={() => handleConfirmAnomaly(record, 'APPROVED')}>确认异常</Button>
-              <Button size="small" danger onClick={() => handleConfirmAnomaly(record, 'REJECTED')}>驳回异常</Button>
-            </>
-          )}
-          {record.financeConfirmSubmit === 'PENDING' && (
-            <Button size="small" type="primary" onClick={() => handleSubmit(record)}>提交</Button>
-          )}
-        </Space>
-      )
-    }
   ]
 
-  const allocations: BillAllocation[] = allocationData?.data?.data?.content || []
-  const totalAmount = allocations.reduce((sum: number, a: BillAllocation) => sum + (a.totalAmount || 0), 0)
-  const anomalyCount = allocations.filter((a: BillAllocation) => a.anomalyFlag).length
-  const pendingCount = allocations.filter((a: BillAllocation) =>
-    a.adminConfirmOrg === 'PENDING' || a.adminConfirmAmount === 'PENDING' || a.financeConfirmSubmit === 'PENDING'
-  ).length
+  const data: BillAllocationSummary[] = summaryData || []
+  const totalAmount = data.reduce((sum, r) => sum + (r.totalAmount || 0), 0)
+  const totalFeeSubtotal = data.reduce((sum, r) => sum + (r.feeSubtotal || 0), 0)
+  const totalRecording = data.reduce((sum, r) => sum + (r.recordingFee || 0), 0)
+  const totalRingtone = data.reduce((sum, r) => sum + (r.ringtoneFee || 0), 0)
+  const totalFlash = data.reduce((sum, r) => sum + (r.flashSmsFee || 0), 0)
 
   return (
     <div>
@@ -252,39 +160,63 @@ const BillAllocationManagement = () => {
           <Card><Statistic title="账单月份" value={billMonth} /></Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="总金额" value={`¥${totalAmount.toFixed(2)}`} /></Card>
+          <Card><Statistic title="费用小计" value={fmtMoney(totalFeeSubtotal)} valueStyle={{ color: '#1890ff' }} /></Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="异常数" value={anomalyCount} valueStyle={{ color: anomalyCount > 0 ? '#cf1322' : '#3f8600' }} /></Card>
+          <Card><Statistic title="增值费用" value={`录音¥${totalRecording.toFixed(0)} 彩铃¥${totalRingtone.toFixed(0)} 闪信¥${totalFlash.toFixed(0)}`} valueStyle={{ fontSize: 16 }} /></Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="待处理" value={pendingCount} valueStyle={{ color: pendingCount > 0 ? '#faad14' : '#3f8600' }} /></Card>
+          <Card><Statistic title="合计金额" value={fmtMoney(totalAmount)} valueStyle={{ color: '#cf1322', fontWeight: 700 }} /></Card>
         </Col>
       </Row>
 
       <Card>
-        <Space style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Select value={billMonth} onChange={setBillMonth} style={{ width: 150 }}>
             {months.map(m => <Option key={m} value={m}>{m}</Option>)}
           </Select>
-          <Select value={tabKey} onChange={setTabKey} style={{ width: 150 }}>
-            <Option value="all">全部</Option>
-            <Option value="anomalies">异常记录</Option>
-            <Option value="pendingOrg">待组织确认</Option>
-            <Option value="pendingAmount">待金额确认</Option>
-            <Option value="pendingFinance">待财务确认</Option>
-            <Option value="pendingSubmit">待提交</Option>
-          </Select>
           <Button onClick={() => refetch()}>刷新</Button>
-        </Space>
+        </div>
 
         <Table
           columns={columns}
-          dataSource={allocations}
+          dataSource={data}
           loading={isLoading}
-          rowKey="id"
+          rowKey="branchName"
           scroll={{ x: 1500 }}
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
+          pagination={false}
+          size="middle"
+          bordered
+          summary={(pageData) => {
+            let tPlat = 0, tRent = 0, tDom = 0, tIntl = 0, tSub = 0, tRec = 0, tRing = 0, tFlash = 0, tTotal = 0
+            pageData.forEach(r => {
+              tPlat += r.platformUsageFee || 0
+              tRent += r.numberMonthlyRent || 0
+              tDom += r.domesticCharge || 0
+              tIntl += r.internationalCharge || 0
+              tSub += r.feeSubtotal || 0
+              tRec += r.recordingFee || 0
+              tRing += r.ringtoneFee || 0
+              tFlash += r.flashSmsFee || 0
+              tTotal += r.totalAmount || 0
+            })
+            return (
+              <Table.Summary.Row style={{ background: '#fafafa', fontWeight: 700 }}>
+                <Table.Summary.Cell index={0}>合计</Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">{fmtMoney(tPlat)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">{fmtMoney(tRent)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">-</Table.Summary.Cell>
+                <Table.Summary.Cell index={4} align="right">-</Table.Summary.Cell>
+                <Table.Summary.Cell index={5} align="right">{fmtMoney(tDom)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={6} align="right">{fmtMoney(tIntl)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={7} align="right">{fmtMoney(tSub)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={8} align="right">{fmtMoney(tRec)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={9} align="right">{fmtMoney(tRing)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={10} align="right">{fmtMoney(tFlash)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={11} align="right"><span style={{ color: '#1890ff', fontWeight: 700, fontSize: 14 }}>{fmtMoney(tTotal)}</span></Table.Summary.Cell>
+              </Table.Summary.Row>
+            )
+          }}
         />
       </Card>
     </div>

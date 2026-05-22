@@ -9,6 +9,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.dto.BillAllocationSummaryDTO;
+import java.math.BigDecimal;
+import com.phonebiz.repository.BillRawRepository;
+import java.util.ArrayList;
+import java.util.List;
 import com.phonebiz.entity.BillAllocation;
 import com.phonebiz.repository.BillAllocationRepository;
 import com.phonebiz.service.BillAllocationService;
@@ -24,6 +29,7 @@ public class BillAllocationController {
 
     private final BillAllocationRepository billAllocationRepository;
     private final BillAllocationService billAllocationService;
+    private final BillRawRepository billRawRepository;
 
     @GetMapping
     public ApiResponse<Page<BillAllocation>> getAllocations(
@@ -115,5 +121,45 @@ public class BillAllocationController {
         billAllocationService.rejectAndReset(id, reason);
         return ApiResponse.success(null);
     }
-}
 
+    @GetMapping("/allocation-summary")
+    public ApiResponse<java.util.List<BillAllocationSummaryDTO>> getAllocationSummary(
+            @RequestParam String billMonth) {
+        List<Object[]> rows = billRawRepository.sumByBranch(billMonth);
+        List<BillAllocationSummaryDTO> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            String branchName = (String) row[0];
+            if (branchName == null || branchName.isEmpty()) {
+                branchName = "未分配";
+            }
+            BigDecimal platformUsageFee = (BigDecimal) row[1];
+            BigDecimal numberMonthlyRent = (BigDecimal) row[2];
+            Integer outboundDuration = ((Number) row[3]).intValue();
+            Integer transferOutboundDuration = ((Number) row[4]).intValue();
+            BigDecimal domesticCharge = (BigDecimal) row[5];
+            BigDecimal internationalCharge = (BigDecimal) row[6];
+            BigDecimal recordingFee = (BigDecimal) row[7];
+            BigDecimal ringtoneFee = (BigDecimal) row[8];
+            BigDecimal flashSmsFee = (BigDecimal) row[9];
+            BigDecimal totalAmount = (BigDecimal) row[10];
+            BigDecimal feeSubtotal = platformUsageFee.add(numberMonthlyRent).add(domesticCharge).add(internationalCharge);
+
+            result.add(BillAllocationSummaryDTO.builder()
+                    .branchName(branchName)
+                    .platformUsageFee(platformUsageFee)
+                    .numberMonthlyRent(numberMonthlyRent)
+                    .outboundDuration(outboundDuration)
+                    .transferOutboundDuration(transferOutboundDuration)
+                    .domesticCharge(domesticCharge)
+                    .internationalCharge(internationalCharge)
+                    .feeSubtotal(feeSubtotal)
+                    .recordingFee(recordingFee)
+                    .ringtoneFee(ringtoneFee)
+                    .flashSmsFee(flashSmsFee)
+                    .totalAmount(totalAmount)
+                    .build());
+        }
+        return ApiResponse.success(result);
+    }
+
+}
