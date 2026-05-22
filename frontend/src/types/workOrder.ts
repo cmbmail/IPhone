@@ -2,7 +2,7 @@ export interface WorkOrderItem {
   id: number
   workOrderId: number
   itemType: number
-  targetId: number | null
+  targetRefId: number | null
   action: string | null
   fromValue: string | null
   toValue: string | null

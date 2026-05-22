@@ -114,27 +114,23 @@ const InvoiceManagement = () => {
     })
   }
 
-  const columns = [
+const columns = [
     { title: '发票编号', dataIndex: 'invoiceNo', key: 'invoiceNo', width: 180 },
-    { title: '类型', dataIndex: 'invoiceType', key: 'invoiceType', width: 100 },
     { title: '来源组织', dataIndex: 'sourceOrgName', key: 'sourceOrgName', width: 150 },
     { title: '金额', dataIndex: 'amount', key: 'amount', width: 120,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
+      render: (val: number | null) => val != null ? '\u00A5' + val.toFixed(2) : '-' },
     { title: '税额', dataIndex: 'taxAmount', key: 'taxAmount', width: 100,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '总计', dataIndex: 'totalAmount', key: 'totalAmount', width: 120,
-      render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '开票日期', dataIndex: 'issueDate', key: 'issueDate', width: 120 },
+      render: (val: number | null) => val != null ? '\u00A5' + val.toFixed(2) : '-' },
+    { title: '开票日期', dataIndex: 'invoiceDate', key: 'invoiceDate', width: 120 },
     { title: '账单月份', dataIndex: 'billMonth', key: 'billMonth', width: 100 },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
+      render: (status: number) => <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
     },
-    {
-      title: '操作',
+    { title: '操作', key: 'actions', width: 150,
       key: 'actions',
       width: 150,
       render: (_: any, record: Invoice) => (

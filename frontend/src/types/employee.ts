@@ -42,7 +42,7 @@ export interface EmployeeQueryDTO {
   employeeNo?: string
   name?: string
   orgId?: number
-  status?: string
+  status?: number
   isVirtual?: boolean
   page?: number
   pageSize?: number

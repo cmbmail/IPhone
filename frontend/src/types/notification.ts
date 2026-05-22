@@ -1,6 +1,6 @@
 export interface Notification {
   id: number
-  userId: number
+  sysUserId: number
   title: string
   content: string
   notificationType: number
