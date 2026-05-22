@@ -104,13 +104,6 @@ const ExtensionPoolManagement = () => {
       ),
     },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 100,
-      render: (s: string) => {
-        const m = STATUS_MAP[s] || { label: s, color: 'default' }
-        return <Tag color={m.color}>{m.label}</Tag>
-      },
-    },
-    {
       title: '使用人', dataIndex: 'userName', key: 'userName', width: 120,
       render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>空</span>,
     },
@@ -125,6 +118,13 @@ const ExtensionPoolManagement = () => {
     {
       title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
       render: (v: string) => v || '-',
+    },
+    {
+      title: '状态', dataIndex: 'status', key: 'status', width: 100,
+      render: (s: string) => {
+        const m = STATUS_MAP[s] || { label: s, color: 'default' }
+        return <Tag color={m.color}>{m.label}</Tag>
+      },
     },
     {
       title: '操作', key: 'actions', width: 160,
