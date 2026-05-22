@@ -11,6 +11,7 @@ import Dashboard from '@/pages/Dashboard'
 import OrgManagement from '@/pages/OrgManagement'
 import CostCenterManagement from '@/pages/CostCenterManagement'
 import PhoneManagement from '@/pages/PhoneManagement'
+import PhoneOwnershipPage from '@/pages/PhoneOwnership'
 import ExtensionPoolManagement from '@/pages/ExtensionPoolManagement'
 import AreaCodeManagement from '@/pages/AreaCodeManagement'
 import BillAllocationManagement from '@/pages/BillAllocationManagement'
@@ -35,6 +36,7 @@ const menuItems = [
   ]},
   { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码资源', children: [
     { key: '/phones', icon: <PhoneOutlined />, label: '号码管理' },
+    { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
     { key: '/extension-pools', icon: <AppstoreOutlined />, label: '分机池' },
     { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理' },
     { key: '/devices', icon: <DesktopOutlined />, label: '设备管理' },
@@ -59,6 +61,7 @@ const pageTitleMap: Record<string, string> = {
   '/dashboard': '系统看板',
   '/work-orders': '工单管理',
   '/phones': '号码管理',
+  '/phone-ownership': '号码归属',
   '/extension-pools': '分机池',
   '/area-codes': '区号管理',
   '/devices': '设备管理',
@@ -276,6 +279,7 @@ const App = () => (
         <Route path="/dashboard" element={<PrivateRouteWithLayout><Dashboard /></PrivateRouteWithLayout>} />
         <Route path="/work-orders" element={<PrivateRouteWithLayout><WorkOrderManagement /></PrivateRouteWithLayout>} />
         <Route path="/phones" element={<PrivateRouteWithLayout><PhoneManagement /></PrivateRouteWithLayout>} />
+        <Route path="/phone-ownership" element={<PrivateRouteWithLayout><PhoneOwnershipPage /></PrivateRouteWithLayout>} />
         <Route path="/extension-pools" element={<PrivateRouteWithLayout><ExtensionPoolManagement /></PrivateRouteWithLayout>} />
         <Route path="/area-codes" element={<PrivateRouteWithLayout><AreaCodeManagement /></PrivateRouteWithLayout>} />
         <Route path="/devices" element={<PrivateRouteWithLayout><DeviceManagement /></PrivateRouteWithLayout>} />
