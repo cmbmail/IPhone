@@ -83,10 +83,7 @@ request.interceptors.request.use(
     if (config.data && typeof config.data === "object" && !(config.data instanceof FormData)) {
       config.data = keysToSnakeCase(config.data)
     }
-    // Convert request params keys from camelCase to snake_case
-    if (config.params && typeof config.params === "object") {
-      config.params = keysToSnakeCase(config.params)
-    }
+
     return config
   },
   (error) => Promise.reject(error),
