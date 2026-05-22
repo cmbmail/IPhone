@@ -51,6 +51,18 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
     @Query("SELECT p FROM PhoneNumber p WHERE p.id IN :ids ORDER BY p.id ASC")
     List<PhoneNumber> findByIdsForUpdate(@Param("ids") List<Long> ids);
 
+    @Query("SELECT p.status, COUNT(p) FROM PhoneNumber p GROUP BY p.status")
+    List<Object[]> countGroupByStatus();
+
+    @Query("SELECT p.orgId, COUNT(p) FROM PhoneNumber p WHERE p.orgId IS NOT NULL GROUP BY p.orgId")
+    List<Object[]> countByOrgIdGroupBy();
+
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.orgId = :orgId")
+    long countByOrgId(@Param("orgId") Long orgId);
+
+    @Query("SELECT p.status, COUNT(p) FROM PhoneNumber p WHERE p.orgId = :orgId GROUP BY p.status")
+    List<Object[]> countByOrgIdGroupByStatus(@Param("orgId") Long orgId);
+
     @Query("SELECT p.phoneNumber FROM PhoneNumber p")
     List<String> findAllPhoneNumbers();
 }

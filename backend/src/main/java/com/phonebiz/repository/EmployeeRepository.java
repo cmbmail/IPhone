@@ -31,6 +31,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e WHERE e.orgId IN :orgIds AND e.status = 'active'")
     List<Employee> findByOrgIdInAndStatusActive(@Param("orgIds") List<Long> orgIds);
 
+    @Query("SELECT e FROM Employee e WHERE e.employeeNo IN :employeeNos")
+    List<Employee> findAllByEmployeeNoIn(@Param("employeeNos") List<String> employeeNos);
+
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.orgId = :orgId AND e.status = 'active'")
     long countActiveByOrgId(@Param("orgId") Long orgId);
 }

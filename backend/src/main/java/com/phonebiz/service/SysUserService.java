@@ -114,25 +114,28 @@ public class SysUserService {
     }
 
     private List<UserVO> buildUserVOList(List<Employee> employees) {
+        // Batch load all SysUsers by employee numbers (was N+1)
+        List<String> employeeNos = employees.stream().map(Employee::getEmployeeNo)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
         Map<String, SysUser> userMap = new HashMap<>();
-        for (Employee emp : employees) {
-            userRepository.findByEmployeeNo(emp.getEmployeeNo())
-                    .ifPresent(u -> userMap.put(emp.getEmployeeNo(), u));
+        if (!employeeNos.isEmpty()) {
+            userRepository.findAllByEmployeeNoIn(employeeNos)
+                    .forEach(u -> userMap.put(u.getEmployeeNo(), u));
         }
 
-        // Cache org names
+        // Batch load org names (was N+1)
         Set<Long> orgIdSet = employees.stream().map(Employee::getOrgId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, String> orgNameMap = new HashMap<>();
-        for (Long oid : orgIdSet) {
-            orgRepository.findById(oid).ifPresent(o -> orgNameMap.put(oid, o.getName()));
+        if (!orgIdSet.isEmpty()) {
+            orgRepository.findAllById(orgIdSet).forEach(o -> orgNameMap.put(o.getId(), o.getName()));
         }
 
-        // Cache role names
+        // Batch load role names (was N+1 per unique role)
+        Set<Long> roleIdSet = userMap.values().stream()
+                .map(SysUser::getRoleId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, String> roleNameMap = new HashMap<>();
-        for (SysUser u : userMap.values()) {
-            if (u.getRoleId() != null && !roleNameMap.containsKey(u.getRoleId())) {
-                roleRepository.findById(u.getRoleId()).ifPresent(r -> roleNameMap.put(r.getId(), r.getName()));
-            }
+        if (!roleIdSet.isEmpty()) {
+            roleRepository.findAllById(roleIdSet).forEach(r -> roleNameMap.put(r.getId(), r.getName()));
         }
 
         List<UserVO> result = new ArrayList<>();

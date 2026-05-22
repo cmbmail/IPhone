@@ -34,19 +34,27 @@ public class StatisticsService {
 
     @Transactional(readOnly = true)
     public PhoneStatisticsDTO getPhoneStatistics() {
-        List<PhoneNumber> allPhones = phoneRepository.findAll();
+        // Use COUNT/GROUP BY instead of findAll() to avoid loading all entities
+        Map<String, Long> statusDistribution = new LinkedHashMap<>();
+        long totalCount = 0;
+        for (Object[] row : phoneRepository.countGroupByStatus()) {
+            String status = ((PhoneNumber.PhoneStatus) row[0]).name();
+            Long count = (Long) row[1];
+            statusDistribution.put(status, count);
+            totalCount += count;
+        }
 
-        Map<String, Long> statusDistribution = allPhones.stream()
-                .collect(Collectors.groupingBy(p -> p.getStatus().name(), Collectors.counting()));
-
-        Map<Long, Long> orgDistribution = allPhones.stream()
-                .filter(p -> p.getOrgId() != null)
-                .collect(Collectors.groupingBy(PhoneNumber::getOrgId, Collectors.counting()));
+        Map<Long, Long> orgDistribution = new LinkedHashMap<>();
+        for (Object[] row : phoneRepository.countByOrgIdGroupBy()) {
+            Long orgId = (Long) row[0];
+            Long count = (Long) row[1];
+            orgDistribution.put(orgId, count);
+        }
 
         List<PhoneStatisticsDTO.DailyTrend> dailyTrend = generateDailyTrend(7);
 
         return PhoneStatisticsDTO.builder()
-                .totalCount(allPhones.size())
+                .totalCount((int) totalCount)
                 .allocatedCount(statusDistribution.getOrDefault("active", 0L))
                 .idleCount(statusDistribution.getOrDefault("idle", 0L))
                 .stoppedCount(statusDistribution.getOrDefault("stopped", 0L))
@@ -61,13 +69,18 @@ public class StatisticsService {
 
     @Transactional(readOnly = true)
     public PhoneStatisticsDTO getPhoneStatisticsByOrg(Long orgId) {
-        List<PhoneNumber> orgPhones = phoneRepository.findByOrgId(orgId);
-
-        Map<String, Long> statusDistribution = orgPhones.stream()
-                .collect(Collectors.groupingBy(p -> p.getStatus().name(), Collectors.counting()));
+        // Use COUNT/GROUP BY instead of findAll() for org-specific stats
+        Map<String, Long> statusDistribution = new LinkedHashMap<>();
+        long totalCount = 0;
+        for (Object[] row : phoneRepository.countByOrgIdGroupByStatus(orgId)) {
+            String status = ((PhoneNumber.PhoneStatus) row[0]).name();
+            Long count = (Long) row[1];
+            statusDistribution.put(status, count);
+            totalCount += count;
+        }
 
         return PhoneStatisticsDTO.builder()
-                .totalCount(orgPhones.size())
+                .totalCount((int) totalCount)
                 .allocatedCount(statusDistribution.getOrDefault("active", 0L))
                 .idleCount(statusDistribution.getOrDefault("idle", 0L))
                 .stoppedCount(statusDistribution.getOrDefault("stopped", 0L))
@@ -102,35 +115,47 @@ public class StatisticsService {
 
     @Transactional(readOnly = true)
     public DeviceStatisticsDTO getDeviceStatistics() {
-        List<Device> allDevices = deviceRepository.findAll();
+        // Use COUNT/GROUP BY instead of findAll()
+        Map<String, Long> statusDistribution = new LinkedHashMap<>();
+        long totalCount = 0;
+        long onlineCount = 0;
+        long offlineCount = 0;
+        long unregisteredCount = 0;
+        long disabledCount = 0;
+        for (Object[] row : deviceRepository.countGroupByStatus()) {
+            String status = ((Device.DeviceStatus) row[0]).name();
+            Long count = (Long) row[1];
+            statusDistribution.put(status, count);
+            totalCount += count;
+            switch (status) {
+                case "ONLINE" -> onlineCount = count;
+                case "OFFLINE" -> offlineCount = count;
+                case "UNREGISTERED" -> unregisteredCount = count;
+                case "DISABLED" -> disabledCount = count;
+            }
+        }
 
-        Map<String, Long> typeDistribution = allDevices.stream()
-                .collect(Collectors.groupingBy(d -> d.getDeviceType().name(), Collectors.counting()));
+        Map<String, Long> typeDistribution = new LinkedHashMap<>();
+        for (Object[] row : deviceRepository.countGroupByType()) {
+            String type = ((Device.DeviceType) row[0]).name();
+            Long count = (Long) row[1];
+            typeDistribution.put(type, count);
+        }
 
-        Map<String, Long> modelDistribution = allDevices.stream()
-                .filter(d -> d.getModel() != null && !d.getModel().isEmpty())
-                .collect(Collectors.groupingBy(Device::getModel, Collectors.counting()));
+        Map<String, Long> modelDistribution = new LinkedHashMap<>();
+        for (Object[] row : deviceRepository.countGroupByModel()) {
+            String model = (String) row[0];
+            Long count = (Long) row[1];
+            modelDistribution.put(model, count);
+        }
 
-        long onlineCount = allDevices.stream()
-                .filter(d -> d.getStatus() == Device.DeviceStatus.ONLINE)
-                .count();
-        long offlineCount = allDevices.stream()
-                .filter(d -> d.getStatus() == Device.DeviceStatus.OFFLINE)
-                .count();
-        long unregisteredCount = allDevices.stream()
-                .filter(d -> d.getStatus() == Device.DeviceStatus.UNREGISTERED)
-                .count();
-        long disabledCount = allDevices.stream()
-                .filter(d -> d.getStatus() == Device.DeviceStatus.DISABLED)
-                .count();
+        double onlineRate = totalCount > 0 ? 
+                Math.round(onlineCount * 10000.0 / totalCount) / 100.0 : 0;
 
-        double onlineRate = allDevices.isEmpty() ? 0 : 
-                Math.round(onlineCount * 10000.0 / allDevices.size()) / 100.0;
-
-        List<DeviceStatisticsDTO.DailyOnlineTrend> dailyTrend = generateDeviceDailyTrend(7);
+        List<DeviceStatisticsDTO.DailyOnlineTrend> dailyTrend = generateDeviceDailyTrend(7, onlineCount, offlineCount);
 
         return DeviceStatisticsDTO.builder()
-                .totalCount(allDevices.size())
+                .totalCount((int) totalCount)
                 .onlineCount(onlineCount)
                 .offlineCount(offlineCount)
                 .unregisteredCount(unregisteredCount)
@@ -142,13 +167,9 @@ public class StatisticsService {
                 .build();
     }
 
-    private List<DeviceStatisticsDTO.DailyOnlineTrend> generateDeviceDailyTrend(int days) {
+    private List<DeviceStatisticsDTO.DailyOnlineTrend> generateDeviceDailyTrend(int days, long online, long offline) {
         List<DeviceStatisticsDTO.DailyOnlineTrend> trend = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        // Use current device counts as baseline (no historical data yet)
-        List<Device> allDevices = deviceRepository.findAll();
-        long online = allDevices.stream().filter(d -> d.getStatus() == Device.DeviceStatus.ONLINE).count();
-        long offline = allDevices.stream().filter(d -> d.getStatus() == Device.DeviceStatus.OFFLINE).count();
 
         for (int i = days - 1; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
@@ -172,4 +193,3 @@ public class StatisticsService {
         return deviceRepository.findByStatus(Device.DeviceStatus.OFFLINE);
     }
 }
-

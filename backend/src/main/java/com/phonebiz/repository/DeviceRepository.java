@@ -26,5 +26,13 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     boolean existsByDeviceId(String deviceId);
     
     boolean existsByMacAddress(String macAddress);
+    @org.springframework.data.jpa.repository.Query("SELECT d.status, COUNT(d) FROM Device d GROUP BY d.status")
+    List<Object[]> countGroupByStatus();
+
+    @org.springframework.data.jpa.repository.Query("SELECT d.deviceType, COUNT(d) FROM Device d GROUP BY d.deviceType")
+    List<Object[]> countGroupByType();
+
+    @org.springframework.data.jpa.repository.Query("SELECT d.model, COUNT(d) FROM Device d WHERE d.model IS NOT NULL AND d.model <> '' GROUP BY d.model")
+    List<Object[]> countGroupByModel();
 }
 

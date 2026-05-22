@@ -3,6 +3,7 @@ package com.phonebiz.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,11 +177,17 @@ public class SubsidiaryReconciliationService {
     @Transactional(readOnly = true)
     public Page<Map<String, Object>> getReconciliationsWithOrgName(String billMonth, Long orgId, Pageable pageable) {
         Page<SubsidiaryReconciliation> page = getReconciliations(billMonth, orgId, pageable);
-        
+
+        // Batch load org names to avoid N+1
+        List<Long> orgIds = page.getContent().stream()
+                .map(SubsidiaryReconciliation::getSubsidiaryOrgId).distinct().collect(Collectors.toList());
+        Map<Long, String> orgNameMap = new HashMap<>();
+        if (!orgIds.isEmpty()) {
+            orgStructureRepository.findAllById(orgIds).forEach(o -> orgNameMap.put(o.getId(), o.getName()));
+        }
+
         return page.map(r -> {
-            String orgName = orgStructureRepository.findById(r.getSubsidiaryOrgId())
-                    .map(OrgStructure::getName)
-                    .orElse("Unknown");
+            String orgName = orgNameMap.getOrDefault(r.getSubsidiaryOrgId(), "Unknown");
             
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("id", r.getId());

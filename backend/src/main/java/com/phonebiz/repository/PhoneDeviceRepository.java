@@ -23,6 +23,12 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds)")
     Page<PhoneDevice> findByOrgIds(@Param("orgIds") List<Long> orgIds, Pageable pageable);
 
+    @Query("SELECT d.orgId FROM PhoneDevice d WHERE d.id IN :ids")
+    List<Long> findOrgIdsByIds(@Param("ids") List<Long> ids);
+
+    @Query("SELECT d.assignedTo FROM PhoneDevice d WHERE d.id IN :ids AND d.assignedTo IS NOT NULL")
+    List<String> findAssignedTosByIds(@Param("ids") List<Long> ids);
+
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds) AND d.status = :status")
     Page<PhoneDevice> findByOrgIdsAndStatus(@Param("orgIds") List<Long> orgIds,
                                             @Param("status") PhoneDevice.PhoneDeviceStatus status,

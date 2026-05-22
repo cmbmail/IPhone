@@ -116,3 +116,7 @@ tasks.named('test') {
 tasks.named('check') {
     dependsOn dependencyCheckAnalyze
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

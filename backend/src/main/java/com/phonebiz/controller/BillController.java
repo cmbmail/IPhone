@@ -1,6 +1,7 @@
 package com.phonebiz.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
@@ -76,20 +77,38 @@ public class BillController {
     @PostMapping("/import-and-allocate")
     @PreAuthorize("hasAuthority('bill:import') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "导入并分摊账单", targetType = "BillRaw")
-    public ApiResponse<Void> importAndAllocate(@RequestParam String billMonth,
+    public ApiResponse<Map<String, Object>> importAndAllocate(@RequestParam String billMonth,
                                              @RequestParam("file") MultipartFile file,
                                              Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         try {
-            billImportService.importBillRaw(billMonth, file, operator);
+            int count = billImportService.importBillRaw(billMonth, file, operator);
             billImportService.processImportAsync(billMonth, operator);
-            return ApiResponse.success(null);
+            Map<String, Object> result = new java.util.LinkedHashMap<>();
+            result.put("billMonth", billMonth);
+            result.put("importedCount", count);
+            result.put("allocationStatus", "processing");
+            return ApiResponse.success(result);
         } catch (BusinessException e) {
             return ApiResponse.error(e.getErrorCode().getCode(), e.getMessage());
         } catch (Exception e) {
             log.error("Bill import and allocate failed", e);
             return ApiResponse.error(500, "账单导入并分摊失败，请检查文件格式");
         }
+    }
+
+    @GetMapping("/allocation-status")
+    @PreAuthorize("hasAuthority('bill:view') or hasRole('ADMIN') or hasRole('FINANCE')")
+    public ApiResponse<Map<String, Object>> getAllocationStatus(@RequestParam String billMonth) {
+        String status = billImportService.getAllocationStatus(billMonth);
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("billMonth", billMonth);
+        result.put("status", status);
+        // Clean up completed/failed status after reading
+        if ("completed".equals(status) || status.startsWith("failed")) {
+            billImportService.clearAllocationStatus(billMonth);
+        }
+        return ApiResponse.success(result);
     }
 
     @DeleteMapping

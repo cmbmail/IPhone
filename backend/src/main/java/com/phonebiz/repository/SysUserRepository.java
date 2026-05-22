@@ -30,17 +30,23 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long> {
     @Query("SELECT COUNT(u) FROM SysUser u WHERE u.roleId = :roleId")
     long countByRoleId(@Param("roleId") Long roleId);
 
+    @Query("SELECT u FROM SysUser u WHERE u.employeeNo IN :employeeNos")
+    List<SysUser> findAllByEmployeeNoIn(@Param("employeeNos") List<String> employeeNos);
+
     @Modifying
     @Query("UPDATE SysUser u SET u.loginFailCount = :count WHERE u.username = :username")
     void updateLoginFailCount(@Param("username") String username, @Param("count") int count);
+
 
     @Modifying
     @Query("UPDATE SysUser u SET u.lockedUntil = :lockedUntil WHERE u.username = :username")
     void updateLockedUntil(@Param("username") String username, @Param("lockedUntil") LocalDateTime lockedUntil);
 
+
     @Modifying
     @Query("UPDATE SysUser u SET u.lastLoginAt = :lastLoginAt, u.loginFailCount = 0 WHERE u.username = :username")
     void updateLastLoginAt(@Param("username") String username, @Param("lastLoginAt") LocalDateTime lastLoginAt);
+
 
     @Modifying
     @Query("UPDATE SysUser u SET u.passwordHash = :passwordHash, u.passwordChangedAt = :changedAt WHERE u.username = :username")

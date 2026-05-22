@@ -3,6 +3,7 @@ package com.phonebiz.service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class SnapshotService {
     private final EmployeeRepository employeeRepository;
 
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
+    private static final int BATCH_SIZE = 500;
 
     @Scheduled(cron = "0 0 3 1 * ?")
     public void executeMonthlySnapshot() {
@@ -52,25 +55,30 @@ public class SnapshotService {
             log.info("月度快照执行完成，月份: {}", snapshotMonth);
         } catch (Exception e) {
             log.error("月度快照执行失败，月份: {}", snapshotMonth, e);
-            retrySnapshot(snapshotMonth, 1);
+            // Use @Async retry instead of Thread.sleep
+            asyncRetrySnapshot(snapshotMonth, 1);
         }
     }
 
-    private void retrySnapshot(String snapshotMonth, int attempt) {
+    @Async("importTaskExecutor")
+    public void asyncRetrySnapshot(String snapshotMonth, int attempt) {
         if (attempt > 3) {
             log.error("月度快照重试次数已达上限，月份: {}", snapshotMonth);
             return;
         }
-        
-        log.info("月度快照重试第 {} 次，月份: {}", attempt, snapshotMonth);
-        
         try {
             Thread.sleep(5000L * attempt);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        log.info("月度快照重试第 {} 次，月份: {}", attempt, snapshotMonth);
+        try {
             generateSnapshot(snapshotMonth);
             log.info("月度快照重试成功，月份: {}", snapshotMonth);
         } catch (Exception e) {
             log.error("月度快照重试失败，第 {} 次，月份: {}", attempt, snapshotMonth, e);
-            retrySnapshot(snapshotMonth, attempt + 1);
+            asyncRetrySnapshot(snapshotMonth, attempt + 1);
         }
     }
 
@@ -81,25 +89,47 @@ public class SnapshotService {
             return;
         }
 
-        List<PhoneNumber> phoneNumbers = phoneNumberRepository.findAll();
-        log.info("查询到待快照号码数量: {}", phoneNumbers.size());
-
+        // Pre-load reference data maps (batch, not per-entity)
         Map<Long, String> orgNameMap = buildOrgNameMap();
         Map<Long, String> costCenterMap = buildCostCenterMap();
         Map<String, Employee> employeeMap = buildEmployeeMap();
 
+        // Process in batches instead of loading all phone numbers at once
+        long totalPhones = phoneNumberRepository.count();
+        log.info("待快照号码总数: {}", totalPhones);
+
         int savedCount = 0;
-        for (PhoneNumber phone : phoneNumbers) {
-            PhoneNumber.PhoneStatus status = phone.getStatus();
-            if (status != PhoneNumber.PhoneStatus.active &&
-                status != PhoneNumber.PhoneStatus.stopped &&
-                status != PhoneNumber.PhoneStatus.cancelled) {
-                continue;
+        int page = 0;
+        boolean hasMore = true;
+
+        while (hasMore) {
+            org.springframework.data.domain.Page<PhoneNumber> phonePage = 
+                phoneNumberRepository.findAll(
+                    org.springframework.data.domain.PageRequest.of(page, BATCH_SIZE));
+            
+            if (phonePage.isEmpty()) {
+                hasMore = false;
+                break;
             }
 
-            PhoneSnapshot snapshot = buildSnapshot(phone, snapshotMonth, orgNameMap, costCenterMap, employeeMap);
-            phoneSnapshotRepository.save(snapshot);
-            savedCount++;
+            List<PhoneSnapshot> batch = new ArrayList<>();
+            for (PhoneNumber phone : phonePage.getContent()) {
+                PhoneNumber.PhoneStatus status = phone.getStatus();
+                if (status != PhoneNumber.PhoneStatus.active &&
+                    status != PhoneNumber.PhoneStatus.stopped &&
+                    status != PhoneNumber.PhoneStatus.cancelled) {
+                    continue;
+                }
+                batch.add(buildSnapshot(phone, snapshotMonth, orgNameMap, costCenterMap, employeeMap));
+            }
+
+            if (!batch.isEmpty()) {
+                phoneSnapshotRepository.saveAll(batch);
+                savedCount += batch.size();
+            }
+
+            hasMore = phonePage.hasNext();
+            page++;
         }
 
         log.info("月度快照生成完成，月份: {}，记录数: {}", snapshotMonth, savedCount);

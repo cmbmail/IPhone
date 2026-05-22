@@ -16,5 +16,8 @@ public interface DevicePhoneMappingRepository extends JpaRepository<DevicePhoneM
     boolean existsByDeviceIdAndPhoneId(Long deviceId, Long phoneId);
     void deleteByDeviceId(Long deviceId);
     void deleteByDeviceIdAndPhoneId(Long deviceId, Long phoneId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT m.deviceId, COUNT(m) FROM DevicePhoneMapping m WHERE m.deviceId IN :deviceIds GROUP BY m.deviceId")
+    List<Object[]> countByDeviceIdIn(@org.springframework.data.repository.query.Param("deviceIds") List<Long> deviceIds);
 }
 

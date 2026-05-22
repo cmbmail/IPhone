@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,8 @@ public class BillImportService {
     private final BillRawRepository billRawRepository;
     private final BillAllocationService billAllocationService;
     private final ObjectMapper objectMapper;
+
+    private final Map<String, String> allocationStatusMap = new ConcurrentHashMap<>();
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -122,14 +125,12 @@ public class BillImportService {
             vals[i] = cellStr(row.getCell(i));
         }
 
-        Map<String, Integer> hdr = buildHeaderMap(row);
-
         switch (chargeType) {
-            case "PHONE" -> fillPhone(b, vals, hdr);
-            case "RECORDING" -> fillRecording(b, vals, hdr);
-            case "RINGTONE" -> fillRingtone(b, vals, hdr);
-            case "FLASH_SMS" -> fillFlashSms(b, vals, hdr);
-            default -> fillPhone(b, vals, hdr);
+            case "PHONE" -> fillPhone(b, vals);
+            case "RECORDING" -> fillRecording(b, vals);
+            case "RINGTONE" -> fillRingtone(b, vals);
+            case "FLASH_SMS" -> fillFlashSms(b, vals);
+            default -> fillPhone(b, vals);
         }
 
         try {
@@ -139,14 +140,8 @@ public class BillImportService {
         return b;
     }
 
-    private Map<String, Integer> buildHeaderMap(Row row) {
-        // We use index-based column reading, but also build a map for flexibility
-        // Not strictly needed since we use positional matching based on known Excel layouts
-        // TODO: Implement header mapping or remove dead code
-        return new HashMap<>();
-    }
 
-    private void fillPhone(BillRaw b, String[] v, Map<String, Integer> hdr) {
+    private void fillPhone(BillRaw b, String[] v) {
         // 按号码费用: 号码(0) 分配时间(1) 用户ID(2) 部门(3) 平台使用费(4) 码号月租费(5)
         //            外呼时长(6) 转接外呼时长(7) 国内费用(8) 国际时长(9) 国际费用(10) 费用小计(11) 备注(12)
         b.setPhoneNumber(s(v, 0));
@@ -164,7 +159,7 @@ public class BillImportService {
         b.setRemark(s(v, 12));
     }
 
-    private void fillRecording(BillRaw b, String[] v, Map<String, Integer> hdr) {
+    private void fillRecording(BillRaw b, String[] v) {
         // 录音费用: 分机号(0) 号码(1) 开启时间(2) 关闭时间(3) 开始时间(4) 结束时间(5) 天数(6) 费用小计(7)
         b.setExtensionNumber(s(v, 0));
         b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
@@ -176,7 +171,7 @@ public class BillImportService {
         b.setChargeAmount(dec(s(v, 7)));
     }
 
-    private void fillRingtone(BillRaw b, String[] v, Map<String, Integer> hdr) {
+    private void fillRingtone(BillRaw b, String[] v) {
         // 彩铃费用: 分机号(0) 号码(1) 开通时间(2) 归属(3) 费用(4)
         b.setExtensionNumber(s(v, 0));
         b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
@@ -185,7 +180,7 @@ public class BillImportService {
         b.setChargeAmount(dec(s(v, 4)));
     }
 
-    private void fillFlashSms(BillRaw b, String[] v, Map<String, Integer> hdr) {
+    private void fillFlashSms(BillRaw b, String[] v) {
         // 闪信费用: 月份(0) 主号码(1) 子号码(2) 地市(3) 下发量(4)
         // Note: billMonth already set by buildBillRaw from parameter; Excel col0 is just display
         // b.setBillMonth(s(v, 0));  // keep parameter billMonth (e.g. 2026-04) not Excel (e.g. 202601)
@@ -260,11 +255,22 @@ public class BillImportService {
 
     @org.springframework.scheduling.annotation.Async("importTaskExecutor")
     public void processImportAsync(String billMonth, String operator) {
+        allocationStatusMap.put(billMonth, "processing");
         try {
             processAndAllocate(billMonth, operator);
+            allocationStatusMap.put(billMonth, "completed");
         } catch (Exception e) {
             log.error("Bill import and allocation failed for month {}: {}", billMonth, e.getMessage(), e);
+            allocationStatusMap.put(billMonth, "failed:" + e.getMessage());
         }
+    }
+
+    public String getAllocationStatus(String billMonth) {
+        return allocationStatusMap.getOrDefault(billMonth, "not_found");
+    }
+
+    public void clearAllocationStatus(String billMonth) {
+        allocationStatusMap.remove(billMonth);
     }
 
     @Transactional

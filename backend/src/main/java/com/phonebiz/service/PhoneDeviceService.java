@@ -46,7 +46,13 @@ public class PhoneDeviceService {
                 page = phoneDeviceRepository.findAll(pageable);
             }
         }
-        return page.map(this::toDTO);
+        // Batch load related data to avoid N+1
+        List<Long> deviceIds = page.getContent().stream().map(PhoneDevice::getId).collect(Collectors.toList());
+        java.util.Map<Long, String> orgNameMap = batchLoadOrgNames(page.getContent().stream().map(PhoneDevice::getOrgId).filter(id -> id != null).distinct().collect(Collectors.toList()));
+        java.util.Map<String, String> empNameMap = batchLoadEmployeeNames(
+                page.getContent().stream().map(PhoneDevice::getAssignedTo).filter(a -> a != null).distinct().collect(Collectors.toList()));
+        java.util.Map<Long, Integer> phoneCountMap = batchLoadPhoneCounts(deviceIds);
+        return page.map(d -> toDTOEnriched(d, orgNameMap, empNameMap, phoneCountMap));
     }
 
     public PhoneDeviceDTO getDeviceDetail(Long id) {
@@ -59,9 +65,24 @@ public class PhoneDeviceService {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
         List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByDeviceId(deviceId);
+        if (mappings.isEmpty()) return List.of();
+
+        // Batch load all related data
+        List<Long> phoneIds = mappings.stream().map(DevicePhoneMapping::getPhoneId).collect(Collectors.toList());
+        java.util.Map<Long, PhoneNumber> phoneMap = new java.util.HashMap<>();
+        phoneNumberRepository.findAllById(phoneIds).forEach(p -> phoneMap.put(p.getId(), p));
+
+        List<String> userIds = phoneMap.values().stream()
+                .map(PhoneNumber::getUserId).filter(u -> u != null).distinct().collect(Collectors.toList());
+        java.util.Map<String, String> empNameMap = batchLoadEmployeeNames(userIds);
+
+        List<Long> orgIds = phoneMap.values().stream()
+                .map(PhoneNumber::getAllocationOrgId).filter(o -> o != null).distinct().collect(Collectors.toList());
+        java.util.Map<Long, String> orgNameMap = batchLoadOrgNames(orgIds);
+
         return mappings.stream()
                 .map(mapping -> {
-                    PhoneNumber phone = phoneNumberRepository.findById(mapping.getPhoneId()).orElse(null);
+                    PhoneNumber phone = phoneMap.get(mapping.getPhoneId());
                     if (phone == null) return null;
                     BoundPhoneDTO dto = new BoundPhoneDTO();
                     dto.setPhoneId(phone.getId());
@@ -72,17 +93,11 @@ public class PhoneDeviceService {
                     dto.setLineOrder(mapping.getLineOrder());
                     dto.setCreatedAt(mapping.getCreatedAt());
                     if (phone.getUserId() != null) {
-                        Employee emp = employeeRepository.findByEmployeeNo(phone.getUserId()).orElse(null);
-                        if (emp != null) {
-                            dto.setUserName(emp.getName());
-                        }
+                        dto.setUserName(empNameMap.getOrDefault(phone.getUserId(), null));
                     }
                     if (phone.getAllocationOrgId() != null) {
                         dto.setOrgId(phone.getAllocationOrgId());
-                        OrgStructure org = orgStructureRepository.findById(phone.getAllocationOrgId()).orElse(null);
-                        if (org != null) {
-                            dto.setOrgName(org.getName());
-                        }
+                        dto.setOrgName(orgNameMap.getOrDefault(phone.getAllocationOrgId(), null));
                     }
                     return dto;
                 })
@@ -410,7 +425,8 @@ public class PhoneDeviceService {
         return authentication != null ? authentication.getName() : "system";
     }
 
-    private PhoneDeviceDTO toDTO(PhoneDevice device) {
+    private PhoneDeviceDTO toDTOEnriched(PhoneDevice device, java.util.Map<Long, String> orgNameMap,
+                                         java.util.Map<String, String> empNameMap, java.util.Map<Long, Integer> phoneCountMap) {
         PhoneDeviceDTO dto = new PhoneDeviceDTO();
         dto.setId(device.getId());
         dto.setMacAddress(device.getMacAddress());
@@ -424,22 +440,51 @@ public class PhoneDeviceService {
         dto.setCreatedAt(device.getCreatedAt());
         dto.setUpdatedAt(device.getUpdatedAt());
 
-        OrgStructure org = orgStructureRepository.findById(device.getOrgId()).orElse(null);
-        if (org != null) {
-            dto.setOrgName(org.getName());
+        if (device.getOrgId() != null) {
+            dto.setOrgName(orgNameMap.getOrDefault(device.getOrgId(), null));
         }
 
         if (device.getAssignedTo() != null) {
-            Employee emp = employeeRepository.findByEmployeeNo(device.getAssignedTo()).orElse(null);
-            if (emp != null) {
-                dto.setAssignedEmployeeName(emp.getName());
-            }
+            dto.setAssignedEmployeeName(empNameMap.getOrDefault(device.getAssignedTo(), null));
         }
 
-        List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByDeviceId(device.getId());
-        dto.setBoundPhoneCount(mappings.size());
+        dto.setBoundPhoneCount(phoneCountMap.getOrDefault(device.getId(), 0));
 
         return dto;
+    }
+
+    private PhoneDeviceDTO toDTO(PhoneDevice device) {
+        // Used for single device operations (detail, create, update) - N+1 not an issue
+        return toDTOEnriched(device,
+                batchLoadOrgNames(List.of(device.getOrgId())),
+                batchLoadEmployeeNames(device.getAssignedTo() != null ? List.of(device.getAssignedTo()) : List.of()),
+                batchLoadPhoneCounts(List.of(device.getId())));
+    }
+
+    private java.util.Map<Long, String> batchLoadOrgNames(List<Long> orgIds) {
+        java.util.Map<Long, String> map = new java.util.HashMap<>();
+        if (orgIds == null || orgIds.isEmpty()) return map;
+        List<Long> distinctIds = orgIds.stream().distinct().collect(Collectors.toList());
+        orgStructureRepository.findAllById(distinctIds).forEach(o -> map.put(o.getId(), o.getName()));
+        return map;
+    }
+
+    private java.util.Map<String, String> batchLoadEmployeeNames(List<String> employeeNos) {
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        if (employeeNos == null || employeeNos.isEmpty()) return map;
+        List<String> distinctNos = employeeNos.stream().distinct().collect(Collectors.toList());
+        employeeRepository.findAllByEmployeeNoIn(distinctNos).forEach(e -> map.put(e.getEmployeeNo(), e.getName()));
+        return map;
+    }
+
+    private java.util.Map<Long, Integer> batchLoadPhoneCounts(List<Long> deviceIds) {
+        java.util.Map<Long, Integer> map = new java.util.HashMap<>();
+        if (deviceIds == null || deviceIds.isEmpty()) return map;
+        List<Object[]> results = devicePhoneMappingRepository.countByDeviceIdIn(deviceIds);
+        for (Object[] row : results) {
+            map.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        return map;
     }
 
     private PhoneDeviceHistoryDTO toHistoryDTO(PhoneDeviceHistory history) {
