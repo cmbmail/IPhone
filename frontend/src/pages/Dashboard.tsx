@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Progress, Table, Space, Tag, Spin, List, Modal } from 'antd'
+import { Card, Row, Col, Statistic, Progress, Table, Space, Tag, Spin, List, Modal, Typography } from 'antd'
 import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '@ant-design/icons'
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
 import { request } from '@/api/request'
@@ -233,28 +233,33 @@ const Dashboard = () => {
       </Row>
 
       <Modal
+        title={selectedAnnouncement?.title || '公告详情'}
         open={!!selectedAnnouncement}
-        title={
-          selectedAnnouncement ? (
-            <Space>
-              <Tag color={ANNOUNCEMENT_TYPE_COLORS[selectedAnnouncement.announcementType] || 'default'}>
-                {ANNOUNCEMENT_TYPE_NAMES[selectedAnnouncement.announcementType] || selectedAnnouncement.announcementType}
-              </Tag>
-              {selectedAnnouncement.title}
-            </Space>
-          ) : ''
-        }
         onCancel={() => setSelectedAnnouncement(null)}
         footer={null}
-        width={600}
+        width={720}
+        centered
       >
         {selectedAnnouncement && (
           <div>
-            <div style={{ marginBottom: 12, fontSize: 12, color: '#999' }}>
+            <Space style={{ marginBottom: 16 }}>
+              <Tag color={ANNOUNCEMENT_TYPE_COLORS[selectedAnnouncement.announcementType] || 'default'}>
+                {ANNOUNCEMENT_TYPE_NAMES[selectedAnnouncement.announcementType] || selectedAnnouncement.announcementType}
+              </Tag>
+              <Tag color={selectedAnnouncement.priority === 'URGENT' ? 'red' : selectedAnnouncement.priority === 'IMPORTANT' ? 'orange' : 'default'}>
+                {{ URGENT: '紧急', IMPORTANT: '重要', NORMAL: '普通' }[selectedAnnouncement.priority] || selectedAnnouncement.priority}
+              </Tag>
+              <Tag color={selectedAnnouncement.status === 'PUBLISHED' ? 'green' : 'default'}>
+                {{ PUBLISHED: '已发布', DRAFT: '草稿', ARCHIVED: '已归档' }[selectedAnnouncement.status] || selectedAnnouncement.status}
+              </Tag>
+            </Space>
+            <div style={{ color: '#999', marginBottom: 16, fontSize: 13 }}>
               发布人: {selectedAnnouncement.createdBy || '系统'} | 发布时间: {selectedAnnouncement.createdAt ? selectedAnnouncement.createdAt.replace('T', ' ').substring(0, 16) : '-'}
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
-              {selectedAnnouncement.content}
+            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+              <Typography.Paragraph style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.8 }}>
+                {selectedAnnouncement.content || '无内容'}
+              </Typography.Paragraph>
             </div>
           </div>
         )}
