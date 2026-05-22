@@ -34,7 +34,7 @@ const menuItems = [
   { key: 'sub-work-orders', icon: <CarryOutOutlined />, label: '工单管理', children: [
     { key: '/work-orders', icon: <CarryOutOutlined />, label: '工单管理' },
   ]},
-  { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码资源', children: [
+  { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码管理', children: [
     { key: '/phones', icon: <PhoneOutlined />, label: '电话号码' },
     { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
     { key: '/extension-pools', icon: <AppstoreOutlined />, label: '分机池' },
