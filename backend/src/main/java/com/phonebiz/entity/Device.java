@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -18,16 +19,26 @@ import lombok.NoArgsConstructor;
 @Table(name = "device")
 public class Device extends BaseEntity {
 
+    public static final int DEV_ONLINE = 1;
+    public static final int DEV_OFFLINE = 2;
+    public static final int DEV_UNREGISTERED = 3;
+    public static final int DEV_DISABLED = 4;
+
+
+    public static final int DEV_IP_PHONE = 1;
+    public static final int DEV_SOFT_PHONE = 2;
+    public static final int DEV_ATA = 3;
+    public static final int DEV_GATEWAY = 4;
+
+
     @NotBlank(message = "Device ID cannot be blank")
     @Column(name = "device_id", unique = true, nullable = false, length = 50)
     private String deviceId;
 
     @Column(name = "device_name", length = 100)
     private String deviceName;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "device_type", nullable = false, length = 20)
-    private DeviceType deviceType;
+    private Integer deviceType;
 
     @Column(name = "model", length = 100)
     private String model;
@@ -43,10 +54,8 @@ public class Device extends BaseEntity {
 
     @Column(name = "extension_number", length = 20)
     private String extensionNumber;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private DeviceStatus status;
+    private Integer status;
 
     @Column(name = "firmware_version", length = 50)
     private String firmwareVersion;
@@ -57,17 +66,6 @@ public class Device extends BaseEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
-    public enum DeviceType {
-        IP_PHONE,
-        SOFT_PHONE,
-        ATA,
-        GATEWAY
-    }
-
-    public enum DeviceStatus {
-        ONLINE,
-        OFFLINE,
-        UNREGISTERED,
-        DISABLED
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

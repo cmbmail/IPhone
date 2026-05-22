@@ -7,16 +7,16 @@ import { SyncOutlined, CheckOutlined } from '@ant-design/icons'
 
 const { Option } = Select
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'warning',
-  CONFIRMED_BY_SUBSIDIARY: 'processing',
-  CONFIRMED_BY_GROUP: 'success'
+const STATUS_COLORS: Record<number, string> = {
+  0: 'warning',
+  1: 'processing',
+  2: 'success'
 }
 
-const STATUS_NAMES: Record<string, string> = {
-  PENDING: '待处理',
-  CONFIRMED_BY_SUBSIDIARY: '子公司已确认',
-  CONFIRMED_BY_GROUP: '集团已确认'
+const STATUS_NAMES: Record<number, string> = {
+  0: '待处理',
+  1: '子公司已确认',
+  2: '集团已确认'
 }
 
 const SubsidiaryReconciliationPage = () => {
@@ -122,12 +122,12 @@ const SubsidiaryReconciliationPage = () => {
       width: 200,
       render: (_: any, record: SubsidiaryReconciliation) => (
         <Space>
-          {record.subsidiaryConfirm === 'PENDING' && (
+          {record.subsidiaryConfirm === 0 && (
             <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleSubsidiaryConfirm(record)}>
               子公司确认
             </Button>
           )}
-          {record.subsidiaryConfirm === 'CONFIRMED' && record.groupConfirm === 'PENDING' && (
+          {record.subsidiaryConfirm === 1 && record.groupConfirm === 0 && (
             <Button size="small" type="primary" onClick={() => handleGroupConfirm(record)}>
               集团确认
             </Button>

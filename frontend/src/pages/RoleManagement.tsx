@@ -203,7 +203,7 @@ const RoleManagement: React.FC = () => {
     { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true, render: (v: string) => v || '-' },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 80,
-      render: (s: string) => s === 'active' ? <Badge status="success" text="启用" /> : <Badge status="default" text="停用" />
+      render: (s: string) => s === 1 ? <Badge status="success" text="启用" /> : <Badge status="default" text="停用" />
     },
     {
       title: '操作', key: 'actions', width: 260, fixed: 'right' as const,
@@ -273,8 +273,8 @@ const RoleManagement: React.FC = () => {
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
             <select style={{ width: '100%', padding: '4px 11px', border: '1px solid #d9d9d9', borderRadius: 6, height: 32 }}>
-              <option value="active">启用</option>
-              <option value="inactive">停用</option>
+              <option value={1}>启用</option>
+              <option value={0}>停用</option>
             </select>
           </Form.Item>
         </Form>

@@ -45,5 +45,8 @@ public class PhoneSurrenderRecord {
 
     @Column(name = "archived_at", nullable = false)
     private LocalDateTime archivedAt = LocalDateTime.now();
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
 

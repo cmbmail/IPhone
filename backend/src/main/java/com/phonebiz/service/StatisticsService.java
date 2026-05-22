@@ -38,7 +38,7 @@ public class StatisticsService {
         Map<String, Long> statusDistribution = new LinkedHashMap<>();
         long totalCount = 0;
         for (Object[] row : phoneRepository.countGroupByStatus()) {
-            String status = ((PhoneNumber.PhoneStatus) row[0]).name();
+            String status = String.valueOf((Integer) row[0]);
             Long count = (Long) row[1];
             statusDistribution.put(status, count);
             totalCount += count;
@@ -55,12 +55,12 @@ public class StatisticsService {
 
         return PhoneStatisticsDTO.builder()
                 .totalCount((int) totalCount)
-                .allocatedCount(statusDistribution.getOrDefault("active", 0L))
-                .idleCount(statusDistribution.getOrDefault("idle", 0L))
-                .stoppedCount(statusDistribution.getOrDefault("stopped", 0L))
-                .cancelledCount(statusDistribution.getOrDefault("cancelled", 0L))
-                .reservedCount(statusDistribution.getOrDefault("reserved", 0L))
-                .disabledCount(statusDistribution.getOrDefault("disabled", 0L))
+                .allocatedCount(statusDistribution.getOrDefault("1", 0L))
+                .idleCount(statusDistribution.getOrDefault("0", 0L))
+                .stoppedCount(statusDistribution.getOrDefault("2", 0L))
+                .cancelledCount(statusDistribution.getOrDefault("3", 0L))
+                .reservedCount(statusDistribution.getOrDefault("4", 0L))
+                .disabledCount(statusDistribution.getOrDefault("5", 0L))
                 .statusDistribution(statusDistribution)
                 .orgDistribution(orgDistribution)
                 .dailyTrend(dailyTrend)
@@ -73,7 +73,7 @@ public class StatisticsService {
         Map<String, Long> statusDistribution = new LinkedHashMap<>();
         long totalCount = 0;
         for (Object[] row : phoneRepository.countByOrgIdGroupByStatus(orgId)) {
-            String status = ((PhoneNumber.PhoneStatus) row[0]).name();
+            String status = String.valueOf((Integer) row[0]);
             Long count = (Long) row[1];
             statusDistribution.put(status, count);
             totalCount += count;
@@ -81,12 +81,12 @@ public class StatisticsService {
 
         return PhoneStatisticsDTO.builder()
                 .totalCount((int) totalCount)
-                .allocatedCount(statusDistribution.getOrDefault("active", 0L))
-                .idleCount(statusDistribution.getOrDefault("idle", 0L))
-                .stoppedCount(statusDistribution.getOrDefault("stopped", 0L))
-                .cancelledCount(statusDistribution.getOrDefault("cancelled", 0L))
-                .reservedCount(statusDistribution.getOrDefault("reserved", 0L))
-                .disabledCount(statusDistribution.getOrDefault("disabled", 0L))
+                .allocatedCount(statusDistribution.getOrDefault("1", 0L))
+                .idleCount(statusDistribution.getOrDefault("0", 0L))
+                .stoppedCount(statusDistribution.getOrDefault("2", 0L))
+                .cancelledCount(statusDistribution.getOrDefault("3", 0L))
+                .reservedCount(statusDistribution.getOrDefault("4", 0L))
+                .disabledCount(statusDistribution.getOrDefault("5", 0L))
                 .statusDistribution(statusDistribution)
                 .build();
     }
@@ -123,21 +123,21 @@ public class StatisticsService {
         long unregisteredCount = 0;
         long disabledCount = 0;
         for (Object[] row : deviceRepository.countGroupByStatus()) {
-            String status = ((Device.DeviceStatus) row[0]).name();
+            String status = String.valueOf((Integer) row[0]);
             Long count = (Long) row[1];
             statusDistribution.put(status, count);
             totalCount += count;
-            switch (status) {
-                case "ONLINE" -> onlineCount = count;
-                case "OFFLINE" -> offlineCount = count;
-                case "UNREGISTERED" -> unregisteredCount = count;
-                case "DISABLED" -> disabledCount = count;
+            switch (Integer.parseInt(status)) {
+                case 1 -> onlineCount = count;
+                case 2 -> offlineCount = count;
+                case 3 -> unregisteredCount = count;
+                case 4 -> disabledCount = count;
             }
         }
 
         Map<String, Long> typeDistribution = new LinkedHashMap<>();
         for (Object[] row : deviceRepository.countGroupByType()) {
-            String type = ((Device.DeviceType) row[0]).name();
+            String type = String.valueOf((Integer) row[0]);
             Long count = (Long) row[1];
             typeDistribution.put(type, count);
         }
@@ -184,12 +184,12 @@ public class StatisticsService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PhoneNumber> getPhonesByStatus(PhoneNumber.PhoneStatus status, Pageable pageable) {
+    public Page<PhoneNumber> getPhonesByStatus(Integer status, Pageable pageable) {
         return phoneRepository.findByStatus(status, pageable);
     }
 
     @Transactional(readOnly = true)
     public List<Device> getOfflineDevices() {
-        return deviceRepository.findByStatus(Device.DeviceStatus.OFFLINE);
+        return deviceRepository.findByStatus(Device.DEV_OFFLINE);
     }
 }

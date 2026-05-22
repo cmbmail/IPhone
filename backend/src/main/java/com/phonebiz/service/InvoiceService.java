@@ -174,7 +174,7 @@ public class InvoiceService {
 
         extractAmountFromOcr(ocrText, invoice);
 
-        invoice.setStatus(Invoice.InvoiceStatus.distributed);
+        invoice.setStatus(Invoice.INV_DISTRIBUTED);
         invoice.setDistributeAt(LocalDateTime.now());
         invoiceRepository.save(invoice);
 
@@ -268,7 +268,7 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_001));
 
-        invoice.setStatus(Invoice.InvoiceStatus.confirmed);
+        invoice.setStatus(Invoice.INV_CONFIRMED);
         invoice.setConfirmedAt(LocalDateTime.now());
         return invoiceRepository.save(invoice);
     }
@@ -280,7 +280,7 @@ public class InvoiceService {
 
         if (invoice.getReadAt() == null) {
             invoice.setReadAt(LocalDateTime.now());
-            invoice.setStatus(Invoice.InvoiceStatus.read);
+            invoice.setStatus(Invoice.INV_READ);
             return invoiceRepository.save(invoice);
         }
         return invoice;
@@ -292,12 +292,12 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Invoice> getInvoicesByOrgAndStatus(Long orgId, Invoice.InvoiceStatus status, Pageable pageable) {
+    public Page<Invoice> getInvoicesByOrgAndStatus(Long orgId, Integer status, Pageable pageable) {
         return invoiceRepository.findByRecipientOrgIdAndStatus(orgId, status, pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<Invoice> getInvoicesByStatus(Invoice.InvoiceStatus status, Pageable pageable) {
+    public Page<Invoice> getInvoicesByStatus(Integer status, Pageable pageable) {
         return invoiceRepository.findByStatus(status, pageable);
     }
 
@@ -337,10 +337,10 @@ public class InvoiceService {
     public Map<String, Long> getInvoiceStatistics(String billMonth) {
         Map<String, Long> stats = new HashMap<>();
         stats.put("total", invoiceRepository.countByBillMonth(billMonth));
-        stats.put("pending", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.InvoiceStatus.pending));
-        stats.put("distributed", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.InvoiceStatus.distributed));
-        stats.put("read", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.InvoiceStatus.read));
-        stats.put("confirmed", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.InvoiceStatus.confirmed));
+        stats.put("pending", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_PENDING));
+        stats.put("distributed", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_DISTRIBUTED));
+        stats.put("read", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_READ));
+        stats.put("confirmed", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_CONFIRMED));
         return stats;
     }
 }

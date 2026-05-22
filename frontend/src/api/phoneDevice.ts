@@ -10,7 +10,7 @@ export interface PhoneDeviceDTO {
   orgName?: string
   assignedTo: string
   assignedEmployeeName?: string
-  status: string
+  status: number
   boundPhoneCount: number
   remark: string
   createdAt: string

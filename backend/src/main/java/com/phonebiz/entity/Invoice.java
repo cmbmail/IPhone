@@ -19,6 +19,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Invoice {
 
+    public static final int INV_PENDING = 0;
+    public static final int INV_DISTRIBUTED = 1;
+    public static final int INV_READ = 2;
+    public static final int INV_CONFIRMED = 3;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -51,11 +57,9 @@ public class Invoice {
 
     @Column(name = "invoice_date")
     private LocalDate invoiceDate;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private InvoiceStatus status = InvoiceStatus.pending;
+    private Integer status = Invoice.INV_PENDING;
 
     @Column(name = "ocr_text", columnDefinition = "TEXT")
     private String ocrText;
@@ -78,6 +82,9 @@ public class Invoice {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -87,12 +94,5 @@ public class Invoice {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum InvoiceStatus {
-        pending,
-        distributed,
-        read,
-        confirmed
     }
 }

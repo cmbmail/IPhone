@@ -56,5 +56,8 @@ public class PhoneDeviceHistory {
             operatedAt = LocalDateTime.now();
         }
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
 

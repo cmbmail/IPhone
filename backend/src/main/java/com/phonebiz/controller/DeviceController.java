@@ -48,7 +48,7 @@ public class DeviceController {
 
     @GetMapping("/status/{status}")
     public ApiResponse<List<Device>> getDevicesByStatus(@PathVariable String status) {
-        Device.DeviceStatus deviceStatus = com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, status);
+        Integer deviceStatus = Integer.parseInt(status);
         return ApiResponse.success(deviceService.getDevicesByStatus(deviceStatus));
     }
 
@@ -59,13 +59,13 @@ public class DeviceController {
         Device device = Device.builder()
                 .deviceId(request.getDeviceId())
                 .deviceName(request.getDeviceName())
-                .deviceType(com.phonebiz.common.EnumHelper.parse(Device.DeviceType.class, request.getDeviceType()))
+                .deviceType(Integer.parseInt(request.getDeviceType()))
                 .model(request.getModel())
                 .macAddress(request.getMacAddress())
                 .ipAddress(request.getIpAddress())
                 .phoneNumber(request.getPhoneNumber())
                 .extensionNumber(request.getExtensionNumber())
-                .status(com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, request.getStatus()))
+                .status(Integer.parseInt(request.getStatus()))
                 .firmwareVersion(request.getFirmwareVersion())
                 .remark(request.getRemark())
                 .build();
@@ -83,7 +83,7 @@ public class DeviceController {
         if (request.getIpAddress() != null) existing.setIpAddress(request.getIpAddress());
         if (request.getPhoneNumber() != null) existing.setPhoneNumber(request.getPhoneNumber());
         if (request.getExtensionNumber() != null) existing.setExtensionNumber(request.getExtensionNumber());
-        if (request.getStatus() != null) existing.setStatus(com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, request.getStatus()));
+        if (request.getStatus() != null) existing.setStatus(Integer.parseInt(request.getStatus()));
         if (request.getFirmwareVersion() != null) existing.setFirmwareVersion(request.getFirmwareVersion());
         if (request.getRemark() != null) existing.setRemark(request.getRemark());
         return ApiResponse.success(deviceService.updateDevice(id, existing));
@@ -102,7 +102,7 @@ public class DeviceController {
     @AuditLog(module = "device", operation = "变更设备状态", targetType = "Device", targetId = "#deviceId")
     public ApiResponse<Device> updateStatus(@PathVariable String deviceId, 
                                            @RequestParam String status) {
-        Device.DeviceStatus deviceStatus = com.phonebiz.common.EnumHelper.parse(Device.DeviceStatus.class, status);
+        Integer deviceStatus = Integer.parseInt(status);
         return ApiResponse.success(deviceService.updateStatus(deviceId, deviceStatus));
     }
 

@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,4 +61,7 @@ public class PhoneOwnership {
     protected void onUpdate() {
         updatedAt = java.time.LocalDateTime.now();
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

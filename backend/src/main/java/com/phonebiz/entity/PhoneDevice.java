@@ -19,6 +19,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PhoneDevice {
+
+    public static final int PD_STOCK = 0;
+    public static final int PD_ACTIVE = 1;
+    public static final int PD_INACTIVE = 2;
+    public static final int PD_REPAIRING = 3;
+    public static final int PD_RETIRED = 4;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,10 +47,8 @@ public class PhoneDevice {
 
     @Column(name = "assigned_to", length = 20)
     private String assignedTo;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private PhoneDeviceStatus status;
+    private Integer status;
 
     @Column(name = "remark", length = 500)
     private String remark;
@@ -57,6 +62,9 @@ public class PhoneDevice {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Column(name = "created_by", nullable = false, length = 50)
     private String createdBy;
@@ -72,17 +80,13 @@ public class PhoneDevice {
             version = 0;
         }
         if (status == null) {
-            status = PhoneDeviceStatus.stock;
+            status = PD_STOCK;
         }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum PhoneDeviceStatus {
-        stock, active, inactive, repairing, retired
     }
 }
 

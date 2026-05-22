@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.phonebiz.entity.ExtensionNumber;
-import com.phonebiz.entity.ExtensionNumber.ExtStatus;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.entity.WorkOrderItem;
@@ -30,7 +29,7 @@ public class ExtensionNumberService {
     private final WorkOrderRepository woRepo;
     private final WorkOrderItemRepository woiRepo;
 
-    public Page<ExtensionNumber> search(String keyword, ExtStatus status, Long deptOrgId, Pageable pageable) {
+    public Page<ExtensionNumber> search(String keyword, Integer status, Long deptOrgId, Pageable pageable) {
         return extRepo.searchOrdered(keyword, status, deptOrgId, pageable);
     }
 
@@ -38,7 +37,7 @@ public class ExtensionNumberService {
     public ExtensionNumber allocate(Long id, String userName, Long deptOrgId, String deptName, String phoneNumber, String operator) {
         ExtensionNumber ext = extRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
-        if (ext.getStatus() == ExtStatus.ALLOCATED) {
+        if (ext.getStatus() == ExtensionNumber.EXT_ALLOCATED) {
             throw new RuntimeException("该分机号已被占用");
         }
 
@@ -47,14 +46,14 @@ public class ExtensionNumberService {
         ext.setDeptName(deptName);
         ext.setBranchName(resolveBranchName(deptOrgId));
         ext.setPhoneNumber(phoneNumber);
-        ext.setStatus(ExtStatus.ALLOCATED);
+        ext.setStatus(ExtensionNumber.EXT_ALLOCATED);
         ext.setUpdatedBy(operator);
 
         extRepo.save(ext);
 
         WorkOrder wo = createWorkOrder("分机号分配 - " + ext.getExtensionNumber(),
                 "将分机号 " + ext.getExtensionNumber() + " 分配给 " + userName + "（" + deptName + "）",
-                WorkOrder.WorkOrderType.PHONE_ALLOCATE, operator, ext.getId(),
+                WorkOrder.WO_PHONE_ALLOCATE, operator, ext.getId(),
                 null, ext.getExtensionNumber());
         ext.setWorkOrderId(wo.getId());
         extRepo.save(ext);
@@ -66,7 +65,7 @@ public class ExtensionNumberService {
     public ExtensionNumber reclaim(Long id, String operator) {
         ExtensionNumber ext = extRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
-        if (ext.getStatus() != ExtStatus.ALLOCATED) {
+        if (ext.getStatus() != ExtensionNumber.EXT_ALLOCATED) {
             throw new RuntimeException("该分机号未被占用，无法回收");
         }
 
@@ -79,7 +78,7 @@ public class ExtensionNumberService {
         ext.setDeptName(null);
         ext.setBranchName(null);
         ext.setPhoneNumber(null);
-        ext.setStatus(ExtStatus.IDLE);
+        ext.setStatus(ExtensionNumber.EXT_IDLE);
         ext.setWorkOrderId(null);
         ext.setUpdatedBy(operator);
 
@@ -87,22 +86,22 @@ public class ExtensionNumberService {
 
         createWorkOrder("分机号回收 - " + prevExt,
                 "回收分机号 " + prevExt + "，原使用人: " + prevUser + "（" + prevDept + "）",
-                WorkOrder.WorkOrderType.PHONE_RECLAIM, operator, ext.getId(),
+                WorkOrder.WO_PHONE_RECLAIM, operator, ext.getId(),
                 prevExt, null);
 
         return ext;
     }
 
     private WorkOrder createWorkOrder(String title, String desc,
-                                       WorkOrder.WorkOrderType type, String operator,
+                                       Integer type, String operator,
                                        Long targetId, String fromValue, String toValue) {
         String woNo = "WO" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
 
         WorkOrder wo = WorkOrder.builder()
                 .workOrderNo(woNo)
                 .type(type)
-                .status(WorkOrder.WorkOrderStatus.COMPLETED)
-                .priority(WorkOrder.WorkOrderPriority.NORMAL)
+                .status(WorkOrder.WO_COMPLETED)
+                .priority(WorkOrder.WO_NORMAL)
                 .requesterName(operator)
                 .handlerName(operator)
                 .title(title)
@@ -115,12 +114,12 @@ public class ExtensionNumberService {
 
         WorkOrderItem item = WorkOrderItem.builder()
                 .workOrderId(wo.getId())
-                .itemType(WorkOrderItem.ItemType.PHONE)
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(targetId)
-                .action(type.name())
+                .action(String.valueOf(type))
                 .fromValue(fromValue)
                 .toValue(toValue)
-                .status(WorkOrderItem.ItemStatus.COMPLETED)
+                .status(WorkOrderItem.ITEM_COMPLETED)
                 .operator(operator)
                 .executedAt(LocalDateTime.now())
                 .build();

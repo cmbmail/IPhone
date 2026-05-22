@@ -99,7 +99,7 @@ public class ReportService {
         for (Object[] row : billAllocationRepository.countByConfirmStatusGroupBy(billMonth)) {
             BillAllocation.ConfirmStatus status = (BillAllocation.ConfirmStatus) row[0];
             Long count = (Long) row[1];
-            confirmStatus.put(status.name(), count);
+            confirmStatus.put(String.valueOf(String.valueOf(status)), count);
         }
 
         report.put("billMonth", billMonth);
@@ -128,19 +128,19 @@ public class ReportService {
         long completedOrders = 0;
         long pendingOrders = 0;
         for (Object[] row : workOrderRepository.countGroupByStatusBetween(start, end)) {
-            WorkOrder.WorkOrderStatus status = (WorkOrder.WorkOrderStatus) row[0];
+            Integer status = (Integer) row[0];
             Long count = (Long) row[1];
-            statusDistribution.put(status.name(), count);
-            if (status == WorkOrder.WorkOrderStatus.COMPLETED) completedOrders = count;
-            if (status == WorkOrder.WorkOrderStatus.PENDING) pendingOrders = count;
+            statusDistribution.put(String.valueOf(String.valueOf(status)), count);
+            if (status == WorkOrder.WO_COMPLETED) completedOrders = count;
+            if (status == WorkOrder.WO_PENDING) pendingOrders = count;
         }
 
         // Item type distribution via JPQL
         Map<String, Long> typeDistribution = new LinkedHashMap<>();
         for (Object[] row : workOrderItemRepository.countGroupByTypeBetween(start, end)) {
-            WorkOrderItem.ItemType type = (WorkOrderItem.ItemType) row[0];
+            Integer type = (Integer) row[0];
             Long count = (Long) row[1];
-            typeDistribution.put(type != null ? type.name() : "unknown", count);
+            typeDistribution.put(type != null ? String.valueOf(String.valueOf(type)) : "unknown", count);
         }
 
         report.put("startTime", startTime);

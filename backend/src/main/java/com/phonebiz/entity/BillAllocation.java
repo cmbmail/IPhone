@@ -18,6 +18,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BillAllocation {
 
+    public static final int SUBMIT_PENDING = 0;
+    public static final int SUBMIT_DONE = 1;
+
+
+    public static final int ANOMALY_PENDING = 0;
+    public static final int ANOMALY_CONFIRMED = 1;
+    public static final int ANOMALY_REJECTED = 2;
+
+
+    public static final int AMOUNT_CONFIRM_PENDING = 0;
+    public static final int AMOUNT_CONFIRM_CORRECT = 1;
+    public static final int AMOUNT_CONFIRM_WRONG = 2;
+
+
+    public static final int CONFIRM_PENDING = 0;
+    public static final int CONFIRM_CORRECT = 1;
+    public static final int CONFIRM_WRONG = 2;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,23 +71,15 @@ public class BillAllocation {
 
     @Column(name = "anomaly_reason", length = 500)
     private String anomalyReason;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "admin_confirm_org", nullable = false, length = 20)
     @Builder.Default
     private ConfirmStatus adminConfirmOrg = ConfirmStatus.pending;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "admin_confirm_amount", nullable = false, length = 20)
     @Builder.Default
     private ConfirmStatus adminConfirmAmount = ConfirmStatus.pending;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "finance_confirm_anomaly", nullable = false, length = 20)
     @Builder.Default
     private FinanceConfirmStatus financeConfirmAnomaly = FinanceConfirmStatus.pending;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "finance_confirm_submit", nullable = false, length = 20)
     @Builder.Default
     private FinanceSubmitStatus financeConfirmSubmit = FinanceSubmitStatus.pending;
@@ -124,4 +135,7 @@ public class BillAllocation {
         pending,
         submitted
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

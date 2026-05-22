@@ -8,7 +8,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.entity.ExtensionNumber;
-import com.phonebiz.entity.ExtensionNumber.ExtStatus;
 import com.phonebiz.service.ExtensionNumberService;
 import com.phonebiz.annotation.AuditLog;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +24,7 @@ public class ExtensionNumberController {
     @GetMapping
     public ApiResponse<Page<ExtensionNumber>> search(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) ExtStatus status,
+            @RequestParam(required = false) Integer status,
             @RequestParam(required = false) Long deptOrgId,
             @PageableDefault(size = 20, sort = "extensionNumber", direction = Sort.Direction.ASC) Pageable pageable) {
         return ApiResponse.success(extService.search(keyword, status, deptOrgId, pageable));

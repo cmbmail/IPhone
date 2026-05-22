@@ -56,7 +56,7 @@ public class InvoiceController {
         Page<Invoice> result;
         if (orgId != null && status != null) {
             result = invoiceService.getInvoicesByOrgAndStatus(orgId, 
-                com.phonebiz.common.EnumHelper.parse(Invoice.InvoiceStatus.class, status), pageable);
+                Integer.parseInt(status), pageable);
         } else if (orgId != null) {
             result = invoiceService.getInvoicesByOrg(orgId, pageable);
         } else if (billMonth != null && status != null) {
@@ -64,7 +64,7 @@ public class InvoiceController {
         } else if (billMonth != null) {
             result = invoiceService.getInvoicesByBillMonth(billMonth, pageable);
         } else if (status != null) {
-            result = invoiceService.getInvoicesByStatus(com.phonebiz.common.EnumHelper.parse(Invoice.InvoiceStatus.class, status), pageable);
+            result = invoiceService.getInvoicesByStatus(Integer.parseInt(status), pageable);
         } else {
             result = invoiceService.getInvoicesByOrg(null, pageable);
         }

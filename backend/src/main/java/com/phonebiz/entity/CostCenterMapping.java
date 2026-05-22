@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.Data;
@@ -10,6 +11,10 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "cost_center_mapping")
 public class CostCenterMapping extends BaseEntity {
+
+    public static final int CC_INACTIVE = 0;
+    public static final int CC_ACTIVE = 1;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,12 +28,13 @@ public class CostCenterMapping extends BaseEntity {
 
     @Column(name = "cost_center_code", nullable = false, length = 50)
     private String costCenterCode;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CostCenterStatus status = CostCenterStatus.active;
 
     public enum CostCenterStatus {
         active, inactive
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

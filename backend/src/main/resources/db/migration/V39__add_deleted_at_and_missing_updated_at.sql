@@ -1,0 +1,48 @@
+-- V39: 全表添加 deleted_at + 补齐缺失的 updated_at + sys_role_permission 补全审计字段
+-- 铁律2: 必须有 created_at / updated_at / deleted_at
+
+-- ===== 1. 补齐缺失的 updated_at =====
+ALTER TABLE device_phone_mapping ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE invoice_file ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE sys_permission ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- ===== 2. sys_role_permission 补全 id + 审计字段 =====
+ALTER TABLE sys_role_permission DROP PRIMARY KEY;
+ALTER TABLE sys_role_permission ADD COLUMN id BIGINT NOT NULL AUTO_INCREMENT FIRST, ADD PRIMARY KEY (id), ADD UNIQUE KEY uk_role_perm (role_id, permission_id);
+ALTER TABLE sys_role_permission ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE sys_role_permission ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE sys_role_permission ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+
+-- ===== 3. 全表添加 deleted_at =====
+ALTER TABLE announcement ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE area_code_org_mapping ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE audit_log ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE bill_allocation ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE bill_raw ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE cost_center_mapping ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE device ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE device_operation ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE device_phone_mapping ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE employee ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE extension_number ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE extension_pool ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE import_batch ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE invoice ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE invoice_distribution ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE invoice_file ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE notification ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE org_structure ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_device ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_device_history ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_history ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_number ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_ownership ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_snapshot ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE phone_surrender_record ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE subsidiary_reconciliation ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE sys_feature_flag ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE sys_permission ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE sys_role ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE sys_user ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE work_order ADD COLUMN deleted_at DATETIME DEFAULT NULL;
+ALTER TABLE work_order_item ADD COLUMN deleted_at DATETIME DEFAULT NULL;

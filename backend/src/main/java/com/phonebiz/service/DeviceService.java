@@ -50,7 +50,7 @@ public class DeviceService {
             throw new BusinessException(ErrorCode.DEVICE_003);
         }
         
-        device.setStatus(Device.DeviceStatus.UNREGISTERED);
+        device.setStatus(Device.DEV_UNREGISTERED);
         device.setCreatedAt(LocalDateTime.now());
         device.setUpdatedAt(LocalDateTime.now());
         
@@ -115,13 +115,13 @@ public class DeviceService {
     }
 
     @Transactional
-    public Device updateStatus(String deviceId, Device.DeviceStatus status) {
+    public Device updateStatus(String deviceId, Integer status) {
         Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_001));
         
         device.setStatus(status);
         
-        if (status == Device.DeviceStatus.ONLINE) {
+        if (status == Device.DEV_ONLINE) {
             device.setLastCheckinTime(LocalDateTime.now());
         }
         
@@ -134,7 +134,7 @@ public class DeviceService {
         Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_001));
         
-        device.setStatus(Device.DeviceStatus.ONLINE);
+        device.setStatus(Device.DEV_ONLINE);
         device.setIpAddress(ipAddress);
         device.setFirmwareVersion(firmwareVersion);
         device.setLastCheckinTime(LocalDateTime.now());
@@ -144,7 +144,7 @@ public class DeviceService {
     }
 
     @Transactional(readOnly = true)
-    public List<Device> getDevicesByStatus(Device.DeviceStatus status) {
+    public List<Device> getDevicesByStatus(Integer status) {
         return deviceRepository.findByStatus(status);
     }
 }

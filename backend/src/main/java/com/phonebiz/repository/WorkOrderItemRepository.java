@@ -14,11 +14,11 @@ public interface WorkOrderItemRepository extends JpaRepository<WorkOrderItem, Lo
     
     List<WorkOrderItem> findByWorkOrderId(Long workOrderId);
     
-    List<WorkOrderItem> findByWorkOrderIdAndItemType(Long workOrderId, WorkOrderItem.ItemType itemType);
+    List<WorkOrderItem> findByWorkOrderIdAndItemType(Long workOrderId, Integer itemType);
     
     long countByWorkOrderId(Long workOrderId);
     
-    long countByWorkOrderIdAndStatus(Long workOrderId, WorkOrderItem.ItemStatus status);
+    long countByWorkOrderIdAndStatus(Long workOrderId, Integer status);
     
     List<WorkOrderItem> findByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 

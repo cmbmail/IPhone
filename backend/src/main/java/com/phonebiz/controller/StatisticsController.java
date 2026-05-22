@@ -40,7 +40,7 @@ public class StatisticsController {
     public ApiResponse<Page<PhoneNumber>> getPhonesByStatus(
             @PathVariable String status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        PhoneNumber.PhoneStatus phoneStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, status);
+        Integer phoneStatus = Integer.parseInt(status);
         return ApiResponse.success(statisticsService.getPhonesByStatus(phoneStatus, pageable));
     }
 

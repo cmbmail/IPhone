@@ -86,7 +86,7 @@ public class SysRoleService {
         role.setName(request.getName());
         role.setCode(request.getCode());
         role.setDescription(request.getDescription());
-        role.setStatus(SysRole.RoleStatus.active);
+        role.setStatus(SysRole.ROLE_ACTIVE);
         role.setIsSystem(false);
         role.setCreatedBy(operator);
         role.setUpdatedBy(operator);
@@ -117,7 +117,7 @@ public class SysRoleService {
         }
 
         if (request.getStatus() != null) {
-            role.setStatus(SysRole.RoleStatus.valueOf(request.getStatus()));
+            role.setStatus(Integer.valueOf(request.getStatus()));
         }
 
         role.setUpdatedBy(operator);

@@ -7,23 +7,23 @@ import { UploadOutlined, FilePdfOutlined, DeleteOutlined, CheckOutlined } from '
 
 const { Option } = Select
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'warning',
-  CONFIRMED: 'success',
-  DISTRIBUTED: 'processing',
-  REJECTED: 'error'
+const STATUS_COLORS: Record<number, string> = {
+  0: 'warning',
+  1: 'success',
+  2: 'processing',
+  3: 'error'
 }
 
-const STATUS_NAMES: Record<string, string> = {
-  PENDING: '待处理',
-  CONFIRMED: '已确认',
-  DISTRIBUTED: '已分发',
-  REJECTED: '已拒绝'
+const STATUS_NAMES: Record<number, string> = {
+  0: '待处理',
+  1: '已确认',
+  2: '已分发',
+  3: '已拒绝'
 }
 
 const InvoiceManagement = () => {
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
-  const [status, setStatus] = useState<string>('')
+  const [status, setStatus] = useState<number | ''>('')
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
@@ -138,7 +138,7 @@ const InvoiceManagement = () => {
       width: 150,
       render: (_: any, record: Invoice) => (
         <Space>
-          {record.status === 'PENDING' && (
+          {record.status === 0 && (
             <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleConfirm(record)}>
               确认
             </Button>
@@ -177,9 +177,9 @@ const InvoiceManagement = () => {
             {months.map(m => <Option key={m} value={m}>{m}</Option>)}
           </Select>
           <Select value={status} onChange={setStatus} style={{ width: 150 }} allowClear placeholder="选择状态">
-            <Option value="PENDING">待处理</Option>
-            <Option value="CONFIRMED">已确认</Option>
-            <Option value="DISTRIBUTED">已分发</Option>
+            <Option value={0}>待处理</Option>
+            <Option value={1}>已确认</Option>
+            <Option value={2}>已分发</Option>
           </Select>
           <Button type="primary" icon={<UploadOutlined />} onClick={() => setIsUploadModalOpen(true)}>
             上传发票

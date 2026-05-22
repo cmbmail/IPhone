@@ -19,6 +19,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BillRaw {
 
+    public static final int IMPORT_PENDING = 0;
+    public static final int IMPORT_PROCESSED = 1;
+    public static final int IMPORT_ERROR = 2;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,11 +51,9 @@ public class BillRaw {
 
     @Column(name = "raw_data", columnDefinition = "JSON")
     private String rawData;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "import_status", nullable = false, length = 20)
     @Builder.Default
-    private ImportStatus importStatus = ImportStatus.pending;
+    private Integer importStatus = BillRaw.IMPORT_PENDING;
 
     @Column(name = "import_error_msg", length = 500)
     private String importErrorMsg;
@@ -124,9 +127,6 @@ public class BillRaw {
         importedAt = LocalDateTime.now();
     }
 
-    public enum ImportStatus {
-        pending,
-        processed,
-        error
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

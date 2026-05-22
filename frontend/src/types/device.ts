@@ -1,9 +1,9 @@
 export interface Device {
   id: number
   deviceId: string
-  deviceType: string
+  deviceType: number
   model: string | null
-  status: string
+  status: number
   ipAddress: string | null
   firmwareVersion: string | null
   lastCheckin: string | null
@@ -14,7 +14,7 @@ export interface DeviceOperation {
   id: number
   deviceId: string
   operationType: string
-  status: string
+  status: number
   operator: string
   createdAt: string
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Dropdown, Drawer, Timeline, Descriptions, InputNumber, Popconfirm } from 'antd'
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Drawer, Timeline, Descriptions, InputNumber, Popconfirm } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { phoneApi } from '@/api/phone'
 import { orgApi } from '@/api/org'
@@ -7,11 +7,11 @@ import type { PhoneNumber, CreatePhoneDTO, PhoneAllocationRequest, PhoneReclaimR
 
 const { Option } = Select
 
-const STATUS_COLORS: Record<string, string> = {
-  idle: 'default', active: 'success', stopped: 'warning', cancelled: 'error', reserved: 'processing', disabled: 'error'
+const STATUS_COLORS: Record<number, string> = {
+  0: 'default', 1: 'success', 2: 'warning', 3: 'error', 4: 'processing', 5: 'error'
 }
-const STATUS_NAMES: Record<string, string> = {
-  idle: '空闲', active: '使用中', stopped: '停用', cancelled: '已拆机', reserved: '已预留', disabled: '已禁用'
+const STATUS_NAMES: Record<number, string> = {
+  0: '空闲', 1: '使用中', 2: '停用', 3: '已拆机', 4: '已预留', 5: '已禁用'
 }
 
 const ACTION_NAMES: Record<string, string> = {
@@ -24,10 +24,9 @@ const PhoneManagement = () => {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [searchNumber, setSearchNumber] = useState('')
-  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined)
+  const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
   const [filterOrgId, setFilterOrgId] = useState<number | undefined>(undefined)
 
-  // Modals
   const [selectedPhone, setSelectedPhone] = useState<PhoneNumber | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [modalType, setModalType] = useState<string>('')
@@ -38,7 +37,7 @@ const PhoneManagement = () => {
     queryKey: ['phones', page, pageSize, filterStatus, filterOrgId],
     queryFn: async () => {
       const params: any = { page, size: pageSize }
-      if (filterStatus) params.status = filterStatus
+      if (filterStatus !== undefined) params.status = filterStatus
       if (filterOrgId) params.orgId = filterOrgId
       const res = await phoneApi.getAll(params)
       return res.data.data
@@ -107,7 +106,7 @@ const PhoneManagement = () => {
   const getActionButtons = (r: PhoneNumber) => {
     const btns: React.ReactNode[] = []
     switch (r.status) {
-      case 'idle':
+      case 0:
         btns.push(
           <Button key="alloc" size="small" type="primary" onClick={() => openModal('allocate', r)}>分配</Button>,
           <Button key="reserve" size="small" onClick={() => openModal('reserve', r)}>预留</Button>,
@@ -115,33 +114,33 @@ const PhoneManagement = () => {
           <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
         )
         break
-      case 'active':
+      case 1:
         btns.push(
           <Button key="reclaim" size="small" danger onClick={() => openModal('reclaim', r)}>回收</Button>,
           <Button key="changeUser" size="small" onClick={() => openModal('changeUser', r)}>过户</Button>,
           <Button key="changeNumber" size="small" onClick={() => openModal('changeNumber', r)}>换号</Button>,
           <Button key="changeOrg" size="small" onClick={() => openModal('changeOrg', r)}>转移</Button>,
           <Button key="changeExt" size="small" onClick={() => openModal('changeExtension', r)}>换分机号</Button>,
-          <Button key="stop" size="small" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'stopped' }); setModalType('status') }}>停机</Button>,
+          <Button key="stop" size="small" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 2 }); setModalType('status') }}>停机</Button>,
           <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
         )
         break
-      case 'stopped':
+      case 2:
         btns.push(
-          <Button key="restore" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'active' }); setModalType('status') }}>复机</Button>,
+          <Button key="restore" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 1 }); setModalType('status') }}>复机</Button>,
           <Button key="reclaim" size="small" onClick={() => openModal('reclaim', r)}>回收</Button>,
           <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
         )
         break
-      case 'reserved':
+      case 4:
         btns.push(
           <Button key="release" size="small" onClick={() => openModal('release', r)}>释放</Button>,
           <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
         )
         break
-      case 'disabled':
+      case 5:
         btns.push(
-          <Button key="enable" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'idle' }); setModalType('status') }}>解除禁用</Button>,
+          <Button key="enable" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 0 }); setModalType('status') }}>解除禁用</Button>,
           <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
         )
         break
@@ -154,7 +153,7 @@ const PhoneManagement = () => {
     { title: '使用人', dataIndex: 'userId', key: 'userId', width: 100 },
     { title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100 },
     { title: '组织ID', dataIndex: 'orgId', key: 'orgId', width: 80 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: string) => <Tag color={STATUS_COLORS[s]}>{STATUS_NAMES[s]}</Tag> },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: number) => <Tag color={STATUS_COLORS[s]}>{STATUS_NAMES[s]}</Tag> },
     {
       title: '操作', key: 'actions', width: 320,
       render: (_: any, r: PhoneNumber) => <Space size={4} wrap>{getActionButtons(r)}</Space>
@@ -250,7 +249,7 @@ const PhoneManagement = () => {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <Input.Search placeholder="搜索号码/分机号" style={{ width: 220 }} allowClear onSearch={v => { setSearchNumber(v); setPage(0) }} />
         <Select placeholder="状态筛选" allowClear style={{ width: 140 }} onChange={v => { setFilterStatus(v); setPage(0) }}>
-          {Object.entries(STATUS_NAMES).map(([k, v]) => <Option key={k} value={k}>{v}</Option>)}
+          {Object.entries(STATUS_NAMES).map(([k, v]) => <Option key={k} value={Number(k)}>{v}</Option>)}
         </Select>
         <Select placeholder="组织筛选" allowClear style={{ width: 180 }} onChange={v => { setFilterOrgId(v); setPage(0) }}>
           {orgsData?.map((o: any) => <Option key={o.id} value={o.id}>{o.name}</Option>)}
@@ -293,7 +292,7 @@ const PhoneManagement = () => {
                 <div>
                   <div><strong>{ACTION_NAMES[h.action] || h.action}</strong> <span style={{ color: '#999', fontSize: 12 }}>{h.operatedAt}</span></div>
                   <div style={{ fontSize: 12, color: '#666' }}>
-                    {h.fromStatus && h.toStatus && <span>{STATUS_NAMES[h.fromStatus]} → {STATUS_NAMES[h.toStatus]} | </span>}
+                    {h.fromStatus != null && h.toStatus != null && <span>{STATUS_NAMES[h.fromStatus] || h.fromStatus} → {STATUS_NAMES[h.toStatus] || h.toStatus} | </span>}
                     {h.fromUser && h.toUser && <span>{h.fromUser} → {h.toUser} | </span>}
                     操作人: {h.operator} {h.remark && `| ${h.remark}`}
                   </div>

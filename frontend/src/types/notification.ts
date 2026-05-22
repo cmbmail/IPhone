@@ -3,7 +3,7 @@ export interface Notification {
   userId: number
   title: string
   content: string
-  type: string
-  status: string
+  notificationType: number
+  status: number
   createdAt: string
 }

@@ -10,7 +10,7 @@ export interface UserVO {
   roleId: number | null
   roleName: string
   roleCode: string | null
-  status: string
+  status: number
   updatedAt: string
 }
 

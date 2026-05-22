@@ -114,10 +114,10 @@ public class SnapshotService {
 
             List<PhoneSnapshot> batch = new ArrayList<>();
             for (PhoneNumber phone : phonePage.getContent()) {
-                PhoneNumber.PhoneStatus status = phone.getStatus();
-                if (status != PhoneNumber.PhoneStatus.active &&
-                    status != PhoneNumber.PhoneStatus.stopped &&
-                    status != PhoneNumber.PhoneStatus.cancelled) {
+                Integer status = phone.getStatus();
+                if (status != PhoneNumber.PS_ACTIVE &&
+                    status != PhoneNumber.PS_STOPPED &&
+                    status != PhoneNumber.PS_CANCELLED) {
                     continue;
                 }
                 batch.add(buildSnapshot(phone, snapshotMonth, orgNameMap, costCenterMap, employeeMap));
@@ -155,7 +155,7 @@ public class SnapshotService {
 
     private Map<String, Employee> buildEmployeeMap() {
         Map<String, Employee> map = new HashMap<>();
-        List<Employee> employees = employeeRepository.findByStatus(Employee.EmployeeStatus.active);
+        List<Employee> employees = employeeRepository.findByStatus(Employee.EMP_ACTIVE);
         for (Employee emp : employees) {
             map.put(emp.getEmployeeNo(), emp);
         }
@@ -178,14 +178,14 @@ public class SnapshotService {
                 .phoneId(phone.getId())
                 .phoneNumber(phone.getPhoneNumber())
                 .extension(phone.getExtensionNumber())
-                .status(phone.getStatus().name())
+                .status(String.valueOf(phone.getStatus()))
                 .orgId(orgId)
                 .orgName(orgName)
                 .costCenterCode(costCenterCode)
                 .employeeNo(employeeNo)
                 .employeeName(employee != null ? employee.getName() : null)
-                .isSurrendered(phone.getStatus() == PhoneNumber.PhoneStatus.cancelled)
-                .isAllocatable(phone.getStatus() == PhoneNumber.PhoneStatus.stopped)
+                .isSurrendered(phone.getStatus() == PhoneNumber.PS_CANCELLED)
+                .isAllocatable(phone.getStatus() == PhoneNumber.PS_STOPPED)
                 .build();
     }
 

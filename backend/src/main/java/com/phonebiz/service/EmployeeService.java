@@ -92,7 +92,7 @@ public class EmployeeService {
             employee.setEntryDate(LocalDate.parse(request.getEntryDate()));
         }
 
-        employee.setStatus(Employee.EmployeeStatus.active);
+        employee.setStatus(Employee.EMP_ACTIVE);
         employee.setCreatedBy(operator);
         employee.setUpdatedBy(operator);
 
@@ -136,7 +136,7 @@ public class EmployeeService {
         }
 
         if (request.getStatus() != null) {
-            employee.setStatus(Employee.EmployeeStatus.valueOf(request.getStatus()));
+            employee.setStatus(Integer.valueOf(request.getStatus()));
         }
 
         if (request.getLeaveDate() != null) {
@@ -150,7 +150,7 @@ public class EmployeeService {
     @Transactional
     public void deleteEmployee(Long id) {
         Employee employee = getEmployeeById(id);
-        employee.setStatus(Employee.EmployeeStatus.inactive);
+        employee.setStatus(Employee.EMP_INACTIVE);
         employeeRepository.save(employee);
     }
 
@@ -158,14 +158,14 @@ public class EmployeeService {
     public Employee terminateEmployee(Long id, String remark, String operator) {
         Employee employee = getEmployeeById(id);
         
-        if (employee.getStatus() != Employee.EmployeeStatus.active) {
+        if (employee.getStatus() != Employee.EMP_ACTIVE) {
             throw new BusinessException(ErrorCode.EMP_004);
         }
 
         String employeeNo = employee.getEmployeeNo();
         
         phoneDeviceRepository.findByAssignedTo(employeeNo).forEach(device -> {
-            device.setStatus(PhoneDevice.PhoneDeviceStatus.stock);
+            device.setStatus(PhoneDevice.PD_STOCK);
             device.setAssignedTo(null);
             device.setUpdatedBy(operator);
             phoneDeviceRepository.save(device);
@@ -174,13 +174,13 @@ public class EmployeeService {
 
         phoneNumberRepository.findByUserId(employeeNo).forEach(phone -> {
             phone.setUserId(null);
-            phone.setStatus(PhoneNumber.PhoneStatus.idle);
+            phone.setStatus(PhoneNumber.PS_IDLE);
             phone.setUpdatedBy(operator);
             phoneNumberRepository.save(phone);
             log.info("Phone {} reclaimed from employee {} on termination", phone.getPhoneNumber(), employeeNo);
         });
 
-        employee.setStatus(Employee.EmployeeStatus.inactive);
+        employee.setStatus(Employee.EMP_INACTIVE);
         employee.setLeaveDate(LocalDate.now());
         employee.setUpdatedBy(operator);
         

@@ -10,11 +10,11 @@ export interface SubsidiaryReconciliation {
   invoiceAmount: number
   diffAmount: number
   diffPercentage: number
-  status: string
-  subsidiaryConfirm: string
+  status: number
+  subsidiaryConfirm: number
   subsidiaryConfirmBy: string
   subsidiaryConfirmAt: string
-  groupConfirm: string
+  groupConfirm: number
   groupConfirmBy: string
   groupConfirmAt: string
   createdAt: string

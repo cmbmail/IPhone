@@ -14,10 +14,10 @@ public interface DeviceOperationRepository extends JpaRepository<DeviceOperation
     
     List<DeviceOperation> findByDeviceIdOrderByCreatedAtDesc(String deviceId);
     
-    Page<DeviceOperation> findByOperationType(DeviceOperation.OperationType operationType, Pageable pageable);
+    Page<DeviceOperation> findByOperationType(Integer operationType, Pageable pageable);
     
-    Page<DeviceOperation> findByStatus(DeviceOperation.OperationStatus status, Pageable pageable);
+    Page<DeviceOperation> findByStatus(Integer status, Pageable pageable);
     
-    List<DeviceOperation> findByStatus(DeviceOperation.OperationStatus status);
+    List<DeviceOperation> findByStatus(Integer status);
 }
 

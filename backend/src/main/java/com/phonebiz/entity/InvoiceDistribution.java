@@ -17,6 +17,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InvoiceDistribution {
 
+    public static final int DIST_FAILED = 0;
+    public static final int DIST_SUCCESS = 1;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,8 +30,6 @@ public class InvoiceDistribution {
 
     @Column(name = "recipient_user", length = 50, nullable = false)
     private String recipientUser;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "distribution_status", nullable = false, length = 20)
     @Builder.Default
     private DistributionStatus distributionStatus = DistributionStatus.success;
@@ -47,4 +49,7 @@ public class InvoiceDistribution {
         success,
         failed
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

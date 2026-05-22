@@ -13,6 +13,16 @@ import lombok.EqualsAndHashCode;
 @Table(name = "sys_user")
 public class SysUser extends BaseEntity {
 
+    public static final int USER_INACTIVE = 0;
+    public static final int USER_ACTIVE = 1;
+
+
+    public static final int USER_ADMIN = 1;
+    public static final int USER_OPS = 2;
+    public static final int USER_FINANCE = 3;
+    public static final int USER_BOSS = 4;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,20 +35,16 @@ public class SysUser extends BaseEntity {
 
     @Column(name = "employee_no", nullable = false, unique = true, length = 20)
     private String employeeNo;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    private Integer role;
 
     @Column(name = "role_id")
     private Long roleId;
 
     @Column(name = "scope_org_id")
     private Long scopeOrgId;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status = UserStatus.active;
+    private Integer status = SysUser.USER_ACTIVE;
 
     @Column(name = "login_fail_count", nullable = false)
     private Integer loginFailCount = 0;
@@ -52,14 +58,6 @@ public class SysUser extends BaseEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    public enum UserRole {
-        admin, ops, finance, boss
-    }
-
-    public enum UserStatus {
-        active, inactive
-    }
-
     public boolean isLocked() {
         return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);
     }
@@ -67,4 +65,7 @@ public class SysUser extends BaseEntity {
     public boolean needsPasswordChange() {
         return passwordChangedAt == null;
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

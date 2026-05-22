@@ -30,9 +30,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new User(
                 user.getUsername(),
                 user.getPasswordHash(),
-                user.getStatus() == SysUser.UserStatus.active,
+                user.getStatus() == SysUser.USER_ACTIVE,
                 true, true, !user.isLocked(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name().toUpperCase()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + String.valueOf(user.getRole()).toUpperCase()))
         );
     }
 }

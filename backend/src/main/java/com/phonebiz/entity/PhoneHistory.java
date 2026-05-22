@@ -53,5 +53,8 @@ public class PhoneHistory {
 
     @Column(length = 500)
     private String remark;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
 

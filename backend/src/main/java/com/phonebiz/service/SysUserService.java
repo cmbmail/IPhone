@@ -55,9 +55,9 @@ public class SysUserService {
         user.setUsername(employee.getEmployeeNo());
         user.setPasswordHash(passwordEncoder.encode(defaultPassword));
         user.setEmployeeNo(employee.getEmployeeNo());
-        user.setRole(SysUser.UserRole.ops);
+        user.setRole(SysUser.USER_OPS);
         user.setScopeOrgId(employee.getOrgId());
-        user.setStatus(SysUser.UserStatus.active);
+        user.setStatus(SysUser.USER_ACTIVE);
         user.setCreatedBy(operator);
         user.setUpdatedBy(operator);
 
@@ -149,7 +149,7 @@ public class SysUserService {
                 vo.setId(user.getId());
                 vo.setUsername(user.getUsername());
                 vo.setRoleId(user.getRoleId());
-                vo.setStatus(user.getStatus().name());
+                vo.setStatus(String.valueOf(user.getStatus()));
                 vo.setUpdatedAt(user.getUpdatedAt());
             } else {
                 vo.setUsername(emp.getEmployeeNo());
@@ -170,26 +170,30 @@ public class SysUserService {
         return result;
     }
 
-    private SysUser.UserRole mapRoleIdToEnum(Long roleId) {
-        if (roleId == null) return SysUser.UserRole.ops;
+    private Integer mapRoleIdToEnum(Long roleId) {
+        if (roleId == null) return SysUser.USER_OPS;
         return roleRepository.findById(roleId)
-                .map(r -> switch (r.getCode().toLowerCase()) {
-                    case "admin" -> SysUser.UserRole.admin;
-                    case "ops" -> SysUser.UserRole.ops;
-                    case "finance" -> SysUser.UserRole.finance;
-                    case "boss" -> SysUser.UserRole.boss;
-                    default -> SysUser.UserRole.ops;
+                .map(r -> {
+                    String code = r.getCode() != null ? r.getCode().toLowerCase() : "";
+                    return switch (code) {
+                        case "admin" -> SysUser.USER_ADMIN;
+                        case "ops" -> SysUser.USER_OPS;
+                        case "finance" -> SysUser.USER_FINANCE;
+                        case "boss" -> SysUser.USER_BOSS;
+                        default -> SysUser.USER_OPS;
+                    };
                 })
-                .orElse(SysUser.UserRole.ops);
+                .orElse(SysUser.USER_OPS);
     }
 
     private String mapLegacyRole(SysUser user) {
         if (user == null || user.getRole() == null) return "-";
         return switch (user.getRole()) {
-            case admin -> "系统管理员";
-            case ops -> "运维人员";
-            case finance -> "财务人员";
-            case boss -> "管理层";
+            case 1 -> "系统管理员";
+            case 2 -> "运维人员";
+            case 3 -> "财务人员";
+            case 4 -> "管理层";
+            default -> "-";
         };
     }
 
@@ -269,7 +273,7 @@ public class SysUserService {
         SysUser user = userRepository.findByEmployeeNo(employee.getEmployeeNo())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_001));
 
-        user.setStatus(SysUser.UserStatus.inactive);
+        user.setStatus(SysUser.USER_INACTIVE);
         user.setUpdatedBy(operator);
         userRepository.save(user);
 
@@ -284,7 +288,7 @@ public class SysUserService {
         SysUser user = userRepository.findByEmployeeNo(employee.getEmployeeNo())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_001));
 
-        user.setStatus(SysUser.UserStatus.active);
+        user.setStatus(SysUser.USER_ACTIVE);
         user.setUpdatedBy(operator);
         userRepository.save(user);
 
@@ -302,7 +306,7 @@ public class SysUserService {
         // Delete sys_user
         userRepository.delete(user);
         // Deactivate employee
-        employee.setStatus(Employee.EmployeeStatus.inactive);
+        employee.setStatus(Employee.EMP_INACTIVE);
         employee.setUpdatedBy(operator);
         employeeRepository.save(employee);
 

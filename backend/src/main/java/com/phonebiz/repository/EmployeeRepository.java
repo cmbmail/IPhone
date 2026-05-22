@@ -21,20 +21,20 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findByOrgId(Long orgId);
 
-    List<Employee> findByStatus(Employee.EmployeeStatus status);
+    List<Employee> findByStatus(Integer status);
 
     Page<Employee> findByOrgId(Long orgId, Pageable pageable);
 
-    @Query("SELECT e FROM Employee e WHERE e.status = 'active' ORDER BY e.employeeNo")
+    @Query("SELECT e FROM Employee e WHERE e.status = 1 ORDER BY e.employeeNo")
     List<Employee> findAllActive();
 
-    @Query("SELECT e FROM Employee e WHERE e.orgId IN :orgIds AND e.status = 'active'")
+    @Query("SELECT e FROM Employee e WHERE e.orgId IN :orgIds AND e.status = 1")
     List<Employee> findByOrgIdInAndStatusActive(@Param("orgIds") List<Long> orgIds);
 
     @Query("SELECT e FROM Employee e WHERE e.employeeNo IN :employeeNos")
     List<Employee> findAllByEmployeeNoIn(@Param("employeeNos") List<String> employeeNos);
 
-    @Query("SELECT COUNT(e) FROM Employee e WHERE e.orgId = :orgId AND e.status = 'active'")
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.orgId = :orgId AND e.status = 1")
     long countActiveByOrgId(@Param("orgId") Long orgId);
 }
 

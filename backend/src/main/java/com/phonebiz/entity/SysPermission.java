@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.Data;
@@ -34,4 +35,7 @@ public class SysPermission {
             this.createdAt = java.time.LocalDateTime.now();
         }
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

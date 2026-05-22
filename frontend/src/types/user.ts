@@ -2,9 +2,9 @@ export interface SysUser {
   id: number
   username: string
   employeeNo: string
-  role: UserRole
+  role: number
   scopeOrgId?: number
-  status: 'active' | 'inactive'
+  status: 0 | 1
   loginFailCount: number
   lockedUntil?: string
   passwordChangedAt?: string
@@ -13,18 +13,18 @@ export interface SysUser {
   updatedAt: string
 }
 
-export type UserRole = 'admin' | 'ops' | 'finance' | 'boss'
+export type UserRole = 1 | 2 | 3 | 4
 
 export interface CreateUserRequest {
   username: string
   password: string
   employeeNo: string
-  role: UserRole
+  role: number
   scopeOrgId?: number
 }
 
 export interface UpdateUserRequest {
   role?: UserRole
   scopeOrgId?: number
-  status?: 'active' | 'inactive'
+  status?: 0 | 1
 }

@@ -235,7 +235,7 @@ const OrgManagement: React.FC = () => {
   }
 
   const handleToggleStatus = async (user: UserVO) => {
-    const isActive = user.status === 'active'
+    const isActive = user.status === 1
     const action = isActive ? '禁用' : '启用'
     Modal.confirm({
       title: `${action}账号`,
@@ -303,7 +303,7 @@ const OrgManagement: React.FC = () => {
     },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 70, align: 'center',
-      render: (s: string) => s === 'active'
+      render: (s: string) => s === 1
         ? <Tag color="green">启用</Tag>
         : <Tag color="red">禁用</Tag>
     },
@@ -478,7 +478,7 @@ const OrgManagement: React.FC = () => {
           </Form.Item>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <Button icon={<KeyOutlined />} onClick={() => editingUser && handleResetPassword(editingUser)} block>重置密码</Button>
-            {editingUser?.status === 'active'
+            {editingUser?.status === 1
               ? <Button icon={<StopOutlined />} danger onClick={() => editingUser && handleToggleStatus(editingUser)} block>禁用账号</Button>
               : <Button icon={<CheckCircleOutlined />} onClick={() => editingUser && handleToggleStatus(editingUser)} block>启用账号</Button>
             }

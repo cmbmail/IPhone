@@ -2,11 +2,11 @@ export interface OrgStructure {
   id: number
   parentId: number | null
   name: string
-  type: 'group' | 'subsidiary' | 'dept'
+  type: 1 | 2 | 3
   level: number
   sortOrder: number
   path: string
-  status: 'active' | 'inactive'
+  status: 0 | 1
   createdBy: string
   createdAt: string
   updatedBy: string
@@ -19,14 +19,14 @@ export interface OrgStructure {
 export interface CreateOrgDTO {
   parentId: number | null
   name: string
-  type: 'group' | 'subsidiary' | 'dept'
-  status?: 'active' | 'inactive'
+  type: 1 | 2 | 3
+  status?: 0 | 1
 }
 
 export interface UpdateOrgDTO {
   name?: string
-  type?: 'group' | 'subsidiary' | 'dept'
-  status?: 'active' | 'inactive'
+  type?: 1 | 2 | 3
+  status?: 0 | 1
 }
 
 export interface OrgTreeNode extends OrgStructure {

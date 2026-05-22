@@ -19,22 +19,22 @@ public interface BillRawRepository extends JpaRepository<BillRaw, Long> {
 
     Page<BillRaw> findByBillMonth(String billMonth, Pageable pageable);
 
-    List<BillRaw> findByBillMonthAndImportStatus(String billMonth, BillRaw.ImportStatus importStatus);
+    List<BillRaw> findByBillMonthAndImportStatus(String billMonth, Integer importStatus);
 
-    Page<BillRaw> findByBillMonthAndImportStatus(String billMonth, BillRaw.ImportStatus importStatus, Pageable pageable);
+    Page<BillRaw> findByBillMonthAndImportStatus(String billMonth, Integer importStatus, Pageable pageable);
 
     List<BillRaw> findByPhoneNumber(String phoneNumber);
 
     int countByBillMonth(String billMonth);
 
-    int countByBillMonthAndImportStatus(String billMonth, BillRaw.ImportStatus importStatus);
+    int countByBillMonthAndImportStatus(String billMonth, Integer importStatus);
 
     @Modifying
     @Query("UPDATE BillRaw b SET b.importStatus = :status WHERE b.id = :id")
-    void updateImportStatus(@Param("id") Long id, @Param("status") BillRaw.ImportStatus status);
+    void updateImportStatus(@Param("id") Long id, @Param("status") Integer status);
 
     @Modifying
-    @Query("UPDATE BillRaw b SET b.importStatus = 'processed' WHERE b.billMonth = :billMonth AND b.importStatus = 'pending'")
+    @Query("UPDATE BillRaw b SET b.importStatus = 1 WHERE b.billMonth = :billMonth AND b.importStatus = 0")
     void markAllAsProcessedByBillMonth(@Param("billMonth") String billMonth);
 
     List<BillRaw> findByBillMonthAndChargeType(String billMonth, String chargeType);

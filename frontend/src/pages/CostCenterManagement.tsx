@@ -22,7 +22,7 @@ const CostCenterManagement = () => {
     },
   })
 
-  const departments = (allOrgs || []).filter((o: OrgStructure) => o.type === 'dept')
+  const departments = (allOrgs || []).filter((o: OrgStructure) => o.type === 3)
 
   const filteredData = searchText
     ? departments.filter((d: CostCenter) =>
@@ -216,7 +216,7 @@ const CostCenterManagement = () => {
               showSearch
               optionFilterProp="children"
               fieldNames={{ label: 'name', value: 'id' }}
-              options={(allOrgs || []).filter((o: OrgStructure) => o.type !== 'dept')}
+              options={(allOrgs || []).filter((o: OrgStructure) => o.type !== 3)}
             />
           </Form.Item>
           <Form.Item name="branch_name" label="分行">

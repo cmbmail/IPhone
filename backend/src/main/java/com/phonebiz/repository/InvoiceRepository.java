@@ -21,22 +21,22 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     Page<Invoice> findByRecipientOrgId(Long orgId, Pageable pageable);
 
-    Page<Invoice> findByStatus(Invoice.InvoiceStatus status, Pageable pageable);
+    Page<Invoice> findByStatus(Integer status, Pageable pageable);
 
-    Page<Invoice> findByRecipientOrgIdAndStatus(Long orgId, Invoice.InvoiceStatus status, Pageable pageable);
+    Page<Invoice> findByRecipientOrgIdAndStatus(Long orgId, Integer status, Pageable pageable);
 
-    Page<Invoice> findByBillMonthAndStatus(String billMonth, Invoice.InvoiceStatus status, Pageable pageable);
+    Page<Invoice> findByBillMonthAndStatus(String billMonth, Integer status, Pageable pageable);
 
 
     List<Invoice> findBySourceOrgId(Long orgId);
 
     @Query("SELECT i FROM Invoice i WHERE i.status = :status AND i.billMonth = :billMonth")
-    List<Invoice> findPendingForDistribution(@Param("status") Invoice.InvoiceStatus status, 
+    List<Invoice> findPendingForDistribution(@Param("status") Integer status, 
                                              @Param("billMonth") String billMonth);
 
-    long countByStatus(Invoice.InvoiceStatus status);
+    long countByStatus(Integer status);
 
     long countByBillMonth(String billMonth);
 
-    long countByBillMonthAndStatus(String billMonth, Invoice.InvoiceStatus status);
+    long countByBillMonthAndStatus(String billMonth, Integer status);
 }

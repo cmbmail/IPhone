@@ -18,6 +18,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SubsidiaryReconciliation {
 
+    public static final int RECON_PENDING = 0;
+    public static final int RECON_SUBSIDIARY_CONFIRMED = 1;
+    public static final int RECON_GROUP_CONFIRMED = 2;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,8 +40,6 @@ public class SubsidiaryReconciliation {
     @Column(name = "invoice_count", nullable = false)
     @Builder.Default
     private Integer invoiceCount = 0;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "reconciliation_status", nullable = false, length = 30)
     @Builder.Default
     private ReconciliationStatus reconciliationStatus = ReconciliationStatus.pending;
@@ -78,4 +81,7 @@ public class SubsidiaryReconciliation {
         confirmed_by_subsidiary,
         confirmed_by_group
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

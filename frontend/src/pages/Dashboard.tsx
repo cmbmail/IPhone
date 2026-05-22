@@ -5,17 +5,17 @@ import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/ap
 import { request } from '@/api/request'
 import { announcementApi, type Announcement } from '@/api/announcement'
 
-const ANNOUNCEMENT_TYPE_NAMES: Record<string, string> = {
-  SYSTEM: '系统公告', MAINTENANCE: '维护通知', POLICY: '政策变更', OPERATION: '运营通知', OTHER: '其他',
+const ANNOUNCEMENT_TYPE_NAMES: Record<number, string> = {
+  1: '系统公告', 2: '维护通知', 3: '政策变更', 4: '运营通知', 5: '其他',
 }
-const ANNOUNCEMENT_TYPE_COLORS: Record<string, string> = {
-  SYSTEM: 'blue', MAINTENANCE: 'orange', POLICY: 'purple', OPERATION: 'cyan', OTHER: 'default',
+const ANNOUNCEMENT_TYPE_COLORS: Record<number, string> = {
+  1: 'blue', 2: 'orange', 3: 'purple', 4: 'cyan', 5: 'default',
 }
-const WO_STATUS_NAMES: Record<string, string> = {
-  PENDING: '待处理', ACCEPTED: '已接受', PROCESSING: '处理中', COMPLETED: '已完成', REJECTED: '已拒绝',
+const WO_STATUS_NAMES: Record<number, string> = {
+  0: '待处理', 1: '已接受', 2: '处理中', 3: '已完成', 5: '已取消',
 }
-const WO_STATUS_COLORS: Record<string, string> = {
-  PENDING: 'warning', ACCEPTED: 'processing', PROCESSING: 'processing', COMPLETED: 'success', REJECTED: 'error',
+const WO_STATUS_COLORS: Record<number, string> = {
+  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 5: 'default',
 }
 
 interface RecentBill {
@@ -115,8 +115,8 @@ const Dashboard = () => {
     {
       title: '优先级', dataIndex: 'priority', key: 'priority', width: 80,
       render: (p: string) => {
-        const colors: Record<string, string> = { HIGH: 'error', MEDIUM: 'warning', LOW: 'success' }
-        const names: Record<string, string> = { HIGH: '高', MEDIUM: '中', LOW: '低' }
+        const colors: Record<string, string> = { 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }
+        const names: Record<string, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
         return <Tag color={colors[p]}>{names[p] || p}</Tag>
       }
     },
@@ -247,11 +247,11 @@ const Dashboard = () => {
               <Tag color={ANNOUNCEMENT_TYPE_COLORS[selectedAnnouncement.announcementType] || 'default'}>
                 {ANNOUNCEMENT_TYPE_NAMES[selectedAnnouncement.announcementType] || selectedAnnouncement.announcementType}
               </Tag>
-              <Tag color={selectedAnnouncement.priority === 'URGENT' ? 'red' : selectedAnnouncement.priority === 'IMPORTANT' ? 'orange' : 'default'}>
-                {{ URGENT: '紧急', IMPORTANT: '重要', NORMAL: '普通' }[selectedAnnouncement.priority] || selectedAnnouncement.priority}
+              <Tag color={selectedAnnouncement.priority === 1 ? 'red' : selectedAnnouncement.priority === 2 ? 'orange' : 'default'}>
+                {{ 1: '紧急', 2: '重要', 3: '普通' }[selectedAnnouncement.priority] || selectedAnnouncement.priority}
               </Tag>
-              <Tag color={selectedAnnouncement.status === 'PUBLISHED' ? 'green' : 'default'}>
-                {{ PUBLISHED: '已发布', DRAFT: '草稿', ARCHIVED: '已归档' }[selectedAnnouncement.status] || selectedAnnouncement.status}
+              <Tag color={selectedAnnouncement.status === 1 ? 'green' : 'default'}>
+                {{ 1: '已发布', 0: '草稿', 2: '已归档' }[selectedAnnouncement.status] || selectedAnnouncement.status}
               </Tag>
             </Space>
             <div style={{ color: '#999', marginBottom: 16, fontSize: 13 }}>

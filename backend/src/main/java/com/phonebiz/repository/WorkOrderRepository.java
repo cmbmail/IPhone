@@ -17,7 +17,7 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
     
     Optional<WorkOrder> findByWorkOrderNo(String workOrderNo);
     
-    Page<WorkOrder> findByStatus(WorkOrder.WorkOrderStatus status, Pageable pageable);
+    Page<WorkOrder> findByStatus(Integer status, Pageable pageable);
     
     Page<WorkOrder> findByRequesterId(Long requesterId, Pageable pageable);
     

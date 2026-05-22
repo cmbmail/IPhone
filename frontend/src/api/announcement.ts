@@ -4,9 +4,9 @@ export interface Announcement {
   id: number
   title: string
   content: string
-  announcementType: string
-  priority: string
-  status: string
+  announcementType: number
+  priority: number
+  status: number
   createdBy: string
   createdAt: string
   updatedAt: string

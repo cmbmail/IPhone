@@ -25,8 +25,8 @@ public class AnnouncementController {
 
     @GetMapping
     public ApiResponse<Page<Announcement>> getAnnouncements(
-            @RequestParam(required = false) Announcement.AnnouncementStatus status,
-            @RequestParam(required = false) Announcement.AnnouncementType type,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Integer type,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.success(announcementService.getAnnouncements(status, type, pageable));
     }

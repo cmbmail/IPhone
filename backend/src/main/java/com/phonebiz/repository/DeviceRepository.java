@@ -19,9 +19,9 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
     
     List<Device> findByPhoneNumber(String phoneNumber);
     
-    List<Device> findByStatus(Device.DeviceStatus status);
+    List<Device> findByStatus(Integer status);
     
-    Page<Device> findByDeviceType(Device.DeviceType deviceType, Pageable pageable);
+    Page<Device> findByDeviceType(Integer deviceType, Pageable pageable);
     
     boolean existsByDeviceId(String deviceId);
     

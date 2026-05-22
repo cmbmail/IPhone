@@ -52,9 +52,9 @@ const CHARGE_TABS = [
 ]
 
 const statusMap: Record<string, { text: string; color: string }> = {
-  pending: { text: '待处理', color: 'orange' },
-  processed: { text: '已处理', color: 'green' },
-  error: { text: '异常', color: 'red' },
+  0: { text: '待处理', color: 'orange' },
+  1: { text: '已处理', color: 'green' },
+  2: { text: '异常', color: 'red' },
 }
 
 const fmtMoney = (v: number | null | undefined) => {

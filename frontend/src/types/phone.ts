@@ -6,7 +6,7 @@ export interface PhoneNumber {
   extensionType?: 'auto' | 'manual'
   isShared: boolean
   isReentry: boolean
-  status: PhoneStatus
+  status: number
   orgId?: number
   allocationOrgId?: number
   remark?: string
@@ -17,15 +17,15 @@ export interface PhoneNumber {
   updatedAt: string
 }
 
-export type PhoneStatus = 'idle' | 'active' | 'stopped' | 'cancelled' | 'reserved' | 'disabled'
+export type PhoneStatus = 0 | 1 | 2 | 3 | 4 | 5
 
 export interface PhoneHistory {
   id: number
   phoneId: number
   phoneNumber: string
   action: PhoneAction
-  fromStatus?: PhoneStatus
-  toStatus?: PhoneStatus
+  fromStatus?: number
+  toStatus?: number
   fromUser?: string
   toUser?: string
   fromOrg?: string
@@ -94,7 +94,7 @@ export interface PhoneReclaimRequest {
 
 export interface PhoneStatusChangeRequest {
   phoneId: number
-  newStatus: PhoneStatus
+  newStatus: number
   workOrderNo?: string
   remark?: string
 }
@@ -125,7 +125,7 @@ export interface PhoneChangeRequest {
 export interface PhoneQueryDTO {
   phoneNumber?: string
   userId?: string
-  status?: PhoneStatus
+  status?: number
   orgId?: number
   page?: number
   pageSize?: number

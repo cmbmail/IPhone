@@ -3,11 +3,11 @@ import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Drawer,
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { phoneDeviceApi } from '@/api/phoneDevice'
 
-const DEV_STATUS_COLORS: Record<string, string> = {
-  stock: 'default', active: 'success', inactive: 'warning', repairing: 'processing', retired: 'error'
+const DEV_STATUS_COLORS: Record<number, string> = {
+  0: 'default', 1: 'success', 2: 'warning', 3: 'processing', 4: 'error'
 }
-const DEV_STATUS_NAMES: Record<string, string> = {
-  stock: '库存', active: '使用中', inactive: '停用', repairing: '维修中', retired: '已报废'
+const DEV_STATUS_NAMES: Record<number, string> = {
+  0: '库存', 1: '使用中', 2: '停用', 3: '维修中', 4: '已报废'
 }
 
 const DeviceManagement = () => {
@@ -75,14 +75,14 @@ const DeviceManagement = () => {
   const getActionButtons = (r: any) => {
     const btns: React.ReactNode[] = []
     switch (r.status) {
-      case 'stock':
+      case 0:
         btns.push(
           <Button key="assign" size="small" type="primary" onClick={() => openModal('assign', r)}>分配</Button>,
           <Button key="deactivate" size="small" danger onClick={() => openModal('deactivate', r)}>停用</Button>,
           <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
         )
         break
-      case 'active':
+      case 1:
         btns.push(
           <Button key="reclaim" size="small" onClick={() => openModal('reclaim', r)}>回收</Button>,
           <Button key="deactivate" size="small" danger onClick={() => openModal('deactivate', r)}>停用</Button>,
@@ -90,13 +90,13 @@ const DeviceManagement = () => {
           <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
         )
         break
-      case 'inactive':
+      case 2:
         btns.push(
           <Button key="reactivate" size="small" type="primary" onClick={() => reactivateMut.mutate(r)}>恢复</Button>,
           <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
         )
         break
-      case 'repairing':
+      case 3:
         btns.push(
           <Button key="repairDone" size="small" type="primary" onClick={() => repairDoneMut.mutate(r)}>修复</Button>,
           <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
@@ -111,7 +111,7 @@ const DeviceManagement = () => {
     { title: '型号', dataIndex: 'model', key: 'model', width: 100 },
     { title: '品牌', dataIndex: 'brand', key: 'brand', width: 80 },
     { title: '使用人', dataIndex: 'assignedTo', key: 'assignedTo', width: 100 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: string) => <Tag color={DEV_STATUS_COLORS[s]}>{DEV_STATUS_NAMES[s]}</Tag> },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: number) => <Tag color={DEV_STATUS_COLORS[s]}>{DEV_STATUS_NAMES[s]}</Tag> },
     { title: '绑定号码数', dataIndex: 'boundPhoneCount', key: 'boundPhoneCount', width: 100 },
     {
       title: '操作', key: 'actions', width: 280,
@@ -203,7 +203,7 @@ const DeviceManagement = () => {
             </Descriptions>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h4>已绑定号码 ({boundPhones?.length || 0})</h4>
-              {(selectedDevice.status === 'active' || selectedDevice.status === 'stock') && (
+              {(selectedDevice?.status === 1 || selectedDevice?.status === 0) && (
                 <Button size="small" onClick={() => { setDetailOpen(false); openModal('bindPhone', selectedDevice) }}>绑定号码</Button>
               )}
             </div>

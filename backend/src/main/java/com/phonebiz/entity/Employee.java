@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 
 import jakarta.persistence.*;
@@ -12,6 +13,10 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "employee")
 public class Employee extends BaseEntity {
+
+    public static final int EMP_ACTIVE = 1;
+    public static final int EMP_INACTIVE = 0;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +39,8 @@ public class Employee extends BaseEntity {
 
     @Column(length = 100)
     private String email;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EmployeeStatus status = EmployeeStatus.active;
+    private Integer status = EMP_ACTIVE;
 
     @Column(name = "entry_date")
     private LocalDate entryDate;
@@ -48,8 +51,7 @@ public class Employee extends BaseEntity {
     @Column(name = "is_virtual", nullable = false)
     private Boolean isVirtual = false;
 
-    public enum EmployeeStatus {
-        active, inactive
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
 

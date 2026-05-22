@@ -31,7 +31,7 @@ public class PhoneDeviceService {
     private final EmployeeRepository employeeRepository;
     private final OrgStructureRepository orgStructureRepository;
 
-    public Page<PhoneDeviceDTO> getDeviceList(List<Long> orgIds, PhoneDevice.PhoneDeviceStatus status, Pageable pageable) {
+    public Page<PhoneDeviceDTO> getDeviceList(List<Long> orgIds, Integer status, Pageable pageable) {
         Page<PhoneDevice> page;
         if (orgIds != null && !orgIds.isEmpty()) {
             if (status != null) {
@@ -88,7 +88,7 @@ public class PhoneDeviceService {
                     dto.setPhoneId(phone.getId());
                     dto.setPhoneNumber(phone.getPhoneNumber());
                     dto.setExtensionNumber(phone.getExtensionNumber());
-                    dto.setStatus(phone.getStatus().name());
+                    dto.setStatus(String.valueOf(phone.getStatus()));
                     dto.setUserId(phone.getUserId());
                     dto.setLineOrder(mapping.getLineOrder());
                     dto.setCreatedAt(mapping.getCreatedAt());
@@ -136,14 +136,14 @@ public class PhoneDeviceService {
                 .brand(request.getBrand())
                 .purchaseDate(request.getPurchaseDate())
                 .orgId(request.getOrgId())
-                .status(PhoneDevice.PhoneDeviceStatus.stock)
+                .status(PhoneDevice.PD_STOCK)
                 .remark(request.getRemark())
                 .createdBy(currentUser)
                 .updatedBy(currentUser)
                 .build();
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "录入", null, saved.getStatus().name(), null, null, null);
+        saveHistory(saved, "录入", null, String.valueOf(saved.getStatus()), null, null, null);
         return toDTO(saved);
     }
 
@@ -151,7 +151,7 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO updateDevice(Long id, UpdatePhoneDeviceRequest request) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
         if (request.getOrgId() != null && !orgStructureRepository.existsById(request.getOrgId())) {
@@ -178,29 +178,29 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO assignDevice(Long id, AssignPhoneDeviceRequest request) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.stock) {
+        if (device.getStatus() != PhoneDevice.PD_STOCK) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_STOCK);
         }
 
         Employee employee = employeeRepository.findByEmployeeNo(request.getEmployeeNo())
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_EMPLOYEE_NOT_FOUND));
-        if (employee.getStatus() != Employee.EmployeeStatus.active) {
+        if (employee.getStatus() != Employee.EMP_ACTIVE) {
             throw new BusinessException(ErrorCode.DEVICE_EMPLOYEE_INACTIVE);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
         String fromAssigned = device.getAssignedTo();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.active);
+        device.setStatus(PhoneDevice.PD_ACTIVE);
         device.setAssignedTo(request.getEmployeeNo());
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "分配", fromStatus.name(), saved.getStatus().name(), fromAssigned, saved.getAssignedTo(), request.getRemark());
+        saveHistory(saved, "分配", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, saved.getAssignedTo(), request.getRemark());
         return toDTO(saved);
     }
 
@@ -208,23 +208,23 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO reclaimDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.active) {
+        if (device.getStatus() != PhoneDevice.PD_ACTIVE) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_ACTIVE);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
         String fromAssigned = device.getAssignedTo();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.stock);
+        device.setStatus(PhoneDevice.PD_STOCK);
         device.setAssignedTo(null);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "回收", fromStatus.name(), saved.getStatus().name(), fromAssigned, null, remark);
+        saveHistory(saved, "回收", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, null, remark);
         return toDTO(saved);
     }
 
@@ -232,21 +232,21 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO deactivateDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.active && device.getStatus() != PhoneDevice.PhoneDeviceStatus.stock) {
+        if (device.getStatus() != PhoneDevice.PD_ACTIVE && device.getStatus() != PhoneDevice.PD_STOCK) {
             throw new BusinessException(ErrorCode.DEVICE_STATUS_INVALID);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.inactive);
+        device.setStatus(PhoneDevice.PD_INACTIVE);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "停用", fromStatus.name(), saved.getStatus().name(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "停用", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -254,21 +254,21 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO reactivateDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.inactive) {
+        if (device.getStatus() != PhoneDevice.PD_INACTIVE) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_INACTIVE);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.stock);
+        device.setStatus(PhoneDevice.PD_STOCK);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "恢复", fromStatus.name(), saved.getStatus().name(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "恢复", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -276,21 +276,21 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO repairDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.active) {
+        if (device.getStatus() != PhoneDevice.PD_ACTIVE) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_ACTIVE);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.repairing);
+        device.setStatus(PhoneDevice.PD_REPAIRING);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "送修", fromStatus.name(), saved.getStatus().name(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "送修", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
         unbindAllPhones(device.getId());
         return toDTO(saved);
     }
@@ -299,21 +299,21 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO repairDoneDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.repairing) {
+        if (device.getStatus() != PhoneDevice.PD_REPAIRING) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_REPAIRING);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.active);
+        device.setStatus(PhoneDevice.PD_ACTIVE);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "修复完成", fromStatus.name(), saved.getStatus().name(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "修复完成", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -321,20 +321,20 @@ public class PhoneDeviceService {
     public PhoneDeviceDTO retireDevice(Long id, String remark) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
 
         String currentUser = getCurrentUsername();
-        PhoneDevice.PhoneDeviceStatus fromStatus = device.getStatus();
+        int fromStatus = device.getStatus();
         String fromAssigned = device.getAssignedTo();
 
-        device.setStatus(PhoneDevice.PhoneDeviceStatus.retired);
+        device.setStatus(PhoneDevice.PD_RETIRED);
         device.setAssignedTo(null);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "报废", fromStatus.name(), saved.getStatus().name(), fromAssigned, null, remark);
+        saveHistory(saved, "报废", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, null, remark);
         unbindAllPhones(device.getId());
         return toDTO(saved);
     }
@@ -343,10 +343,10 @@ public class PhoneDeviceService {
     public void bindPhone(Long deviceId, BindPhoneRequest request) {
         PhoneDevice device = phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        if (device.getStatus() == PhoneDevice.PhoneDeviceStatus.retired) {
+        if (device.getStatus() == PhoneDevice.PD_RETIRED) {
             throw new BusinessException(ErrorCode.DEVICE_RETIRED);
         }
-        if (device.getStatus() != PhoneDevice.PhoneDeviceStatus.active) {
+        if (device.getStatus() != PhoneDevice.PD_ACTIVE) {
             throw new BusinessException(ErrorCode.DEVICE_NOT_ACTIVE);
         }
 
@@ -435,7 +435,7 @@ public class PhoneDeviceService {
         dto.setPurchaseDate(device.getPurchaseDate());
         dto.setOrgId(device.getOrgId());
         dto.setAssignedTo(device.getAssignedTo());
-        dto.setStatus(device.getStatus().name());
+        dto.setStatus(String.valueOf(device.getStatus()));
         dto.setRemark(device.getRemark());
         dto.setCreatedAt(device.getCreatedAt());
         dto.setUpdatedAt(device.getUpdatedAt());

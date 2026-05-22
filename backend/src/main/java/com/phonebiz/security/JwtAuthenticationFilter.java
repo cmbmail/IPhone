@@ -59,12 +59,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .collect(Collectors.toList());
                     // Also add ROLE_ prefix for role-based checks
                     if (role != null) {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + mapRoleToName(role)));
                     }
                 } else {
                     // Fallback: role-only authority for backward compatibility
                     authorities = Collections.singletonList(
-                            new SimpleGrantedAuthority("ROLE_" + (role != null ? role.toUpperCase() : "USER"))
+                            new SimpleGrantedAuthority("ROLE_" + (role != null ? mapRoleToName(role) : "USER"))
                     );
                 }
 
@@ -139,5 +139,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private String mapRoleToName(String role) {
+        try {
+            int roleCode = Integer.parseInt(role);
+            return switch (roleCode) {
+                case 1 -> "ADMIN";
+                case 2 -> "OPS";
+                case 3 -> "FINANCE";
+                case 4 -> "BOSS";
+                default -> "USER";
+            };
+        } catch (NumberFormatException e) {
+            return role.toUpperCase();
+        }
     }
 }

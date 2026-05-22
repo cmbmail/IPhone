@@ -26,7 +26,7 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
 
     Optional<PhoneNumber> findByExtensionNumber(String extensionNumber);
 
-    Page<PhoneNumber> findByStatus(PhoneNumber.PhoneStatus status, Pageable pageable);
+    Page<PhoneNumber> findByStatus(Integer status, Pageable pageable);
 
     Page<PhoneNumber> findByOrgId(Long orgId, Pageable pageable);
 
@@ -38,13 +38,13 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
     @Query("SELECT p FROM PhoneNumber p WHERE p.id = :id")
     Optional<PhoneNumber> findByIdWithLock(@Param("id") Long id);
 
-    @Query("SELECT p FROM PhoneNumber p WHERE p.status = 'idle' ORDER BY p.createdAt")
+    @Query("SELECT p FROM PhoneNumber p WHERE p.status = 0 ORDER BY p.createdAt")
     List<PhoneNumber> findIdlePhones();
 
-    @Query("SELECT p FROM PhoneNumber p WHERE p.extensionNumber = :ext AND p.status = 'idle'")
+    @Query("SELECT p FROM PhoneNumber p WHERE p.extensionNumber = :ext AND p.status = 0")
     Optional<PhoneNumber> findIdleByExtensionNumber(@Param("ext") String extensionNumber);
 
-    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.orgId = :orgId AND p.status = 'active'")
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.orgId = :orgId AND p.status = 1")
     long countActiveByOrgId(@Param("orgId") Long orgId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

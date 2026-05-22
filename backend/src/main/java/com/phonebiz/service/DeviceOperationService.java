@@ -44,7 +44,7 @@ public class DeviceOperationService {
     }
 
     @Transactional
-    public DeviceOperation createOperation(String deviceId, DeviceOperation.OperationType operationType, 
+    public DeviceOperation createOperation(String deviceId, Integer operationType, 
                                            String params, String operator) {
         Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_001));
@@ -52,7 +52,7 @@ public class DeviceOperationService {
         DeviceOperation operation = DeviceOperation.builder()
                 .deviceId(deviceId)
                 .operationType(operationType)
-                .status(DeviceOperation.OperationStatus.PENDING)
+                .status(DeviceOperation.OP_PENDING)
                 .params(params)
                 .operator(operator)
                 .build();
@@ -68,11 +68,11 @@ public class DeviceOperationService {
         DeviceOperation operation = operationRepository.findById(operationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_002));
 
-        if (operation.getStatus() != DeviceOperation.OperationStatus.PENDING) {
+        if (operation.getStatus() != DeviceOperation.OP_PENDING) {
             throw new BusinessException(ErrorCode.SYS_002);
         }
 
-        operation.setStatus(DeviceOperation.OperationStatus.PROCESSING);
+        operation.setStatus(DeviceOperation.OP_PROCESSING);
         operation.setUpdatedAt(LocalDateTime.now());
         operationRepository.save(operation);
 
@@ -80,14 +80,14 @@ public class DeviceOperationService {
             boolean success = simulateOperation(operation.getDeviceId(), operation.getOperationType());
             
             if (success) {
-                operation.setStatus(DeviceOperation.OperationStatus.COMPLETED);
+                operation.setStatus(DeviceOperation.OP_COMPLETED);
                 operation.setResult("Operation completed successfully");
             } else {
-                operation.setStatus(DeviceOperation.OperationStatus.FAILED);
+                operation.setStatus(DeviceOperation.OP_FAILED);
                 operation.setErrorMessage("Operation failed");
             }
         } catch (Exception e) {
-            operation.setStatus(DeviceOperation.OperationStatus.FAILED);
+            operation.setStatus(DeviceOperation.OP_FAILED);
             operation.setErrorMessage(e.getMessage());
             log.error("Operation {} failed: {}", operationId, e.getMessage());
         }
@@ -96,7 +96,7 @@ public class DeviceOperationService {
         return operationRepository.save(operation);
     }
 
-    private boolean simulateOperation(String deviceId, DeviceOperation.OperationType operationType) {
+    private boolean simulateOperation(String deviceId, Integer operationType) {
         // TODO: Replace with real device API integration
         log.warn("MOCK: Device operation {} for {} is using simulated implementation", operationType, deviceId);
         log.info("Executing {} operation for device {}", operationType, deviceId);
@@ -105,12 +105,12 @@ public class DeviceOperationService {
 
     @Transactional
     public DeviceOperation rebootDevice(String deviceId, String operator) {
-        return createOperation(deviceId, DeviceOperation.OperationType.REBOOT, null, operator);
+        return createOperation(deviceId, DeviceOperation.OP_REBOOT, null, operator);
     }
 
     @Transactional
     public DeviceOperation syncConfig(String deviceId, String operator) {
-        return createOperation(deviceId, DeviceOperation.OperationType.CONFIG_SYNC, null, operator);
+        return createOperation(deviceId, DeviceOperation.OP_CONFIG_SYNC, null, operator);
     }
 
     @Transactional
@@ -123,17 +123,17 @@ public class DeviceOperationService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYS_002, "Invalid firmware version");
         }
-        return createOperation(deviceId, DeviceOperation.OperationType.FIRMWARE_UPGRADE, params, operator);
+        return createOperation(deviceId, DeviceOperation.OP_FIRMWARE_UPGRADE, params, operator);
     }
 
     @Transactional
     public DeviceOperation factoryReset(String deviceId, String operator) {
-        return createOperation(deviceId, DeviceOperation.OperationType.FACTORY_RESET, null, operator);
+        return createOperation(deviceId, DeviceOperation.OP_FACTORY_RESET, null, operator);
     }
 
     @Transactional
     public DeviceOperation registerDevice(String deviceId, String operator) {
-        return createOperation(deviceId, DeviceOperation.OperationType.REGISTER, null, operator);
+        return createOperation(deviceId, DeviceOperation.OP_REGISTER, null, operator);
     }
 }
 

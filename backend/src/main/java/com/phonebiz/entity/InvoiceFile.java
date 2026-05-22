@@ -43,4 +43,7 @@ public class InvoiceFile {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

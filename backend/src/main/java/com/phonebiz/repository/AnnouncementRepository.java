@@ -10,11 +10,11 @@ import com.phonebiz.entity.Announcement;
 
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
 
-    Page<Announcement> findByStatus(Announcement.AnnouncementStatus status, Pageable pageable);
+    Page<Announcement> findByStatus(Integer status, Pageable pageable);
 
-    List<Announcement> findTop5ByStatusOrderByCreatedAtDesc(Announcement.AnnouncementStatus status);
+    List<Announcement> findTop5ByStatusOrderByCreatedAtDesc(Integer status);
 
-    Page<Announcement> findByAnnouncementType(Announcement.AnnouncementType type, Pageable pageable);
+    Page<Announcement> findByAnnouncementType(Integer type, Pageable pageable);
 
-    long countByStatus(Announcement.AnnouncementStatus status);
+    long countByStatus(Integer status);
 }

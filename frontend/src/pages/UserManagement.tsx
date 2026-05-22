@@ -104,7 +104,7 @@ const UserManagement = () => {
     { title: '角色', dataIndex: 'roleName', key: 'roleName', width: 120, render: (v: string) => v ? <Tag color="blue">{v}</Tag> : '-' },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 80,
-      render: (s: string) => s === 'active' ? <Tag color="success">启用</Tag> : <Tag color="default">禁用</Tag>
+      render: (s: string) => s === 1 ? <Tag color="success">启用</Tag> : <Tag color="default">禁用</Tag>
     },
     {
       title: '操作', key: 'action', width: 320,
@@ -112,7 +112,7 @@ const UserManagement = () => {
         <Space size="small">
           <Button size="small" icon={<KeyOutlined />} onClick={() => handleResetPassword(record.employeeId)}>重置密码</Button>
           <Button size="small" onClick={() => openRoleModal(record)}>分配角色</Button>
-          {record.status === 'active' ? (
+          {record.status === 1 ? (
             <Popconfirm title="确定禁用此用户？" onConfirm={() => handleToggleStatus(record.employeeId, 'disable')} okText="确定" cancelText="取消">
               <Button size="small" danger icon={<StopOutlined />}>禁用</Button>
             </Popconfirm>

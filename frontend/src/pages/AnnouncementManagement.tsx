@@ -8,50 +8,50 @@ const { Option } = Select
 const { TextArea } = Input
 const { Paragraph } = Typography
 
-const TYPE_NAMES: Record<string, string> = {
-  SYSTEM: '系统公告',
-  MAINTENANCE: '维护通知',
-  POLICY: '政策变更',
-  OPERATION: '运营通知',
-  OTHER: '其他',
+const TYPE_NAMES: Record<number, string> = {
+  1: '系统公告',
+  2: '维护通知',
+  3: '政策变更',
+  4: '运营通知',
+  5: '其他',
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  SYSTEM: 'blue',
-  MAINTENANCE: 'orange',
-  POLICY: 'purple',
-  OPERATION: 'cyan',
-  OTHER: 'default',
+const TYPE_COLORS: Record<number, string> = {
+  1: 'blue',
+  2: 'orange',
+  3: 'purple',
+  4: 'cyan',
+  5: 'default',
 }
 
-const PRIORITY_NAMES: Record<string, string> = {
-  URGENT: '紧急',
-  HIGH: '重要',
-  NORMAL: '普通',
-  LOW: '低',
+const PRIORITY_NAMES: Record<number, string> = {
+  1: '紧急',
+  2: '重要',
+  3: '普通',
+  4: '低',
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: '#ff4d4f',
-  HIGH: '#fa8c16',
-  NORMAL: '#1677ff',
-  LOW: '#8c8c8c',
+const PRIORITY_COLORS: Record<number, string> = {
+  1: '#ff4d4f',
+  2: '#fa8c16',
+  3: '#1677ff',
+  4: '#8c8c8c',
 }
 
-const STATUS_NAMES: Record<string, string> = {
-  DRAFT: '草稿',
-  PUBLISHED: '已发布',
-  ARCHIVED: '已归档',
+const STATUS_NAMES: Record<number, string> = {
+  0: '草稿',
+  1: '已发布',
+  2: '已归档',
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'default',
-  PUBLISHED: 'success',
-  ARCHIVED: 'warning',
+const STATUS_COLORS: Record<number, string> = {
+  0: 'default',
+  1: 'success',
+  2: 'warning',
 }
 
 const AnnouncementManagement = () => {
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<number | ''>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<Announcement | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -190,10 +190,10 @@ const AnnouncementManagement = () => {
         <Space size="small">
           <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>查看</Button>
           <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
-          {record.status === 'DRAFT' && (
+          {record.status === 0 && (
             <Button size="small" type="primary" onClick={() => publishMutation.mutate(record.id)}>发布</Button>
           )}
-          {record.status === 'PUBLISHED' && (
+          {record.status === 1 && (
             <Button size="small" onClick={() => archiveMutation.mutate(record.id)}>归档</Button>
           )}
           <Button size="small" danger onClick={() => {
@@ -211,9 +211,9 @@ const AnnouncementManagement = () => {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 150 }} allowClear placeholder="状态筛选">
-            <Option value="PUBLISHED">已发布</Option>
-            <Option value="DRAFT">草稿</Option>
-            <Option value="ARCHIVED">已归档</Option>
+            <Option value={1}>已发布</Option>
+            <Option value={0}>草稿</Option>
+            <Option value={2}>已归档</Option>
           </Select>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => {
             setEditRecord(null)
@@ -264,31 +264,31 @@ const AnnouncementManagement = () => {
         width={640}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ marginTop: 16 }}
-          initialValues={{ announcementType: 'SYSTEM', priority: 'NORMAL', status: 'DRAFT' }}>
+          initialValues={{ announcementType: 1, priority: 3, status: 0 }}>
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="输入公告标题" />
           </Form.Item>
           <Form.Item name="announcementType" label="类型" rules={[{ required: true }]}>
             <Select>
-              <Option value="SYSTEM">系统公告</Option>
-              <Option value="MAINTENANCE">维护通知</Option>
-              <Option value="POLICY">政策变更</Option>
-              <Option value="OPERATION">运营通知</Option>
-              <Option value="OTHER">其他</Option>
+              <Option value={1}>系统公告</Option>
+              <Option value={2}>维护通知</Option>
+              <Option value={3}>政策变更</Option>
+              <Option value={4}>运营通知</Option>
+              <Option value={5}>其他</Option>
             </Select>
           </Form.Item>
           <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
             <Select>
-              <Option value="URGENT">紧急</Option>
-              <Option value="HIGH">重要</Option>
-              <Option value="NORMAL">普通</Option>
-              <Option value="LOW">低</Option>
+              <Option value={1}>紧急</Option>
+              <Option value={2}>重要</Option>
+              <Option value={3}>普通</Option>
+              <Option value={4}>低</Option>
             </Select>
           </Form.Item>
           <Form.Item name="status" label="状态">
             <Select>
-              <Option value="DRAFT">草稿</Option>
-              <Option value="PUBLISHED">直接发布</Option>
+              <Option value={0}>草稿</Option>
+              <Option value={1}>直接发布</Option>
             </Select>
           </Form.Item>
           <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>

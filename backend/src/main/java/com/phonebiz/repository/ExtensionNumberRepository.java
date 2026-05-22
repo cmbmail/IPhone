@@ -15,7 +15,7 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
 
     Optional<ExtensionNumber> findByExtensionNumber(String extensionNumber);
 
-    Page<ExtensionNumber> findByStatus(ExtensionNumber.ExtStatus status, Pageable pageable);
+    Page<ExtensionNumber> findByStatus(Integer status, Pageable pageable);
 
     Page<ExtensionNumber> findByDeptOrgId(Long deptOrgId, Pageable pageable);
 
@@ -24,11 +24,11 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
            "AND (:status IS NULL OR e.status = :status) " +
            "AND (:deptOrgId IS NULL OR e.deptOrgId = :deptOrgId)")
     Page<ExtensionNumber> search(@Param("keyword") String keyword,
-                                  @Param("status") ExtensionNumber.ExtStatus status,
+                                  @Param("status") Integer status,
                                   @Param("deptOrgId") Long deptOrgId,
                                   Pageable pageable);
 
-    long countByStatus(ExtensionNumber.ExtStatus status);
+    long countByStatus(Integer status);
 
     // Order: AVAILABLE first, then IDLE, then ALLOCATED
     @Query("SELECT e FROM ExtensionNumber e WHERE " +
@@ -37,7 +37,7 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
            "AND (:deptOrgId IS NULL OR e.deptOrgId = :deptOrgId) " +
            "ORDER BY CASE e.status WHEN 'AVAILABLE' THEN 0 WHEN 'IDLE' THEN 1 WHEN 'ALLOCATED' THEN 2 ELSE 3 END, e.extensionNumber ASC")
     Page<ExtensionNumber> searchOrdered(@Param("keyword") String keyword,
-                                         @Param("status") ExtensionNumber.ExtStatus status,
+                                         @Param("status") Integer status,
                                          @Param("deptOrgId") Long deptOrgId,
                                          Pageable pageable);
 }

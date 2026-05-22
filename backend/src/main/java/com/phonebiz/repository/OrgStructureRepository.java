@@ -18,9 +18,9 @@ public interface OrgStructureRepository extends JpaRepository<OrgStructure, Long
 
     List<OrgStructure> findByParentId(Long parentId);
 
-    List<OrgStructure> findByParentIdAndStatus(Long parentId, OrgStructure.OrgStatus status);
+    List<OrgStructure> findByParentIdAndStatus(Long parentId, Integer status);
 
-    List<OrgStructure> findByStatus(OrgStructure.OrgStatus status);
+    List<OrgStructure> findByStatus(Integer status);
 
     Optional<OrgStructure> findByName(String name);
 
@@ -28,7 +28,7 @@ public interface OrgStructureRepository extends JpaRepository<OrgStructure, Long
 
     boolean existsByParentIdIsNullAndName(String name);
 
-    @Query("SELECT o FROM OrgStructure o WHERE o.status = 'active' ORDER BY o.sortOrder, o.name")
+    @Query("SELECT o FROM OrgStructure o WHERE o.status = 1 ORDER BY o.sortOrder, o.name")
     List<OrgStructure> findAllActiveOrdered();
 
     @Query("SELECT o FROM OrgStructure o WHERE o.path LIKE :pathPrefix%")

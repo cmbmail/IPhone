@@ -10,16 +10,16 @@ export interface BillAllocation {
   diffAmount: number
   anomalyFlag: boolean
   anomalyReason: string
-  adminConfirmOrg: string
+  adminConfirmOrg: number
   adminConfirmOrgBy: string
   adminConfirmOrgAt: string
-  adminConfirmAmount: string
+  adminConfirmAmount: number
   adminConfirmAmountBy: string
   adminConfirmAmountAt: string
-  financeConfirmAnomaly: string
+  financeConfirmAnomaly: number
   financeConfirmAnomalyBy: string
   financeConfirmAnomalyAt: string
-  financeConfirmSubmit: string
+  financeConfirmSubmit: number
   financeConfirmSubmitBy: string
   financeConfirmSubmitAt: string
   createdAt: string
@@ -51,13 +51,13 @@ export const billAllocationApi = {
   getPendingSubmit: (params: AllocationRequest) =>
     request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/pending-submit', { params }),
 
-  confirmOrg: (id: number, status: string) =>
+  confirmOrg: (id: number, status: number) =>
     request.post(`/bill-allocations/${id}/confirm-org`, null, { params: { status } }),
 
-  confirmAmount: (id: number, status: string) =>
+  confirmAmount: (id: number, status: number) =>
     request.post(`/bill-allocations/${id}/confirm-amount`, null, { params: { status } }),
 
-  confirmAnomaly: (id: number, status: string) =>
+  confirmAnomaly: (id: number, status: number) =>
     request.post(`/bill-allocations/${id}/confirm-anomaly`, null, { params: { status } }),
 
   submit: (id: number) =>

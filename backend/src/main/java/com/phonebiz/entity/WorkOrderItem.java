@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
@@ -17,12 +18,22 @@ import lombok.NoArgsConstructor;
 @Table(name = "work_order_item")
 public class WorkOrderItem extends BaseEntity {
 
+    public static final int ITEM_PENDING = 0;
+    public static final int ITEM_PROCESSING = 1;
+    public static final int ITEM_COMPLETED = 2;
+    public static final int ITEM_FAILED = 3;
+    public static final int ITEM_SKIPPED = 4;
+
+
+    public static final int ITEM_PHONE = 1;
+    public static final int ITEM_DEVICE = 2;
+    public static final int ITEM_EMPLOYEE = 3;
+
+
     @Column(name = "work_order_id", nullable = false)
     private Long workOrderId;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false, length = 20)
-    private ItemType itemType;
+    private Integer itemType;
 
     @Column(name = "target_id")
     private Long targetId;
@@ -35,10 +46,8 @@ public class WorkOrderItem extends BaseEntity {
 
     @Column(name = "to_value", length = 500)
     private String toValue;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ItemStatus status;
+    private Integer status;
 
     @Column(name = "executed_at")
     private java.time.LocalDateTime executedAt;
@@ -52,17 +61,6 @@ public class WorkOrderItem extends BaseEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
-    public enum ItemType {
-        PHONE,
-        DEVICE,
-        EMPLOYEE
-    }
-
-    public enum ItemStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED,
-        SKIPPED
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

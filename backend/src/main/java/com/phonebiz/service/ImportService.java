@@ -41,7 +41,7 @@ public class ImportService {
                 .totalCount(totalCount)
                 .successCount(0)
                 .failCount(0)
-                .status(ImportBatch.ImportStatus.PENDING)
+                .status(ImportBatch.BATCH_PENDING)
                 .operator(operator)
                 .build();
         
@@ -55,7 +55,7 @@ public class ImportService {
             processImport(batchId, dataList, strategy, operator);
         } catch (Exception e) {
             log.error("Import batch {} failed: {}", batchId, e.getMessage(), e);
-            updateBatchStatus(batchId, ImportBatch.ImportStatus.FAILED, e.getMessage());
+            updateBatchStatus(batchId, ImportBatch.BATCH_FAILED, e.getMessage());
             progressMap.remove(batchId);  // P3-08: Clean up on failure too
         }
     }
@@ -66,7 +66,7 @@ public class ImportService {
         ImportBatch batch = batchRepository.findByBatchId(batchId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMPORT_001));
 
-        batch.setStatus(ImportBatch.ImportStatus.PROCESSING);
+        batch.setStatus(ImportBatch.BATCH_PROCESSING);
         batchRepository.save(batch);
 
         List<String> errors = new ArrayList<>();
@@ -110,9 +110,9 @@ public class ImportService {
         batch.setFailCount(failCount);
         
         if (failCount == 0) {
-            batch.setStatus(ImportBatch.ImportStatus.COMPLETED);
+            batch.setStatus(ImportBatch.BATCH_COMPLETED);
         } else {
-            batch.setStatus(ImportBatch.ImportStatus.COMPLETED);
+            batch.setStatus(ImportBatch.BATCH_COMPLETED);
             try {
                 batch.setErrorDetail(objectMapper.writeValueAsString(errors));
             } catch (JsonProcessingException e) {
@@ -152,7 +152,7 @@ public class ImportService {
                     return null;
                 case OVERWRITE:
                     PhoneNumber existingPhone = phoneRepository.findByPhoneNumber(phoneNumber).orElse(null);
-                    if (existingPhone == null || existingPhone.getStatus() != PhoneNumber.PhoneStatus.idle) {
+                    if (existingPhone == null || existingPhone.getStatus() != PhoneNumber.PS_IDLE) {
                         return null;
                     }
                     return updateExistingPhone(existingPhone, data);
@@ -174,7 +174,7 @@ public class ImportService {
     private PhoneNumber createNewPhone(Map<String, Object> data, String phoneNumber) {
         PhoneNumber phone = new PhoneNumber();
         phone.setPhoneNumber(phoneNumber);
-        phone.setStatus(PhoneNumber.PhoneStatus.idle);
+        phone.setStatus(PhoneNumber.PS_IDLE);
         
         if (data.containsKey("orgId")) {
             try {
@@ -228,7 +228,7 @@ public class ImportService {
         return progressMap.getOrDefault(batchId, 0);
     }
 
-    private void updateBatchStatus(String batchId, ImportBatch.ImportStatus status, String errorDetail) {
+    private void updateBatchStatus(String batchId, Integer status, String errorDetail) {
         try {
             batchRepository.findByBatchId(batchId).ifPresent(batch -> {
                 batch.setStatus(status);

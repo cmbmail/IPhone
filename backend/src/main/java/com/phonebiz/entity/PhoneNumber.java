@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.Data;
@@ -10,6 +11,14 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "phone_number")
 public class PhoneNumber extends BaseEntity {
+
+    public static final int PS_IDLE = 0;
+    public static final int PS_ACTIVE = 1;
+    public static final int PS_STOPPED = 2;
+    public static final int PS_CANCELLED = 3;
+    public static final int PS_RESERVED = 4;
+    public static final int PS_DISABLED = 5;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +41,8 @@ public class PhoneNumber extends BaseEntity {
 
     @Column(name = "is_reentry", nullable = false)
     private Boolean isReentry = false;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PhoneStatus status = PhoneStatus.idle;
+    private Integer status = PhoneNumber.PS_IDLE;
 
     @Column(name = "org_id")
     private Long orgId;
@@ -50,7 +57,6 @@ public class PhoneNumber extends BaseEntity {
     @Version
     private Long version = 0L;
 
-    public enum PhoneStatus {
-        idle, active, stopped, cancelled, reserved, disabled
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

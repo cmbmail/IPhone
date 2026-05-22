@@ -41,5 +41,8 @@ public class DevicePhoneMapping {
             lineOrder = 1;
         }
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
 

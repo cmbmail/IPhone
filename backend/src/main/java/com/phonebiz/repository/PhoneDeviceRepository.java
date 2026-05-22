@@ -18,7 +18,7 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     boolean existsByMacAddress(String macAddress);
     List<PhoneDevice> findByOrgId(Long orgId);
     List<PhoneDevice> findByAssignedTo(String employeeNo);
-    Page<PhoneDevice> findByStatus(PhoneDevice.PhoneDeviceStatus status, Pageable pageable);
+    Page<PhoneDevice> findByStatus(Integer status, Pageable pageable);
 
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds)")
     Page<PhoneDevice> findByOrgIds(@Param("orgIds") List<Long> orgIds, Pageable pageable);
@@ -31,7 +31,7 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
 
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds) AND d.status = :status")
     Page<PhoneDevice> findByOrgIdsAndStatus(@Param("orgIds") List<Long> orgIds,
-                                            @Param("status") PhoneDevice.PhoneDeviceStatus status,
+                                            @Param("status") Integer status,
                                             Pageable pageable);
 }
 

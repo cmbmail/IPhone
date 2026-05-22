@@ -7,7 +7,7 @@ export interface Employee {
   position?: string
   phone?: string
   email?: string
-  status: 'active' | 'inactive'
+  status: 0 | 1
   entryDate?: string
   leaveDate?: string
   isVirtual: boolean
@@ -34,7 +34,7 @@ export interface UpdateEmployeeDTO {
   position?: string
   phone?: string
   email?: string
-  status?: 'active' | 'inactive'
+  status?: 0 | 1
   leaveDate?: string
 }
 

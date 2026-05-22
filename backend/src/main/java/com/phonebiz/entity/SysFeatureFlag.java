@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
@@ -47,4 +48,7 @@ public class SysFeatureFlag extends BaseEntity {
         USER,
         CUSTOM
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

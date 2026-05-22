@@ -42,7 +42,7 @@ public class LoginResponse {
                         .id(user.getId())
                         .username(user.getUsername())
                         .employeeNo(user.getEmployeeNo())
-                        .role(user.getRole().name())
+                        .role(String.valueOf(user.getRole()))
                         .scopeOrgId(user.getScopeOrgId())
                         .lastLoginAt(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null)
                         .needsPasswordChange(user.needsPasswordChange())

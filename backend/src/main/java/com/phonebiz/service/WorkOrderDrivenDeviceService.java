@@ -108,8 +108,8 @@ public class WorkOrderDrivenDeviceService {
                 .itemType("DEVICE")
                 .targetId(deviceId)
                 .action("repair")
-                .fromValue(device.getStatus().name())
-                .toValue(PhoneDevice.PhoneDeviceStatus.repairing.name())
+                .fromValue(String.valueOf(device.getStatus()))
+                .toValue(String.valueOf(PhoneDevice.PD_REPAIRING))
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
@@ -140,8 +140,8 @@ public class WorkOrderDrivenDeviceService {
                 .itemType("DEVICE")
                 .targetId(deviceId)
                 .action("retire")
-                .fromValue(device.getStatus().name())
-                .toValue(PhoneDevice.PhoneDeviceStatus.retired.name())
+                .fromValue(String.valueOf(device.getStatus()))
+                .toValue(String.valueOf(PhoneDevice.PD_RETIRED))
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()

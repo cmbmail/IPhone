@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExtensionNumber {
 
+    public static final int EXT_AVAILABLE = 0;
+    public static final int EXT_ALLOCATED = 1;
+    public static final int EXT_IDLE = 2;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,11 +29,9 @@ public class ExtensionNumber {
 
     @Column(name = "pool_id", nullable = false)
     private Long poolId;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private ExtStatus status = ExtStatus.AVAILABLE;
+    private Integer status = ExtensionNumber.EXT_AVAILABLE;
 
     @Column(name = "user_name", length = 100)
     private String userName;
@@ -68,7 +72,6 @@ public class ExtensionNumber {
     @PreUpdate
     protected void onUpdate() { updatedAt = java.time.LocalDateTime.now(); }
 
-    public enum ExtStatus {
-        ALLOCATED, IDLE, AVAILABLE
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

@@ -3,7 +3,7 @@ import { request } from './request'
 export interface ExtensionNumber {
   id: number
   extensionNumber: string
-  status: 'ALLOCATED' | 'IDLE' | 'AVAILABLE'
+  status: 0 | 1 | 2
   userName: string | null
   branchName: string | null
   deptName: string | null

@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
@@ -17,6 +18,12 @@ import lombok.NoArgsConstructor;
 @Table(name = "import_batch")
 public class ImportBatch extends BaseEntity {
 
+    public static final int BATCH_PENDING = 0;
+    public static final int BATCH_PROCESSING = 1;
+    public static final int BATCH_COMPLETED = 2;
+    public static final int BATCH_FAILED = 3;
+
+
     @Column(name = "batch_id", unique = true, nullable = false, length = 32)
     private String batchId;
 
@@ -28,10 +35,8 @@ public class ImportBatch extends BaseEntity {
 
     @Column(name = "fail_count", nullable = false)
     private Integer failCount;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ImportStatus status;
+    private Integer status;
 
     @Column(name = "error_detail", columnDefinition = "TEXT")
     private String errorDetail;
@@ -39,10 +44,6 @@ public class ImportBatch extends BaseEntity {
     @Column(name = "operator", length = 100)
     private String operator;
 
-    public enum ImportStatus {
-        PENDING,
-        PROCESSING,
-        COMPLETED,
-        FAILED
-    }
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

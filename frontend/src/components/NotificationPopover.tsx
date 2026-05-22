@@ -42,10 +42,10 @@ const NotificationPopover = () => {
       {isLoading ? <Spin style={{ display: 'block', margin: '20px auto' }} /> :
         notifications.length === 0 ? <Empty description="暂无消息" image={Empty.PRESENTED_IMAGE_SIMPLE} /> :
         <List size="small" dataSource={notifications} renderItem={(item: any) => (
-          <List.Item style={{ background: item.status === 'unread' ? '#f6f8fa' : 'transparent', padding: '8px 12px', cursor: item.status === 'unread' ? 'pointer' : 'default', borderRadius: 4 }}
-            onClick={() => item.status === 'unread' && readMut.mutate(item.id)}>
+          <List.Item style={{ background: item.status === 0 ? '#f6f8fa' : 'transparent', padding: '8px 12px', cursor: item.status === 0 ? 'pointer' : 'default', borderRadius: 4 }}
+            onClick={() => item.status === 0 && readMut.mutate(item.id)}>
             <List.Item.Meta
-              title={<span style={{ fontSize: 13, fontWeight: item.status === 'unread' ? 600 : 400 }}>{item.title || '系统通知'}</span>}
+              title={<span style={{ fontSize: 13, fontWeight: item.status === 0 ? 600 : 400 }}>{item.title || '系统通知'}</span>}
               description={<span style={{ fontSize: 12 }}>{item.message || item.content}{item.createdAt && <span style={{ color: '#999', marginLeft: 8 }}>{new Date(item.createdAt).toLocaleString()}</span>}</span>}
             />
           </List.Item>

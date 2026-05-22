@@ -116,7 +116,7 @@ public class BillImportService {
         b.setChargeType(chargeType);
         b.setFileName(fileName);
         b.setImportedBy(operator);
-        b.setImportStatus(BillRaw.ImportStatus.pending);
+        b.setImportStatus(BillRaw.IMPORT_PENDING);
         b.setChargeAmount(BigDecimal.ZERO);  // default, overwritten by fillXxx if applicable
 
         int cols = row.getLastCellNum();
@@ -276,14 +276,14 @@ public class BillImportService {
     @Transactional
     public void processAndAllocate(String billMonth, String operator) {
         log.info("Starting bill allocation process for month {}", billMonth);
-        List<BillRaw> pendingBills = billRawRepository.findByBillMonthAndImportStatus(billMonth, BillRaw.ImportStatus.pending);
+        List<BillRaw> pendingBills = billRawRepository.findByBillMonthAndImportStatus(billMonth, BillRaw.IMPORT_PENDING);
         if (pendingBills.isEmpty()) {
             log.info("No pending bills to process for month {}", billMonth);
             return;
         }
         billAllocationService.autoAllocateAndSave(pendingBills, billMonth, operator);
         for (BillRaw bill : pendingBills) {
-            bill.setImportStatus(BillRaw.ImportStatus.processed);
+            bill.setImportStatus(BillRaw.IMPORT_PROCESSED);
         }
         billRawRepository.saveAll(pendingBills);
         log.info("Bill allocation completed for month {}: {} records processed", billMonth, pendingBills.size());

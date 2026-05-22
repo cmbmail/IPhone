@@ -57,7 +57,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         }
 
-        if (user.getStatus() == SysUser.UserStatus.inactive) {
+        if (user.getStatus() == SysUser.USER_INACTIVE) {
             throw new BusinessException(ErrorCode.AUTH_004, "Authentication failed");
         }
 
@@ -89,7 +89,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(
                 user.getUsername(),
-                user.getRole().name(),
+                String.valueOf(user.getRole()),
                 user.getScopeOrgId(),
                 user.getRoleId(),
                 permissionCodes
@@ -165,7 +165,7 @@ public class AuthService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .employeeNo(user.getEmployeeNo())
-                .role(user.getRole().name())
+                .role(String.valueOf(user.getRole()))
                 .scopeOrgId(user.getScopeOrgId())
                 .lastLoginAt(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null)
                 .needsPasswordChange(user.needsPasswordChange())

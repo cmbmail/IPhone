@@ -36,7 +36,7 @@ public class PhoneDeviceController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        PhoneDevice.PhoneDeviceStatus statusEnum = status != null ? PhoneDevice.PhoneDeviceStatus.valueOf(status) : null;
+        Integer statusEnum = status != null ? Integer.valueOf(status) : null;
         Page<PhoneDeviceDTO> result = phoneDeviceService.getDeviceList(orgIds, statusEnum, pageable);
         return ApiResponse.success(result);
     }

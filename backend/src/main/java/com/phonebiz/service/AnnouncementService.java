@@ -24,8 +24,8 @@ public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
 
     @Transactional(readOnly = true)
-    public Page<Announcement> getAnnouncements(Announcement.AnnouncementStatus status,
-                                                Announcement.AnnouncementType type,
+    public Page<Announcement> getAnnouncements(Integer status,
+                                                Integer type,
                                                 Pageable pageable) {
         if (status != null) {
             return announcementRepository.findByStatus(status, pageable);
@@ -45,7 +45,7 @@ public class AnnouncementService {
     @Transactional(readOnly = true)
     public List<Announcement> getLatestPublished(int count) {
         return announcementRepository.findTop5ByStatusOrderByCreatedAtDesc(
-                Announcement.AnnouncementStatus.PUBLISHED);
+                Announcement.STATUS_PUBLISHED);
     }
 
     @Transactional
@@ -75,7 +75,7 @@ public class AnnouncementService {
     @Transactional
     public Announcement publishAnnouncement(Long id) {
         Announcement a = getAnnouncementById(id);
-        a.setStatus(Announcement.AnnouncementStatus.PUBLISHED);
+        a.setStatus(Announcement.STATUS_PUBLISHED);
         a.setUpdatedAt(LocalDateTime.now());
         return announcementRepository.save(a);
     }
@@ -83,7 +83,7 @@ public class AnnouncementService {
     @Transactional
     public Announcement archiveAnnouncement(Long id) {
         Announcement a = getAnnouncementById(id);
-        a.setStatus(Announcement.AnnouncementStatus.ARCHIVED);
+        a.setStatus(Announcement.STATUS_ARCHIVED);
         a.setUpdatedAt(LocalDateTime.now());
         return announcementRepository.save(a);
     }

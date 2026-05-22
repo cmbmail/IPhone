@@ -58,7 +58,7 @@ public class OrgService {
         org.setCostCenter(request.getCostCenter());
         
         if (request.getType() != null) {
-            org.setType(OrgStructure.OrgType.valueOf(request.getType()));
+            org.setType(Integer.valueOf(request.getType()));
         }
         
         if (request.getParentId() != null) {
@@ -93,11 +93,11 @@ public class OrgService {
         }
 
         if (request.getType() != null) {
-            org.setType(OrgStructure.OrgType.valueOf(request.getType()));
+            org.setType(Integer.valueOf(request.getType()));
         }
 
         if (request.getStatus() != null) {
-            org.setStatus(OrgStructure.OrgStatus.valueOf(request.getStatus()));
+            org.setStatus(Integer.valueOf(request.getStatus()));
         }
 
         if (request.getSortOrder() != null) {
@@ -151,7 +151,7 @@ public class OrgService {
 
     @Transactional(readOnly = true)
     public List<OrgStructure> getChildren(Long parentId) {
-        return orgRepository.findByParentIdAndStatus(parentId, OrgStructure.OrgStatus.active);
+        return orgRepository.findByParentIdAndStatus(parentId, OrgStructure.ORG_ACTIVE);
     }
 
     @Transactional
@@ -206,15 +206,15 @@ public class OrgService {
             org.setParentId(pid);
             org.setName(name);
             if (item.getType() != null && !item.getType().isBlank()) {
-                org.setType(OrgStructure.OrgType.valueOf(item.getType()));
+                org.setType(Integer.valueOf(item.getType()));
             } else if (pid == null) {
-                org.setType(OrgStructure.OrgType.group);
+                org.setType(OrgStructure.ORG_GROUP);
             } else {
                 OrgStructure parent = orgRepository.findById(pid).orElse(null);
-                if (parent != null && parent.getType() == OrgStructure.OrgType.group) {
-                    org.setType(OrgStructure.OrgType.subsidiary);
+                if (parent != null && parent.getType() == OrgStructure.ORG_GROUP) {
+                    org.setType(OrgStructure.ORG_SUBSIDIARY);
                 } else {
-                    org.setType(OrgStructure.OrgType.dept);
+                    org.setType(OrgStructure.ORG_DEPT);
                 }
             }
             org.setLevel(pid != null ? (orgRepository.findById(pid).map(o -> o.getLevel() + 1).orElse(0)) : 0);

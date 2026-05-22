@@ -3,7 +3,7 @@ export interface SysRole {
   name: string
   code: string
   description?: string
-  status: 'active' | 'inactive'
+  status: 0 | 1
   isSystem: boolean
   createdBy: string
   createdAt: string
@@ -30,6 +30,6 @@ export interface CreateRoleDTO {
 export interface UpdateRoleDTO {
   name?: string
   description?: string
-  status?: string
+  status?: number
   permissionIds?: number[]
 }

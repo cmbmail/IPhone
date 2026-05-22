@@ -70,7 +70,7 @@ public class PhoneController {
             @PathVariable String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        PhoneNumber.PhoneStatus phoneStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, status);
+        Integer phoneStatus = Integer.parseInt(status);
         Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.success(phoneService.getPhonesByStatus(phoneStatus, pageable));
     }
@@ -138,7 +138,7 @@ public class PhoneController {
             @Valid @RequestBody PhoneStatusChangeRequest request,
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
-        PhoneNumber.PhoneStatus newStatus = com.phonebiz.common.EnumHelper.parse(PhoneNumber.PhoneStatus.class, request.getNewStatus());
+        Integer newStatus = Integer.parseInt(request.getNewStatus());
         return ApiResponse.success(phoneService.changeStatus(request.getPhoneId(), newStatus, operator, request.getWorkOrderNo(), request.getRemark()));
     }
 

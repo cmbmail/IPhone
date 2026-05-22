@@ -42,7 +42,7 @@ public class WorkOrderController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<WorkOrderDTO> result;
         if (status != null) {
-            WorkOrder.WorkOrderStatus workOrderStatus = com.phonebiz.common.EnumHelper.parse(WorkOrder.WorkOrderStatus.class, status);
+            Integer workOrderStatus = Integer.parseInt(status);
             result = workOrderService.getWorkOrdersByStatus(workOrderStatus, pageable);
         } else {
             result = workOrderService.getWorkOrders(pageable);

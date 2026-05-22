@@ -45,7 +45,7 @@ public class WorkOrderService {
     }
 
     @Transactional(readOnly = true)
-    public Page<WorkOrderDTO> getWorkOrdersByStatus(WorkOrder.WorkOrderStatus status, Pageable pageable) {
+    public Page<WorkOrderDTO> getWorkOrdersByStatus(Integer status, Pageable pageable) {
         return workOrderRepository.findByStatus(status, pageable).map(this::toDTO);
     }
 
@@ -63,7 +63,7 @@ public class WorkOrderService {
     public WorkOrderDTO getWorkOrderById(Long id) {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
-        
+
         WorkOrderDTO dto = toDTO(workOrder);
         dto.setItems(getWorkOrderItems(id));
         return dto;
@@ -73,7 +73,7 @@ public class WorkOrderService {
     public WorkOrderDTO getWorkOrderByNo(String workOrderNo) {
         WorkOrder workOrder = workOrderRepository.findByWorkOrderNo(workOrderNo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
-        
+
         WorkOrderDTO dto = toDTO(workOrder);
         dto.setItems(getWorkOrderItems(workOrder.getId()));
         return dto;
@@ -82,43 +82,43 @@ public class WorkOrderService {
     @Transactional
     public WorkOrderDTO createWorkOrder(CreateWorkOrderRequest request, Long requesterId, String requesterName) {
         String workOrderNo = generateWorkOrderNo();
-        
+
         WorkOrder workOrder = WorkOrder.builder()
                 .workOrderNo(workOrderNo)
-                .type(WorkOrder.WorkOrderType.valueOf(request.getType().toUpperCase()))
-                .status(WorkOrder.WorkOrderStatus.PENDING)
-                .priority(WorkOrder.WorkOrderPriority.valueOf(request.getPriority().toUpperCase()))
+                .type(mapTypeToInteger(request.getType()))
+                .status(WorkOrder.WO_PENDING)
+                .priority(mapPriorityToInteger(request.getPriority()))
                 .requesterId(requesterId)
                 .requesterName(requesterName)
                 .handlerId(request.getHandlerId())
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .build();
-        
+
         workOrder.setCreatedAt(LocalDateTime.now());
         workOrder.setUpdatedAt(LocalDateTime.now());
-        
+
         WorkOrder saved = workOrderRepository.save(workOrder);
-        
+
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             for (CreateWorkOrderRequest.WorkOrderItemRequest itemRequest : request.getItems()) {
                 WorkOrderItem item = WorkOrderItem.builder()
                         .workOrderId(saved.getId())
-                        .itemType(WorkOrderItem.ItemType.valueOf(itemRequest.getItemType().toUpperCase()))
+                        .itemType(mapItemTypeToInteger(itemRequest.getItemType()))
                         .targetId(itemRequest.getTargetId())
                         .action(itemRequest.getAction())
                         .fromValue(itemRequest.getFromValue())
                         .toValue(itemRequest.getToValue())
-                        .status(WorkOrderItem.ItemStatus.PENDING)
+                        .status(WorkOrderItem.ITEM_PENDING)
                         .build();
                 item.setCreatedAt(LocalDateTime.now());
                 item.setUpdatedAt(LocalDateTime.now());
                 workOrderItemRepository.save(item);
             }
         }
-        
+
         log.info("Work order created: {}", workOrderNo);
-        
+
         return getWorkOrderById(saved.getId());
     }
 
@@ -126,37 +126,37 @@ public class WorkOrderService {
     public WorkOrderDTO updateWorkOrder(Long id, UpdateWorkOrderRequest request) {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
-        
+
         if (request.getStatus() != null) {
-            WorkOrder.WorkOrderStatus newStatus = WorkOrder.WorkOrderStatus.valueOf(request.getStatus().toUpperCase());
+            Integer newStatus = mapStatusToInteger(request.getStatus());
             if (!isValidStatusTransition(workOrder.getStatus(), newStatus)) {
                 throw new BusinessException(ErrorCode.WO_002);
             }
             workOrder.setStatus(newStatus);
-            
-            if (newStatus == WorkOrder.WorkOrderStatus.COMPLETED) {
+
+            if (newStatus == WorkOrder.WO_COMPLETED) {
                 workOrder.setCompletedAt(LocalDateTime.now());
             }
         }
-        
+
         if (request.getHandlerId() != null) {
             workOrder.setHandlerId(request.getHandlerId());
         }
-        
+
         if (request.getDescription() != null) {
             workOrder.setDescription(request.getDescription());
         }
-        
+
         if (request.getRemark() != null) {
             workOrder.setRemark(request.getRemark());
         }
-        
+
         workOrder.setUpdatedAt(LocalDateTime.now());
-        
+
         WorkOrder saved = workOrderRepository.save(workOrder);
-        
+
         log.info("Work order updated: {}", saved.getWorkOrderNo());
-        
+
         return getWorkOrderById(saved.getId());
     }
 
@@ -164,14 +164,14 @@ public class WorkOrderService {
     public void deleteWorkOrder(Long id) {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
-        
-        if (workOrder.getStatus() == WorkOrder.WorkOrderStatus.PROCESSING) {
+
+        if (workOrder.getStatus() == WorkOrder.WO_PROCESSING) {
             throw new BusinessException(ErrorCode.WO_002);
         }
-        
+
         workOrderItemRepository.findByWorkOrderId(id).forEach(workOrderItemRepository::delete);
         workOrderRepository.delete(workOrder);
-        
+
         log.info("Work order deleted: {}", workOrder.getWorkOrderNo());
     }
 
@@ -184,20 +184,20 @@ public class WorkOrderService {
     private synchronized String generateWorkOrderNo() {
         String dateStr = LocalDateTime.now().format(ORDER_NO_FORMATTER);
         String prefix = "WO" + dateStr;
-        
-        // L-07: Use count + UUID suffix to avoid race condition
+
         long count = workOrderRepository.countByWorkOrderNoStartingWith(prefix);
         String randomSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
-        
+
         return String.format("%s%04d%s", prefix, count + 1, randomSuffix);
     }
 
-    private boolean isValidStatusTransition(WorkOrder.WorkOrderStatus from, WorkOrder.WorkOrderStatus to) {
+    private boolean isValidStatusTransition(Integer from, Integer to) {
         return switch (from) {
-            case PENDING -> to == WorkOrder.WorkOrderStatus.ACCEPTED || to == WorkOrder.WorkOrderStatus.REJECTED;
-            case ACCEPTED -> to == WorkOrder.WorkOrderStatus.PROCESSING || to == WorkOrder.WorkOrderStatus.REJECTED;
-            case PROCESSING -> to == WorkOrder.WorkOrderStatus.COMPLETED;
-            case COMPLETED, REJECTED, ARCHIVED -> false;
+            case WorkOrder.WO_PENDING -> to == WorkOrder.WO_ACCEPTED || to == WorkOrder.WO_CANCELLED;
+            case WorkOrder.WO_ACCEPTED -> to == WorkOrder.WO_PROCESSING || to == WorkOrder.WO_CANCELLED;
+            case WorkOrder.WO_PROCESSING -> to == WorkOrder.WO_COMPLETED;
+            case WorkOrder.WO_COMPLETED, WorkOrder.WO_CANCELLED, WorkOrder.WO_ARCHIVED -> false;
+            default -> false;
         };
     }
 
@@ -205,9 +205,9 @@ public class WorkOrderService {
         return WorkOrderDTO.builder()
                 .id(workOrder.getId())
                 .workOrderNo(workOrder.getWorkOrderNo())
-                .type(workOrder.getType().name())
-                .status(workOrder.getStatus().name())
-                .priority(workOrder.getPriority().name())
+                .type(String.valueOf(workOrder.getType()))
+                .status(String.valueOf(workOrder.getStatus()))
+                .priority(String.valueOf(workOrder.getPriority()))
                 .requesterId(workOrder.getRequesterId())
                 .requesterName(workOrder.getRequesterName())
                 .handlerId(workOrder.getHandlerId())
@@ -226,12 +226,12 @@ public class WorkOrderService {
         return WorkOrderItemDTO.builder()
                 .id(item.getId())
                 .workOrderId(item.getWorkOrderId())
-                .itemType(item.getItemType().name())
+                .itemType(String.valueOf(item.getItemType()))
                 .targetId(item.getTargetId())
                 .action(item.getAction())
                 .fromValue(item.getFromValue())
                 .toValue(item.getToValue())
-                .status(item.getStatus().name())
+                .status(String.valueOf(item.getStatus()))
                 .executedAt(item.getExecutedAt())
                 .errorMessage(item.getErrorMessage())
                 .remark(item.getRemark())
@@ -243,11 +243,11 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
-        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.PENDING) {
+        if (workOrder.getStatus() != WorkOrder.WO_PENDING) {
             throw new BusinessException(ErrorCode.WO_002);
         }
 
-        workOrder.setStatus(WorkOrder.WorkOrderStatus.ACCEPTED);
+        workOrder.setStatus(WorkOrder.WO_ACCEPTED);
         workOrder.setHandlerId(handlerId);
         workOrder.setHandlerName(handlerName);
         workOrder.setUpdatedAt(LocalDateTime.now());
@@ -263,11 +263,11 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
-        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.ACCEPTED) {
+        if (workOrder.getStatus() != WorkOrder.WO_ACCEPTED) {
             throw new BusinessException(ErrorCode.WO_002);
         }
 
-        workOrder.setStatus(WorkOrder.WorkOrderStatus.PROCESSING);
+        workOrder.setStatus(WorkOrder.WO_PROCESSING);
         workOrder.setUpdatedAt(LocalDateTime.now());
 
         WorkOrder saved = workOrderRepository.save(workOrder);
@@ -281,11 +281,11 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
-        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.PROCESSING) {
+        if (workOrder.getStatus() != WorkOrder.WO_PROCESSING) {
             throw new BusinessException(ErrorCode.WO_002);
         }
 
-        workOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
+        workOrder.setStatus(WorkOrder.WO_COMPLETED);
         workOrder.setCompletedAt(LocalDateTime.now());
         workOrder.setRemark(remark);
         workOrder.setUpdatedAt(LocalDateTime.now());
@@ -301,11 +301,11 @@ public class WorkOrderService {
         WorkOrder workOrder = workOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
-        if (workOrder.getStatus() != WorkOrder.WorkOrderStatus.PENDING && workOrder.getStatus() != WorkOrder.WorkOrderStatus.ACCEPTED) {
+        if (workOrder.getStatus() != WorkOrder.WO_PENDING && workOrder.getStatus() != WorkOrder.WO_ACCEPTED) {
             throw new BusinessException(ErrorCode.WO_002);
         }
 
-        workOrder.setStatus(WorkOrder.WorkOrderStatus.REJECTED);
+        workOrder.setStatus(WorkOrder.WO_CANCELLED);
         workOrder.setRemark(reason);
         workOrder.setUpdatedAt(LocalDateTime.now());
 
@@ -321,7 +321,7 @@ public class WorkOrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
         List<WorkOrderItem> items = workOrderItemRepository.findByWorkOrderId(id);
-        
+
         Map<Long, List<WorkOrderItem>> itemsByOrg = items.stream()
                 .filter(item -> item.getTargetId() != null)
                 .collect(Collectors.groupingBy(WorkOrderItem::getTargetId));
@@ -333,7 +333,7 @@ public class WorkOrderService {
             WorkOrder childWorkOrder = WorkOrder.builder()
                     .workOrderNo(generateWorkOrderNo())
                     .type(parentWorkOrder.getType())
-                    .status(WorkOrder.WorkOrderStatus.PENDING)
+                    .status(WorkOrder.WO_PENDING)
                     .priority(parentWorkOrder.getPriority())
                     .requesterId(parentWorkOrder.getRequesterId())
                     .requesterName(parentWorkOrder.getRequesterName())
@@ -354,7 +354,7 @@ public class WorkOrderService {
                         .action(item.getAction())
                         .fromValue(item.getFromValue())
                         .toValue(item.getToValue())
-                        .status(WorkOrderItem.ItemStatus.PENDING)
+                        .status(WorkOrderItem.ITEM_PENDING)
                         .build();
                 newItem.setCreatedAt(LocalDateTime.now());
                 newItem.setUpdatedAt(LocalDateTime.now());
@@ -364,8 +364,7 @@ public class WorkOrderService {
             result.add(getWorkOrderById(savedChild.getId()));
         }
 
-        // Save parent as COMPLETED once after all children created
-        parentWorkOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
+        parentWorkOrder.setStatus(WorkOrder.WO_COMPLETED);
         parentWorkOrder.setCompletedAt(LocalDateTime.now());
         parentWorkOrder.setBatchId(batchId);
         workOrderRepository.save(parentWorkOrder);
@@ -379,21 +378,21 @@ public class WorkOrderService {
         WorkOrderItem item = workOrderItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_003));
 
-        if (item.getStatus() != WorkOrderItem.ItemStatus.PENDING) {
+        if (item.getStatus() != WorkOrderItem.ITEM_PENDING) {
             throw new BusinessException(ErrorCode.WO_004);
         }
 
-        item.setStatus(WorkOrderItem.ItemStatus.PROCESSING);
+        item.setStatus(WorkOrderItem.ITEM_PROCESSING);
         item.setUpdatedAt(LocalDateTime.now());
         workOrderItemRepository.save(item);
 
         try {
             executeItemAction(item);
-            
-            item.setStatus(WorkOrderItem.ItemStatus.COMPLETED);
+
+            item.setStatus(WorkOrderItem.ITEM_COMPLETED);
             item.setExecutedAt(LocalDateTime.now());
         } catch (Exception e) {
-            item.setStatus(WorkOrderItem.ItemStatus.FAILED);
+            item.setStatus(WorkOrderItem.ITEM_FAILED);
             item.setErrorMessage(e.getMessage());
             log.error("Failed to execute work order item {}: {}", itemId, e.getMessage());
         }
@@ -401,7 +400,7 @@ public class WorkOrderService {
         item.setUpdatedAt(LocalDateTime.now());
         WorkOrderItem saved = workOrderItemRepository.save(item);
 
-        updateWorkOrderStatusBasedOnItems(saved.getWorkOrderId());
+        updateParentStatusBasedOnItems(saved.getWorkOrderId());
 
         return toItemDTO(saved);
     }
@@ -409,31 +408,71 @@ public class WorkOrderService {
     private void executeItemAction(WorkOrderItem item) {
         log.info("Executing work order item: action={}, targetId={}, itemType={}", item.getAction(), item.getTargetId(), item.getItemType());
 
-        if (item.getItemType() == WorkOrderItem.ItemType.PHONE) {
+        if (item.getItemType() == WorkOrderItem.ITEM_PHONE) {
             workOrderDrivenPhoneService.executePhoneWorkOrderItem(item);
-        } else if (item.getItemType() == WorkOrderItem.ItemType.DEVICE) {
+        } else if (item.getItemType() == WorkOrderItem.ITEM_DEVICE) {
             workOrderDrivenDeviceService.executeDeviceWorkOrderItem(item);
         } else {
             throw new BusinessException(ErrorCode.SYS_001);
         }
     }
 
-    private void updateWorkOrderStatusBasedOnItems(Long workOrderId) {
-        long pendingCount = workOrderItemRepository.countByWorkOrderIdAndStatus(workOrderId, WorkOrderItem.ItemStatus.PENDING);
-        long failedCount = workOrderItemRepository.countByWorkOrderIdAndStatus(workOrderId, WorkOrderItem.ItemStatus.FAILED);
+    private void updateParentStatusBasedOnItems(Long workOrderId) {
+        long pendingCount = workOrderItemRepository.countByWorkOrderIdAndStatus(workOrderId, WorkOrderItem.ITEM_PENDING);
+        long failedCount = workOrderItemRepository.countByWorkOrderIdAndStatus(workOrderId, WorkOrderItem.ITEM_FAILED);
 
         WorkOrder workOrder = workOrderRepository.findById(workOrderId).orElse(null);
-        if (workOrder != null && workOrder.getStatus() == WorkOrder.WorkOrderStatus.PROCESSING) {
-            if (failedCount > 0 && pendingCount == 0) {
-                workOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
-                workOrder.setCompletedAt(LocalDateTime.now());
-                workOrderRepository.save(workOrder);
-            } else if (pendingCount == 0) {
-                workOrder.setStatus(WorkOrder.WorkOrderStatus.COMPLETED);
+        if (workOrder != null && workOrder.getStatus() == WorkOrder.WO_PROCESSING) {
+            if (pendingCount == 0) {
+                workOrder.setStatus(WorkOrder.WO_COMPLETED);
                 workOrder.setCompletedAt(LocalDateTime.now());
                 workOrderRepository.save(workOrder);
             }
         }
     }
-}
 
+    private int mapTypeToInteger(String type) {
+        return switch (type.toUpperCase()) {
+            case "ALLOCATE" -> WorkOrder.WO_PHONE_ALLOCATE;
+            case "TRANSFER" -> WorkOrder.WO_PHONE_TRANSFER;
+            case "CHANGE_NUMBER" -> WorkOrder.WO_PHONE_CHANGE_NUMBER;
+            case "CHANGE_ORG" -> WorkOrder.WO_PHONE_CHANGE_ORG;
+            case "RECLAIM" -> WorkOrder.WO_PHONE_RECLAIM;
+            case "SURRENDER" -> WorkOrder.WO_PHONE_SURRENDER;
+            case "ENABLE" -> WorkOrder.WO_PHONE_ENABLE;
+            case "DISABLE" -> WorkOrder.WO_PHONE_DISABLE;
+            default -> throw new BusinessException(ErrorCode.SYS_001);
+        };
+    }
+
+    private int mapPriorityToInteger(String priority) {
+        return switch (priority.toUpperCase()) {
+            case "LOW" -> WorkOrder.WO_LOW;
+            case "NORMAL" -> WorkOrder.WO_NORMAL;
+            case "HIGH" -> WorkOrder.WO_HIGH;
+            case "URGENT" -> WorkOrder.WO_URGENT;
+            default -> throw new BusinessException(ErrorCode.SYS_001);
+        };
+    }
+
+    private int mapStatusToInteger(String status) {
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> WorkOrder.WO_PENDING;
+            case "ACCEPTED" -> WorkOrder.WO_ACCEPTED;
+            case "PROCESSING" -> WorkOrder.WO_PROCESSING;
+            case "COMPLETED" -> WorkOrder.WO_COMPLETED;
+            case "ARCHIVED" -> WorkOrder.WO_ARCHIVED;
+            case "CANCELLED", "REJECTED" -> WorkOrder.WO_CANCELLED;
+            default -> throw new BusinessException(ErrorCode.SYS_001);
+        };
+    }
+
+    private int mapItemTypeToInteger(String itemType) {
+        return switch (itemType.toUpperCase()) {
+            case "PHONE" -> WorkOrderItem.ITEM_PHONE;
+            case "DEVICE" -> WorkOrderItem.ITEM_DEVICE;
+            case "EMPLOYEE" -> WorkOrderItem.ITEM_EMPLOYEE;
+            default -> throw new BusinessException(ErrorCode.SYS_001);
+        };
+    }
+}

@@ -241,7 +241,7 @@ public class WorkOrderDrivenPhoneService {
                 .itemType("PHONE")
                 .targetId(phoneId)
                 .action("enable")
-                .fromValue(phone.getStatus().name())
+                .fromValue(String.valueOf(phone.getStatus()))
                 .toValue("active")
                 .build();
 
@@ -273,7 +273,7 @@ public class WorkOrderDrivenPhoneService {
                 .itemType("PHONE")
                 .targetId(phoneId)
                 .action("disable")
-                .fromValue(phone.getStatus().name())
+                .fromValue(String.valueOf(phone.getStatus()))
                 .toValue("disabled")
                 .build();
 
@@ -329,10 +329,10 @@ public class WorkOrderDrivenPhoneService {
                 phoneService.changeOrg(phoneId, Long.parseLong(item.getToValue()), operator, workOrderNo, "工单变更组织");
             }
             case "enable" -> {
-                phoneService.changeStatus(phoneId, PhoneNumber.PhoneStatus.active, operator, workOrderNo, "工单启用");
+                phoneService.changeStatus(phoneId, PhoneNumber.PS_ACTIVE, operator, workOrderNo, "工单启用");
             }
             case "disable" -> {
-                phoneService.changeStatus(phoneId, PhoneNumber.PhoneStatus.disabled, operator, workOrderNo, "工单停机");
+                phoneService.changeStatus(phoneId, PhoneNumber.PS_DISABLED, operator, workOrderNo, "工单停机");
             }
             default -> throw new BusinessException(ErrorCode.SYS_001);
         }

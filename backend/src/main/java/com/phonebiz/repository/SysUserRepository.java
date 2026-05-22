@@ -21,7 +21,7 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long> {
 
     boolean existsByUsername(String username);
 
-    @Query("SELECT u FROM SysUser u WHERE u.status = 'active'")
+    @Query("SELECT u FROM SysUser u WHERE u.status = 1")
     List<SysUser> findAllActive();
 
     @Query("SELECT u FROM SysUser u WHERE u.roleId = :roleId")

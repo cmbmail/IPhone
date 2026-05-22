@@ -7,49 +7,29 @@ import { PlusOutlined, CheckOutlined, EyeOutlined } from '@ant-design/icons'
 const { Option } = Select
 const { TextArea } = Input
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'warning',
-  ACCEPTED: 'processing',
-  PROCESSING: 'processing',
-  COMPLETED: 'success',
-  REJECTED: 'error'
+const STATUS_COLORS: Record<number, string> = {
+  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 4: 'error', 5: 'default', 6: 'default'
+}
+const STATUS_NAMES: Record<number, string> = {
+  0: '待处理', 1: '已接受', 2: '处理中', 3: '已完成', 4: '已归档', 5: '已取消'
 }
 
-const STATUS_NAMES: Record<string, string> = {
-  PENDING: '待处理',
-  ACCEPTED: '已接受',
-  PROCESSING: '处理中',
-  COMPLETED: '已完成',
-  REJECTED: '已拒绝'
+const PRIORITY_COLORS: Record<number, string> = {
+  1: 'success', 2: 'default', 3: 'warning', 4: 'error'
+}
+const PRIORITY_NAMES: Record<number, string> = {
+  1: '低', 2: '普通', 3: '高', 4: '紧急'
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  HIGH: 'error',
-  MEDIUM: 'warning',
-  LOW: 'success'
-}
-
-const PRIORITY_NAMES: Record<string, string> = {
-  HIGH: '高',
-  MEDIUM: '中',
-  LOW: '低'
-}
-
-const TYPE_NAMES: Record<string, string> = {
-  PHONE_ASSIGN: '号码分配',
-  PHONE_UNASSIGN: '号码回收',
-  PHONE_TRANSFER: '号码转移',
-  DEVICE_ASSIGN: '设备分配',
-  DEVICE_CHECKIN: '设备签入',
-  DEVICE_CHECKOUT: '设备签出',
-  OTHER: '其他'
+const TYPE_NAMES: Record<number, string> = {
+  1: '号码分配', 2: '号码转移', 3: '号码变更', 4: '组织变更', 5: '号码回收', 6: '号码交回', 7: '号码启用', 8: '号码停用'
 }
 
 interface WorkOrderItem {
   id: number
-  itemType: string
+  itemType: number
   description: string
-  status: string
+  status: number
   result: string | null
   executedAt: string | null
   error: string | null
@@ -60,9 +40,9 @@ interface WorkOrder {
   workOrderNo: string
   title: string
   description: string
-  orderType: string
-  priority: string
-  status: string
+  orderType: number
+  priority: number
+  status: number
   requesterName: string
   requesterId: number
   handlerName: string | null
@@ -75,18 +55,18 @@ interface WorkOrder {
 }
 
 const WorkOrderManagement = () => {
-  const [status, setStatus] = useState<string>('')
+  const [status, setStatus] = useState<number | ''>('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
-  const [formData, setFormData] = useState({ title: '', description: '', priority: 'MEDIUM', type: 'PHONE_ASSIGN' })
+  const [formData, setFormData] = useState({ title: '', description: '', priority: 2, type: 1 })
   const queryClient = useQueryClient()
 
   const { data: orderData, isLoading, refetch } = useQuery({
     queryKey: ['work-orders', status],
     queryFn: async () => {
       const params: Record<string, unknown> = { page: 0, size: 100 }
-      if (status) params.status = status
+      if (status !== '') params.status = status
       return workOrderApi.getList(params)
     }
   })
@@ -124,7 +104,7 @@ const WorkOrderManagement = () => {
       message.success('工单创建成功')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
       setIsCreateModalOpen(false)
-      setFormData({ title: '', description: '', priority: 'MEDIUM', type: 'PHONE_ASSIGN' })
+      setFormData({ title: '', description: '', priority: 2, type: 1 })
     },
     onError: () => message.error('创建失败')
   })
@@ -155,8 +135,8 @@ const WorkOrderManagement = () => {
       content: `标记工单 ${record.workOrderNo} 为已完成？`,
       onOk: () => completeMutation.mutate(record.id)
     })
-  }
 
+  }
   const handleReject = (record: WorkOrder) => {
     let rejectReason = ''
     Modal.confirm({
@@ -204,21 +184,21 @@ const WorkOrderManagement = () => {
       dataIndex: 'orderType',
       key: 'type',
       width: 120,
-      render: (type: string) => TYPE_NAMES[type] || type
+      render: (type: number) => TYPE_NAMES[type] || type
     },
     {
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
-      render: (priority: string) => <Tag color={PRIORITY_COLORS[priority] || 'default'}>{PRIORITY_NAMES[priority]}</Tag>
+      render: (priority: number) => <Tag color={PRIORITY_COLORS[priority] || 'default'}>{PRIORITY_NAMES[priority] || priority}</Tag>
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
+      render: (s: number) => <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
     },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 120 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 120 },
@@ -232,17 +212,17 @@ const WorkOrderManagement = () => {
           <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
             详情
           </Button>
-          {record.status === 'PENDING' && (
+          {record.status === 0 && (
             <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>
               接受
             </Button>
           )}
-          {(record.status === 'ACCEPTED' || record.status === 'PROCESSING') && (
+          {(record.status === 1 || record.status === 2) && (
             <Button size="small" type="primary" onClick={() => handleComplete(record)}>
               完成
             </Button>
           )}
-          {record.status !== 'COMPLETED' && record.status !== 'REJECTED' && (
+          {record.status !== 3 && record.status !== 5 && (
             <Button size="small" danger onClick={() => handleReject(record)}>
               拒绝
             </Button>
@@ -253,9 +233,9 @@ const WorkOrderManagement = () => {
   ]
 
   const orders: WorkOrder[] = orderData?.data?.data?.content || []
-  const pendingCount = orders.filter((o) => o.status === 'PENDING').length
-  const processingCount = orders.filter((o) => o.status === 'ACCEPTED' || o.status === 'PROCESSING').length
-  const completedCount = orders.filter((o) => o.status === 'COMPLETED').length
+  const pendingCount = orders.filter((o) => o.status === 0).length
+  const processingCount = orders.filter((o) => o.status === 1 || o.status === 2).length
+  const completedCount = orders.filter((o) => o.status === 3).length
 
   return (
     <div>
@@ -277,11 +257,11 @@ const WorkOrderManagement = () => {
       <Card>
         <Space style={{ marginBottom: 16 }}>
           <Select value={status} onChange={setStatus} style={{ width: 150 }} allowClear placeholder="选择状态">
-            <Option value="PENDING">待处理</Option>
-            <Option value="ACCEPTED">已接受</Option>
-            <Option value="PROCESSING">处理中</Option>
-            <Option value="COMPLETED">已完成</Option>
-            <Option value="REJECTED">已拒绝</Option>
+            <Option value={0}>待处理</Option>
+            <Option value={1}>已接受</Option>
+            <Option value={2}>处理中</Option>
+            <Option value={3}>已完成</Option>
+            <Option value={5}>已取消</Option>
           </Select>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalOpen(true)}>
             创建工单
@@ -310,8 +290,8 @@ const WorkOrderManagement = () => {
               <Descriptions.Item label="工单号">{selectedOrder.workOrderNo}</Descriptions.Item>
               <Descriptions.Item label="标题">{selectedOrder.title}</Descriptions.Item>
               <Descriptions.Item label="类型">{TYPE_NAMES[selectedOrder.orderType] || selectedOrder.orderType}</Descriptions.Item>
-              <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority]}</Tag></Descriptions.Item>
-              <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status]}</Tag></Descriptions.Item>
+              <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
+              <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName}</Descriptions.Item>
               <Descriptions.Item label="处理人">{selectedOrder.handlerName || '-'}</Descriptions.Item>
               <Descriptions.Item label="创建时间">{selectedOrder.createdAt}</Descriptions.Item>
@@ -330,20 +310,20 @@ const WorkOrderManagement = () => {
                 {selectedOrder.items.map((item) => (
                   <Timeline.Item
                     key={item.id}
-                    color={item.status === 'COMPLETED' ? 'green' : item.status === 'FAILED' ? 'red' : 'blue'}
+                    color={item.status === 2 ? 'green' : item.status === 3 ? 'red' : 'blue'}
                   >
                     <div style={{ paddingBottom: 8 }}>
                       <div>
                         <Tag>{TYPE_NAMES[item.itemType] || item.itemType}</Tag>
-                        <Tag color={item.status === 'COMPLETED' ? 'success' : item.status === 'FAILED' ? 'error' : 'processing'}>
-                          {item.status === 'COMPLETED' ? '已完成' : item.status === 'FAILED' ? '失败' : '待执行'}
+                        <Tag color={item.status === 2 ? 'success' : item.status === 3 ? 'error' : 'processing'}>
+                          {item.status === 2 ? '已完成' : item.status === 3 ? '失败' : '待执行'}
                         </Tag>
                       </div>
                       <div style={{ color: '#666', marginTop: 4 }}>{item.description}</div>
                       {item.result && <div style={{ color: '#52c41a', marginTop: 4 }}>结果: {item.result}</div>}
                       {item.error && <div style={{ color: '#ff4d4f', marginTop: 4 }}>错误: {item.error}</div>}
                       {item.executedAt && <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>执行时间: {item.executedAt}</div>}
-                      {(item.status === 'PENDING' || item.status === 'FAILED') && (
+                      {(item.status === 0 || item.status === 3) && (
                         <Button
                           size="small"
                           type="primary"
@@ -391,19 +371,20 @@ const WorkOrderManagement = () => {
             onChange={(value) => setFormData({ ...formData, priority: value })}
             style={{ width: '100%' }}
           >
-            <Option value="LOW">低</Option>
-            <Option value="MEDIUM">中</Option>
-            <Option value="HIGH">高</Option>
+            <Option value={1}>低</Option>
+            <Option value={2}>普通</Option>
+            <Option value={3}>高</Option>
+            <Option value={4}>紧急</Option>
           </Select>
           <Select
             value={formData.type}
             onChange={(value) => setFormData({ ...formData, type: value })}
             style={{ width: '100%' }}
           >
-            <Option value="PHONE_ASSIGN">号码分配</Option>
-            <Option value="PHONE_UNASSIGN">号码回收</Option>
-            <Option value="PHONE_TRANSFER">号码转移</Option>
-            <Option value="DEVICE_ASSIGN">设备分配</Option>
+            <Option value={1}>号码分配</Option>
+            <Option value={5}>号码回收</Option>
+            <Option value={2}>号码转移</Option>
+            <Option value={4}>组织变更</Option>
           </Select>
         </Space>
       </Modal>

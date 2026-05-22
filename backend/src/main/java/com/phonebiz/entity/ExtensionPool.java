@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.Data;
@@ -26,4 +27,7 @@ public class ExtensionPool extends BaseEntity {
 
     @Column(name = "allocated_by", nullable = false, length = 50)
     private String allocatedBy;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

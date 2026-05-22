@@ -19,6 +19,6 @@ public interface SysRoleRepository extends JpaRepository<SysRole, Long> {
 
     boolean existsByName(String name);
 
-    @Query("SELECT r FROM SysRole r WHERE r.status = 'active' ORDER BY r.isSystem DESC, r.name")
+    @Query("SELECT r FROM SysRole r WHERE r.status = 1 ORDER BY r.isSystem DESC, r.name")
     List<SysRole> findAllActive();
 }

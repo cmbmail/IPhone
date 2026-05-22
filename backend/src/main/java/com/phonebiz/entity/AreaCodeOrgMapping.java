@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import lombok.Data;
@@ -23,4 +24,7 @@ public class AreaCodeOrgMapping extends BaseEntity {
 
     @Column(nullable = false)
     private Integer priority = 1;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

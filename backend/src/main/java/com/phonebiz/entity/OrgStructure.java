@@ -1,5 +1,6 @@
 package com.phonebiz.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,15 @@ import com.phonebiz.common.ErrorCode;
 @Table(name = "org_structure")
 public class OrgStructure extends BaseEntity {
 
+    public static final int ORG_INACTIVE = 0;
+    public static final int ORG_ACTIVE = 1;
+
+
+    public static final int ORG_GROUP = 1;
+    public static final int ORG_SUBSIDIARY = 2;
+    public static final int ORG_DEPT = 3;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,10 +36,8 @@ public class OrgStructure extends BaseEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrgType type = OrgType.dept;
+    private Integer type = OrgStructure.ORG_DEPT;
 
     @Column(nullable = false)
     private Integer level = 0;
@@ -51,22 +59,12 @@ public class OrgStructure extends BaseEntity {
 
     @Column(name = "cost_center", length = 50)
     private String costCenter;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrgStatus status = OrgStatus.active;
+    private Integer status = OrgStructure.ORG_ACTIVE;
 
     @OneToMany(mappedBy = "parentId", fetch = FetchType.EAGER)
     @OrderBy("sortOrder ASC")
     private List<OrgStructure> children = new ArrayList<>();
-
-    public enum OrgType {
-        group, subsidiary, dept
-    }
-
-    public enum OrgStatus {
-        active, inactive
-    }
 
     public void calculateLevelAndPath() {
         if (this.parentId == null) {
@@ -85,4 +83,7 @@ public class OrgStructure extends BaseEntity {
             throw new BusinessException(ErrorCode.ORG_003);
         }
     }
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

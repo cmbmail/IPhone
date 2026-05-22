@@ -5,15 +5,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { extensionNumberApi, type ExtensionNumber } from '@/api/extensionNumber'
 import { request } from '@/api/request'
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  AVAILABLE: { label: '可分配', color: 'green' },
-  IDLE: { label: '闲置(无电话)', color: 'orange' },
-  ALLOCATED: { label: '已占用', color: 'blue' },
+const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: '可分配', color: 'green' },
+  2: { label: '闲置(无电话)', color: 'orange' },
+  1: { label: '已占用', color: 'blue' },
 }
 
 const ExtensionPoolManagement = () => {
   const [keyword, setKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
+  const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined)
   const [deptFilter, setDeptFilter] = useState<number | undefined>(undefined)
   const [page, setPage] = useState(0)
   const [size] = useState(20)
@@ -98,7 +98,7 @@ const ExtensionPoolManagement = () => {
     {
       title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 120,
       render: (v: string, r: ExtensionNumber) => (
-        <span style={{ fontWeight: r.status === 'AVAILABLE' ? 600 : 400, color: r.status === 'AVAILABLE' ? '#52c41a' : undefined }}>
+        <span style={{ fontWeight: r.status === 0 ? 600 : 400, color: r.status === 0 ? '#52c41a' : undefined }}>
           {v}
         </span>
       ),
@@ -130,10 +130,10 @@ const ExtensionPoolManagement = () => {
       title: '操作', key: 'actions', width: 160,
       render: (_: unknown, record: ExtensionNumber) => (
         <Space size="small">
-          {record.status !== 'ALLOCATED' && (
+          {record.status !== 1 && (
             <Button size="small" type="primary" icon={<UserAddOutlined />} onClick={() => handleAllocate(record)}>分配</Button>
           )}
-          {record.status === 'ALLOCATED' && (
+          {record.status === 1 && (
             <Button size="small" danger icon={<RollbackOutlined />} onClick={() => handleReclaim(record)}>回收</Button>
           )}
         </Space>
@@ -141,9 +141,9 @@ const ExtensionPoolManagement = () => {
     },
   ]
 
-  const availableCount = content.filter(c => c.status === 'AVAILABLE').length
-  const idleCount = content.filter(c => c.status === 'IDLE').length
-  const allocatedCount = content.filter(c => c.status === 'ALLOCATED').length
+  const availableCount = content.filter(c => c.status === 0).length
+  const idleCount = content.filter(c => c.status === 2).length
+  const allocatedCount = content.filter(c => c.status === 1).length
 
   const subDepts = orgs.filter((o: any) => o.level >= 2)
 
@@ -169,9 +169,9 @@ const ExtensionPoolManagement = () => {
           <Space>
             <Input.Search placeholder="搜索分机号/使用人/部门/电话" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(0) }} style={{ width: 260 }} />
             <Select placeholder="状态筛选" value={statusFilter} onChange={v => { setStatusFilter(v); setPage(0) }} style={{ width: 120 }} allowClear>
-              <Select.Option value="AVAILABLE">可分配</Select.Option>
-              <Select.Option value="IDLE">闲置</Select.Option>
-              <Select.Option value="ALLOCATED">已占用</Select.Option>
+              <Select.Option value={0}>可分配</Select.Option>
+              <Select.Option value={2}>闲置</Select.Option>
+              <Select.Option value={1}>已占用</Select.Option>
             </Select>
             <Select placeholder="部门筛选" value={deptFilter} onChange={v => { setDeptFilter(v); setPage(0) }} style={{ width: 150 }} allowClear>
               {subDepts.map((d: any) => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)}
