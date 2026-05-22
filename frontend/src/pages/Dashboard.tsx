@@ -181,15 +181,12 @@ const Dashboard = () => {
       </Row>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={24}>
+        <Col span={18}>
           <Card title="最近账单">
             <Table columns={billColumns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} />
           </Card>
         </Col>
-      </Row>
-
-      <Row gutter={16}>
-        <Col span={12}>
+        <Col span={6}>
           <Card title="通知公告" extra={<a href="/announcements" style={{ fontSize: 13 }}>查看全部</a>}>
             {announcements.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: '#999' }}>暂无公告</div>
@@ -197,29 +194,30 @@ const Dashboard = () => {
               <List
                 dataSource={announcements}
                 renderItem={(item: Announcement) => (
-                  <List.Item style={{ padding: '8px 0' }}>
-                    <List.Item.Meta
-                      title={
-                        <Space>
-                          <Tag color={ANNOUNCEMENT_TYPE_COLORS[item.announcementType] || 'default'} style={{ fontSize: 11 }}>
-                            {ANNOUNCEMENT_TYPE_NAMES[item.announcementType] || item.announcementType}
-                          </Tag>
-                          <span style={{ fontSize: 14 }}>{item.title}</span>
-                        </Space>
-                      }
-                      description={
-                        <div style={{ fontSize: 12, color: '#999' }}>
-                          {item.createdBy || '系统'} | {item.createdAt ? item.createdAt.replace('T', ' ').substring(0, 16) : '-'}
-                        </div>
-                      }
-                    />
+                  <List.Item style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ width: '100%' }}>
+                      <div style={{ marginBottom: 4 }}>
+                        <Tag color={ANNOUNCEMENT_TYPE_COLORS[item.announcementType] || 'default'} style={{ fontSize: 11 }}>
+                          {ANNOUNCEMENT_TYPE_NAMES[item.announcementType] || item.announcementType}
+                        </Tag>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#999' }}>
+                        {item.createdBy || '系统'} | {item.createdAt ? item.createdAt.replace('T', ' ').substring(0, 16) : '-'}
+                      </div>
+                    </div>
                   </List.Item>
                 )}
               />
             )}
           </Card>
         </Col>
-        <Col span={12}>
+      </Row>
+
+      <Row gutter={16}>
+        <Col span={24}>
           <Card title="最近工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
             <Table
               columns={woColumns}
