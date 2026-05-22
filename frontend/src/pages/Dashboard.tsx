@@ -238,7 +238,8 @@ const Dashboard = () => {
         onCancel={() => setSelectedAnnouncement(null)}
         footer={null}
         width={720}
-        centered
+        style={{ top: '8vh' }}
+        bodyStyle={{ minHeight: 360 }}
       >
         {selectedAnnouncement && (
           <div>
