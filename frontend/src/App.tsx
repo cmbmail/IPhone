@@ -51,6 +51,7 @@ const menuItems = [
     { key: '/reports', icon: <BarChartOutlined />, label: '报表中心' },
     { key: '/audit-logs', icon: <FileTextOutlined />, label: '审计日志' },
     { key: '/roles', icon: <SafetyCertificateOutlined />, label: '角色管理' },
+    { key: '/announcements', icon: <NotificationOutlined />, label: '通知公告' },
   ]},
 ]
 
@@ -71,6 +72,7 @@ const pageTitleMap: Record<string, string> = {
   '/user-management': '用户管理',
   '/audit-logs': '审计日志',
   '/roles': '角色管理',
+  '/announcements': '通知公告',
 }
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
