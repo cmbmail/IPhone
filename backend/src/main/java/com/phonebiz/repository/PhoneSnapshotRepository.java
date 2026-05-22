@@ -41,5 +41,22 @@ public interface PhoneSnapshotRepository extends JpaRepository<PhoneSnapshot, Lo
 
     int countBySnapshotMonthAndOrgId(String snapshotMonth, Long orgId);
 
+
+    // Report aggregation queries
+    @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth")
+    long countByMonth(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT p.status, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth GROUP BY p.status")
+    List<Object[]> countGroupByStatus(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT p.orgId, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.orgId IS NOT NULL GROUP BY p.orgId")
+    List<Object[]> countGroupByOrgId(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.employeeNo IS NOT NULL AND p.employeeNo <> ''")
+    long countAllocatedByMonth(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND (p.employeeNo IS NULL OR p.employeeNo = '')")
+    long countIdleByMonth(@Param("snapshotMonth") String snapshotMonth);
+
     void deleteBySnapshotMonth(String snapshotMonth);
 }

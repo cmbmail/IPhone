@@ -76,6 +76,29 @@ public interface BillAllocationRepository extends JpaRepository<BillAllocation, 
     @Query("SELECT b.snapshotOrgId, COUNT(b), SUM(b.chargeAmount) FROM BillAllocation b WHERE b.billMonth = :billMonth GROUP BY b.snapshotOrgId")
     List<Object[]> getAllocationSummaryByOrg(@Param("billMonth") String billMonth);
 
+
+    // Report aggregation queries - avoid loading 80k+ entities into memory
+    @Query("SELECT COALESCE(SUM(b.chargeAmount), 0) FROM BillAllocation b WHERE b.billMonth = :billMonth")
+    BigDecimal sumChargeAmountByMonth(@Param("billMonth") String billMonth);
+
+    @Query("SELECT COALESCE(SUM(b.chargeAmount), 0) FROM BillAllocation b WHERE b.billMonth = :billMonth AND b.anomalyFlag = true")
+    BigDecimal sumAnomalyAmountByMonth(@Param("billMonth") String billMonth);
+
+    @Query("SELECT b.adminConfirmOrg, COUNT(b) FROM BillAllocation b WHERE b.billMonth = :billMonth GROUP BY b.adminConfirmOrg")
+    List<Object[]> countByConfirmStatusGroupBy(@Param("billMonth") String billMonth);
+
+    @Query("SELECT b.snapshotOrgId, SUM(b.chargeAmount), COUNT(b) FROM BillAllocation b WHERE b.billMonth = :billMonth AND b.snapshotOrgId IS NOT NULL GROUP BY b.snapshotOrgId")
+    List<Object[]> sumAndCountGroupByOrgId(@Param("billMonth") String billMonth);
+
+    @Query("SELECT b.anomalyReason, COUNT(b) FROM BillAllocation b WHERE b.billMonth = :billMonth AND b.anomalyFlag = true AND b.anomalyReason IS NOT NULL GROUP BY b.anomalyReason")
+    List<Object[]> countAnomalyByReason(@Param("billMonth") String billMonth);
+
+    @Query("SELECT COALESCE(SUM(b.chargeAmount), 0) FROM BillAllocation b WHERE b.billMonth = :billMonth AND b.anomalyFlag = true")
+    BigDecimal sumAnomalyChargeByMonth(@Param("billMonth") String billMonth);
+
+    @Query("SELECT b.id, b.phoneNumber, b.chargeAmount, b.anomalyReason, b.snapshotOrgName, b.createdAt FROM BillAllocation b WHERE b.billMonth = :billMonth AND b.anomalyFlag = true ORDER BY b.chargeAmount DESC")
+    List<Object[]> findAnomalyProjectionByMonth(@Param("billMonth") String billMonth);
+
     List<BillAllocation> findByPhoneNumber(String phoneNumber);
 }
 

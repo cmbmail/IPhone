@@ -21,7 +21,6 @@ import com.phonebiz.repository.*;
 @RequiredArgsConstructor
 public class ReportService {
 
-    private final PhoneNumberRepository phoneNumberRepository;
     private final PhoneSnapshotRepository phoneSnapshotRepository;
     private final BillAllocationRepository billAllocationRepository;
     private final WorkOrderRepository workOrderRepository;
@@ -30,32 +29,30 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getPhoneAssetReport(String billMonth) {
-        Map<String, Object> report = new HashMap<>();
+        Map<String, Object> report = new LinkedHashMap<>();
 
-        List<PhoneSnapshot> snapshots = phoneSnapshotRepository.findBySnapshotMonth(billMonth);
-        
-        long totalPhones = snapshots.size();
-        long allocatedPhones = snapshots.stream()
-                .filter(s -> s.getEmployeeNo() != null && !s.getEmployeeNo().isEmpty())
-                .count();
-        long idlePhones = snapshots.stream()
-                .filter(s -> s.getEmployeeNo() == null || s.getEmployeeNo().isEmpty())
-                .count();
+        long totalPhones = phoneSnapshotRepository.countByMonth(billMonth);
+        long allocatedPhones = phoneSnapshotRepository.countAllocatedByMonth(billMonth);
+        long idlePhones = phoneSnapshotRepository.countIdleByMonth(billMonth);
 
-        Map<String, Long> statusDistribution = snapshots.stream()
-                .collect(Collectors.groupingBy(
-                        s -> s.getStatus() != null ? s.getStatus() : "unknown",
-                        Collectors.counting()
-                ));
+        Map<String, Long> statusDistribution = new LinkedHashMap<>();
+        for (Object[] row : phoneSnapshotRepository.countGroupByStatus(billMonth)) {
+            String status = (String) row[0];
+            Long count = (Long) row[1];
+            statusDistribution.put(status != null ? status : "unknown", count);
+        }
 
-        Map<String, Object> orgDistribution = new HashMap<>();
-        Map<Long, Long> orgPhoneCount = snapshots.stream()
-                .filter(s -> s.getOrgId() != null)
-                .collect(Collectors.groupingBy(PhoneSnapshot::getOrgId, Collectors.counting()));
-        
-        for (Map.Entry<Long, Long> entry : orgPhoneCount.entrySet()) {
-            orgStructureRepository.findById(entry.getKey()).ifPresent(org -> {
-                orgDistribution.put(org.getName(), entry.getValue());
+        Map<String, Object> orgDistribution = new LinkedHashMap<>();
+        Map<Long, Long> orgPhoneCount = new LinkedHashMap<>();
+        for (Object[] row : phoneSnapshotRepository.countGroupByOrgId(billMonth)) {
+            Long orgId = (Long) row[0];
+            Long count = (Long) row[1];
+            orgPhoneCount.put(orgId, count);
+        }
+        // Batch load org names
+        if (!orgPhoneCount.isEmpty()) {
+            orgStructureRepository.findAllById(orgPhoneCount.keySet()).forEach(org -> {
+                orgDistribution.put(org.getName(), orgPhoneCount.get(org.getId()));
             });
         }
 
@@ -63,7 +60,7 @@ public class ReportService {
         report.put("totalPhones", totalPhones);
         report.put("allocatedPhones", allocatedPhones);
         report.put("idlePhones", idlePhones);
-        report.put("allocationRate", totalPhones > 0 ? 
+        report.put("allocationRate", totalPhones > 0 ?
                 Math.round(allocatedPhones * 10000.0 / totalPhones) / 100.0 : 0);
         report.put("statusDistribution", statusDistribution);
         report.put("orgDistribution", orgDistribution);
@@ -73,53 +70,40 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getBillAllocationReport(String billMonth) {
-        Map<String, Object> report = new HashMap<>();
+        Map<String, Object> report = new LinkedHashMap<>();
 
-        List<BillAllocation> allocations = billAllocationRepository.findByBillMonth(billMonth);
-        
-        BigDecimal totalAmount = allocations.stream()
-                .map(BillAllocation::getChargeAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int totalRecords = billAllocationRepository.countByBillMonth(billMonth);
+        BigDecimal totalAmount = billAllocationRepository.sumChargeAmountByMonth(billMonth);
+        if (totalAmount == null) totalAmount = BigDecimal.ZERO;
 
-        BigDecimal anomalyAmount = allocations.stream()
-                .filter(BillAllocation::getAnomalyFlag)
-                .map(BillAllocation::getChargeAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int anomalyCount = billAllocationRepository.countByBillMonthAndAnomalyFlag(billMonth, true);
+        BigDecimal anomalyAmount = billAllocationRepository.sumAnomalyAmountByMonth(billMonth);
+        if (anomalyAmount == null) anomalyAmount = BigDecimal.ZERO;
 
-        long anomalyCount = allocations.stream()
-                .filter(BillAllocation::getAnomalyFlag)
-                .count();
-
-        Map<String, Object> orgAllocation = new HashMap<>();
-        Map<Long, BigDecimal> orgAmountMap = allocations.stream()
-                .filter(a -> a.getSnapshotOrgId() != null && a.getChargeAmount() != null)
-                .collect(Collectors.groupingBy(
-                        BillAllocation::getSnapshotOrgId,
-                        Collectors.mapping(BillAllocation::getChargeAmount, 
-                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
-                ));
-
-        for (Map.Entry<Long, BigDecimal> entry : orgAmountMap.entrySet()) {
-            orgStructureRepository.findById(entry.getKey()).ifPresent(org -> {
-                orgAllocation.put(org.getName(), entry.getValue());
+        // Org allocation via JPQL GROUP BY (returns orgId, sum(amount), count)
+        Map<String, Object> orgAllocation = new LinkedHashMap<>();
+        Map<Long, BigDecimal> orgAmountMap = new LinkedHashMap<>();
+        for (Object[] row : billAllocationRepository.sumAndCountGroupByOrgId(billMonth)) {
+            Long orgId = (Long) row[0];
+            BigDecimal amount = (BigDecimal) row[1];
+            orgAmountMap.put(orgId, amount);
+        }
+        if (!orgAmountMap.isEmpty()) {
+            orgStructureRepository.findAllById(orgAmountMap.keySet()).forEach(org -> {
+                orgAllocation.put(org.getName(), orgAmountMap.get(org.getId()));
             });
         }
 
-        Map<String, Long> confirmStatus = new HashMap<>();
-        confirmStatus.put("pending", allocations.stream()
-                .filter(a -> a.getAdminConfirmOrg() == BillAllocation.ConfirmStatus.pending)
-                .count());
-        confirmStatus.put("correct", allocations.stream()
-                .filter(a -> a.getAdminConfirmOrg() == BillAllocation.ConfirmStatus.correct)
-                .count());
-        confirmStatus.put("wrong", allocations.stream()
-                .filter(a -> a.getAdminConfirmOrg() == BillAllocation.ConfirmStatus.wrong)
-                .count());
+        // Confirm status group by
+        Map<String, Long> confirmStatus = new LinkedHashMap<>();
+        for (Object[] row : billAllocationRepository.countByConfirmStatusGroupBy(billMonth)) {
+            BillAllocation.ConfirmStatus status = (BillAllocation.ConfirmStatus) row[0];
+            Long count = (Long) row[1];
+            confirmStatus.put(status.name(), count);
+        }
 
         report.put("billMonth", billMonth);
-        report.put("totalRecords", allocations.size());
+        report.put("totalRecords", totalRecords);
         report.put("totalAmount", totalAmount);
         report.put("anomalyCount", anomalyCount);
         report.put("anomalyAmount", anomalyAmount);
@@ -131,42 +115,42 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getWorkOrderReport(String startTime, String endTime) {
-        Map<String, Object> report = new HashMap<>();
+        Map<String, Object> report = new LinkedHashMap<>();
 
         LocalDateTime start = LocalDateTime.parse(startTime);
         LocalDateTime end = LocalDateTime.parse(endTime);
 
-        List<WorkOrder> orders = workOrderRepository.findByCreatedAtBetween(start, end);
-        List<WorkOrderItem> items = workOrderItemRepository.findByCreatedAtBetween(start, end);
+        long totalOrders = workOrderRepository.countBetween(start, end);
+        long totalItems = workOrderItemRepository.countBetween(start, end);
 
-        long totalOrders = orders.size();
-        long completedOrders = orders.stream()
-                .filter(o -> o.getStatus() == WorkOrder.WorkOrderStatus.COMPLETED)
-                .count();
-        long pendingOrders = orders.stream()
-                .filter(o -> o.getStatus() == WorkOrder.WorkOrderStatus.PENDING)
-                .count();
+        // Status distribution via JPQL
+        Map<String, Long> statusDistribution = new LinkedHashMap<>();
+        long completedOrders = 0;
+        long pendingOrders = 0;
+        for (Object[] row : workOrderRepository.countGroupByStatusBetween(start, end)) {
+            WorkOrder.WorkOrderStatus status = (WorkOrder.WorkOrderStatus) row[0];
+            Long count = (Long) row[1];
+            statusDistribution.put(status.name(), count);
+            if (status == WorkOrder.WorkOrderStatus.COMPLETED) completedOrders = count;
+            if (status == WorkOrder.WorkOrderStatus.PENDING) pendingOrders = count;
+        }
 
-        Map<String, Long> typeDistribution = items.stream()
-                .collect(Collectors.groupingBy(
-                        i -> i.getItemType() != null ? i.getItemType().name() : "unknown",
-                        Collectors.counting()
-                ));
-
-        Map<String, Long> statusDistribution = orders.stream()
-                .collect(Collectors.groupingBy(
-                        o -> o.getStatus() != null ? o.getStatus().name() : "unknown",
-                        Collectors.counting()
-                ));
+        // Item type distribution via JPQL
+        Map<String, Long> typeDistribution = new LinkedHashMap<>();
+        for (Object[] row : workOrderItemRepository.countGroupByTypeBetween(start, end)) {
+            WorkOrderItem.ItemType type = (WorkOrderItem.ItemType) row[0];
+            Long count = (Long) row[1];
+            typeDistribution.put(type != null ? type.name() : "unknown", count);
+        }
 
         report.put("startTime", startTime);
         report.put("endTime", endTime);
         report.put("totalOrders", totalOrders);
         report.put("completedOrders", completedOrders);
         report.put("pendingOrders", pendingOrders);
-        report.put("completionRate", totalOrders > 0 ? 
+        report.put("completionRate", totalOrders > 0 ?
                 Math.round(completedOrders * 10000.0 / totalOrders) / 100.0 : 0);
-        report.put("totalItems", items.size());
+        report.put("totalItems", totalItems);
         report.put("typeDistribution", typeDistribution);
         report.put("statusDistribution", statusDistribution);
 
@@ -175,39 +159,35 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getAnomalyBillReport(String billMonth) {
-        Map<String, Object> report = new HashMap<>();
+        Map<String, Object> report = new LinkedHashMap<>();
 
-        List<BillAllocation> anomalies = billAllocationRepository.findByBillMonth(billMonth).stream()
-                .filter(BillAllocation::getAnomalyFlag)
-                .toList();
+        int totalAnomalies = billAllocationRepository.countByBillMonthAndAnomalyFlag(billMonth, true);
+        BigDecimal totalAnomalyAmount = billAllocationRepository.sumAnomalyChargeByMonth(billMonth);
+        if (totalAnomalyAmount == null) totalAnomalyAmount = BigDecimal.ZERO;
 
-        Map<String, Long> anomalyReasonDistribution = anomalies.stream()
-                .filter(a -> a.getAnomalyReason() != null)
-                .collect(Collectors.groupingBy(
-                        a -> categorizeAnomalyReason(a.getAnomalyReason()),
-                        Collectors.counting()
-                ));
+        // Anomaly reason distribution via JPQL
+        Map<String, Long> anomalyReasonDistribution = new LinkedHashMap<>();
+        for (Object[] row : billAllocationRepository.countAnomalyByReason(billMonth)) {
+            String reason = (String) row[0];
+            Long count = (Long) row[1];
+            anomalyReasonDistribution.put(categorizeAnomalyReason(reason), count);
+        }
 
-        BigDecimal totalAnomalyAmount = anomalies.stream()
-                .map(BillAllocation::getChargeAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        List<Map<String, Object>> anomalyDetails = anomalies.stream()
-                .map(a -> {
-                    Map<String, Object> detail = new HashMap<>();
-                    detail.put("id", a.getId());
-                    detail.put("phoneNumber", a.getPhoneNumber());
-                    detail.put("chargeAmount", a.getChargeAmount());
-                    detail.put("anomalyReason", a.getAnomalyReason());
-                    detail.put("snapshotOrgName", a.getSnapshotOrgName());
-                    detail.put("createdAt", a.getCreatedAt());
-                    return detail;
-                })
-                .collect(Collectors.toList());
+        // Anomaly details via projection query (only selected columns, not full entity)
+        List<Map<String, Object>> anomalyDetails = new ArrayList<>();
+        for (Object[] row : billAllocationRepository.findAnomalyProjectionByMonth(billMonth)) {
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("id", row[0]);
+            detail.put("phoneNumber", row[1]);
+            detail.put("chargeAmount", row[2]);
+            detail.put("anomalyReason", row[3]);
+            detail.put("snapshotOrgName", row[4]);
+            detail.put("createdAt", row[5]);
+            anomalyDetails.add(detail);
+        }
 
         report.put("billMonth", billMonth);
-        report.put("totalAnomalies", anomalies.size());
+        report.put("totalAnomalies", totalAnomalies);
         report.put("totalAnomalyAmount", totalAnomalyAmount);
         report.put("anomalyReasonDistribution", anomalyReasonDistribution);
         report.put("anomalyDetails", anomalyDetails);
