@@ -1,232 +1,223 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Tag, Space, Modal, message, Input, Row, Col, Statistic } from 'antd'
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Drawer, Descriptions, Timeline } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { deviceApi, Device } from '@/api/device'
-import { orgApi } from '@/api/org'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { phoneDeviceApi } from '@/api/phoneDevice'
 
-const { Option } = Select
-
-const STATUS_COLORS: Record<string, string> = {
-  ONLINE: 'success',
-  OFFLINE: 'error',
-  IDLE: 'warning',
-  MAINTENANCE: 'processing',
-  DECOMMISSIONED: 'default'
+const DEV_STATUS_COLORS: Record<string, string> = {
+  stock: 'default', active: 'success', inactive: 'warning', repairing: 'processing', retired: 'error'
 }
-
-const STATUS_NAMES: Record<string, string> = {
-  ONLINE: '在线',
-  OFFLINE: '离线',
-  IDLE: '空闲',
-  MAINTENANCE: '维护中',
-  DECOMMISSIONED: '已报废'
+const DEV_STATUS_NAMES: Record<string, string> = {
+  stock: '库存', active: '使用中', inactive: '停用', repairing: '维修中', retired: '已报废'
 }
 
 const DeviceManagement = () => {
-  const [status, setStatus] = useState<string>('')
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [formData, setFormData] = useState({ deviceId: '', deviceName: '', deviceType: '', model: '', ipAddress: '', orgId: 0 })
-  const queryClient = useQueryClient()
+  const [page, setPage] = useState(0)
+  const [selectedDevice, setSelectedDevice] = useState<any>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [modalType, setModalType] = useState('')
+  const [form] = Form.useForm()
+  const qc = useQueryClient()
 
-  const { data: orgsData } = useQuery({
-    queryKey: ['orgs'],
-    queryFn: async () => {
-      const response = await orgApi.getAll()
-      return response.data.data
+  const { data: devicesData, isLoading } = useQuery({
+    queryKey: ['phone-devices', page],
+    queryFn: async () => { const r = await phoneDeviceApi.getList({ page, size: 20 }); return r.data.data }
+  })
+
+  const { data: boundPhones } = useQuery({
+    queryKey: ['device-phones', selectedDevice?.id],
+    queryFn: async () => { if (!selectedDevice) return []; const r = await phoneDeviceApi.getBoundPhones(selectedDevice.id); return r.data.data || [] },
+    enabled: !!selectedDevice && detailOpen
+  })
+
+  const { data: devHistory } = useQuery({
+    queryKey: ['device-history', selectedDevice?.id],
+    queryFn: async () => { if (!selectedDevice) return []; const r = await phoneDeviceApi.getHistory(selectedDevice.id); return r.data.data || [] },
+    enabled: !!selectedDevice && detailOpen
+  })
+
+  const mut = (fn: any, msg: string) => useMutation({
+    mutationFn: fn,
+    onSuccess: () => { message.success(msg); qc.invalidateQueries({ queryKey: ['phone-devices'] }); setModalType(''); form.resetFields() }
+  })
+
+  const createMut = mut((d: any) => phoneDeviceApi.create(d), '话机录入成功')
+  const assignMut = mut((d: any) => phoneDeviceApi.assign(selectedDevice.id, d), '分配成功')
+  const reclaimMut = mut((d: any) => phoneDeviceApi.reclaim(selectedDevice.id, d), '回收成功')
+  const deactivateMut = mut((d: any) => phoneDeviceApi.deactivate(selectedDevice.id, d), '停用成功')
+  const reactivateMut = mut((d: any) => phoneDeviceApi.reactivate(selectedDevice.id), '恢复成功')
+  const repairMut = mut((d: any) => phoneDeviceApi.repair(selectedDevice.id, d), '送修成功')
+  const repairDoneMut = mut((d: any) => phoneDeviceApi.repairDone(selectedDevice.id), '修复成功')
+  const retireMut = mut((d: any) => phoneDeviceApi.retire(selectedDevice.id, d), '报废成功')
+  const editMut = mut((d: any) => phoneDeviceApi.update(selectedDevice.id, d), '修改成功')
+  const bindMut = mut((d: any) => phoneDeviceApi.bindPhone(selectedDevice.id, d), '绑定成功')
+  const unbindMut = mut((phoneId: number) => phoneDeviceApi.unbindPhone(selectedDevice.id, phoneId), '解绑成功')
+
+  const handleSubmit = (values: any) => {
+    switch (modalType) {
+      case 'create': createMut.mutate(values); break
+      case 'assign': assignMut.mutate(values); break
+      case 'reclaim': reclaimMut.mutate(values); break
+      case 'deactivate': deactivateMut.mutate(values); break
+      case 'repair': repairMut.mutate(values); break
+      case 'retire': retireMut.mutate(values); break
+      case 'edit': editMut.mutate(values); break
+      case 'bindPhone': bindMut.mutate(values); break
     }
-  })
-
-  const { data: deviceData, isLoading, refetch } = useQuery({
-    queryKey: ['devices', status],
-    queryFn: async () => {
-      const params: any = { page: 0, size: 100 }
-      return deviceApi.getDevices(params)
-    }
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (data: typeof formData) => deviceApi.create(data),
-    onSuccess: () => {
-      message.success('设备创建成功')
-      queryClient.invalidateQueries({ queryKey: ['devices'] })
-      setIsCreateModalOpen(false)
-      setFormData({ deviceId: '', deviceName: '', deviceType: '', model: '', ipAddress: '', orgId: 0 })
-    },
-    onError: () => message.error('创建失败')
-  })
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ deviceId, status }: { deviceId: string; status: string }) =>
-      deviceApi.updateStatus(deviceId, status),
-    onSuccess: () => {
-      message.success('状态更新成功')
-      queryClient.invalidateQueries({ queryKey: ['devices'] })
-    },
-    onError: () => message.error('状态更新失败')
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deviceApi.delete(id),
-    onSuccess: () => {
-      message.success('设备删除成功')
-      queryClient.invalidateQueries({ queryKey: ['devices'] })
-    },
-    onError: () => message.error('删除失败')
-  })
-
-  const handleStatusChange = (record: Device, newStatus: string) => {
-    Modal.confirm({
-      title: '更新设备状态',
-      content: `将设备 ${record.deviceId} 状态改为 ${STATUS_NAMES[newStatus]}？`,
-      onOk: () => updateStatusMutation.mutate({ deviceId: record.deviceId, status: newStatus })
-    })
   }
 
-  const handleDelete = (record: Device) => {
-    Modal.confirm({
-      title: '删除设备',
-      content: `删除设备 ${record.deviceId}？`,
-      onOk: () => deleteMutation.mutate(record.id)
-    })
+  const openModal = (type: string, device: any = null) => {
+    setSelectedDevice(device)
+    form.resetFields()
+    if (device) form.setFieldsValue(device)
+    setModalType(type)
+  }
+
+  const getActionButtons = (r: any) => {
+    const btns: React.ReactNode[] = []
+    switch (r.status) {
+      case 'stock':
+        btns.push(
+          <Button key="assign" size="small" type="primary" onClick={() => openModal('assign', r)}>分配</Button>,
+          <Button key="deactivate" size="small" danger onClick={() => openModal('deactivate', r)}>停用</Button>,
+          <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
+        )
+        break
+      case 'active':
+        btns.push(
+          <Button key="reclaim" size="small" onClick={() => openModal('reclaim', r)}>回收</Button>,
+          <Button key="deactivate" size="small" danger onClick={() => openModal('deactivate', r)}>停用</Button>,
+          <Button key="repair" size="small" onClick={() => openModal('repair', r)}>送修</Button>,
+          <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
+        )
+        break
+      case 'inactive':
+        btns.push(
+          <Button key="reactivate" size="small" type="primary" onClick={() => reactivateMut.mutate(r)}>恢复</Button>,
+          <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
+        )
+        break
+      case 'repairing':
+        btns.push(
+          <Button key="repairDone" size="small" type="primary" onClick={() => repairDoneMut.mutate(r)}>修复</Button>,
+          <Button key="retire" size="small" danger onClick={() => openModal('retire', r)}>报废</Button>,
+        )
+        break
+    }
+    return btns
   }
 
   const columns = [
-    { title: '设备ID', dataIndex: 'deviceId', key: 'deviceId', width: 150 },
-    { title: '设备名称', dataIndex: 'deviceName', key: 'deviceName', width: 150 },
-    { title: '类型', dataIndex: 'deviceType', key: 'deviceType', width: 120 },
-    { title: '型号', dataIndex: 'model', key: 'model', width: 120 },
-    { title: 'IP地址', dataIndex: 'ipAddress', key: 'ipAddress', width: 150 },
-    { title: '组织', dataIndex: 'orgName', key: 'orgName', width: 150 },
-    { title: '用户', dataIndex: 'userName', key: 'userName', width: 120 },
+    { title: 'MAC地址', dataIndex: 'macAddress', key: 'macAddress', width: 140, render: (t: string, r: any) => <a onClick={() => { setSelectedDevice(r); setDetailOpen(true) }}>{t}</a> },
+    { title: '型号', dataIndex: 'model', key: 'model', width: 100 },
+    { title: '品牌', dataIndex: 'brand', key: 'brand', width: 80 },
+    { title: '使用人', dataIndex: 'assignedTo', key: 'assignedTo', width: 100 },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: string) => <Tag color={DEV_STATUS_COLORS[s]}>{DEV_STATUS_NAMES[s]}</Tag> },
+    { title: '绑定号码数', dataIndex: 'boundPhoneCount', key: 'boundPhoneCount', width: 100 },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 200,
-      render: (_: any, record: Device) => (
-        <Space>
-          <Select
-            value={record.status}
-            onChange={(value) => handleStatusChange(record, value)}
-            style={{ width: 100 }}
-            size="small"
-          >
-            <Option value="ONLINE">在线</Option>
-            <Option value="OFFLINE">离线</Option>
-            <Option value="IDLE">空闲</Option>
-            <Option value="MAINTENANCE">维护中</Option>
-            <Option value="DECOMMISSIONED">已报废</Option>
-          </Select>
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-            删除
-          </Button>
-        </Space>
-      )
+      title: '操作', key: 'actions', width: 280,
+      render: (_: any, r: any) => <Space size={4} wrap>{getActionButtons(r)}</Space>
     }
   ]
 
-  const devices = deviceData?.data?.data?.content || []
-  const onlineCount = devices.filter((d: Device) => d.status === 'ONLINE').length
-  const offlineCount = devices.filter((d: Device) => d.status === 'OFFLINE').length
-  const idleCount = devices.filter((d: Device) => d.status === 'IDLE').length
+  const getModalTitle = () => {
+    const map: Record<string, string> = {
+      create: '录入话机', assign: '分配话机', reclaim: '回收话机', deactivate: '停用话机',
+      repair: '送修话机', retire: '报废话机', edit: '编辑话机', bindPhone: '绑定号码'
+    }
+    return map[modalType] || '操作'
+  }
+
+  const renderModalFields = () => {
+    switch (modalType) {
+      case 'create':
+        return (
+          <>
+            <Form.Item name="macAddress" label="MAC地址" rules={[{ required: true }]}><Input placeholder="如 A4B1C2D3E4F5" /></Form.Item>
+            <Form.Item name="model" label="型号"><Input placeholder="话机型号" /></Form.Item>
+            <Form.Item name="brand" label="品牌"><Input placeholder="品牌" /></Form.Item>
+            <Form.Item name="orgId" label="归属组织" rules={[{ required: true }]}><Input type="number" placeholder="组织ID" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'assign':
+        return (
+          <>
+            <Form.Item name="assignedTo" label="员工工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'reclaim':
+      case 'deactivate':
+      case 'repair':
+      case 'retire':
+        return <Form.Item name="reason" label="原因"><Input.TextArea /></Form.Item>
+      case 'edit':
+        return (
+          <>
+            <Form.Item name="model" label="型号"><Input /></Form.Item>
+            <Form.Item name="brand" label="品牌"><Input /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'bindPhone':
+        return (
+          <>
+            <Form.Item name="extensionNumber" label="分机号" rules={[{ required: true }]}><Input placeholder="输入要绑定的分机号" /></Form.Item>
+            <Form.Item name="lineOrder" label="线路序号"><Input type="number" placeholder="默认1" /></Form.Item>
+          </>
+        )
+      default: return null
+    }
+  }
 
   return (
     <div>
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <Card><Statistic title="设备总数" value={devices.length} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="在线" value={onlineCount} valueStyle={{ color: '#3f8600' }} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="离线" value={offlineCount} valueStyle={{ color: '#cf1322' }} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="空闲" value={idleCount} valueStyle={{ color: '#faad14' }} /></Card>
-        </Col>
-      </Row>
+      <div style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={() => openModal('create')}>录入话机</Button>
+      </div>
 
-      <Card>
-        <Space style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalOpen(true)}>
-            添加设备
-          </Button>
-          <Button onClick={() => refetch()}>刷新</Button>
-        </Space>
+      <Table columns={columns} dataSource={devicesData?.content} loading={isLoading} rowKey="id"
+        pagination={{ current: page + 1, pageSize: 20, total: devicesData?.totalElements, showTotal: t => `共 ${t} 条`, onChange: p => setPage(p - 1) }}
+        scroll={{ x: 1100 }}
+      />
 
-        <Table
-          columns={columns}
-          dataSource={devices}
-          loading={isLoading}
-          rowKey="id"
-          pagination={{ pageSize: 20, total: deviceData?.data?.data?.totalElements }}
-        />
-      </Card>
-
-      <Modal
-        title="添加设备"
-        open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
-        footer={[
-          <Button key="back" onClick={() => setIsCreateModalOpen(false)}>取消</Button>,
-          <Button key="submit" type="primary" onClick={() => createMutation.mutate(formData)}>
-            添加
-          </Button>
-        ]}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Input
-            label="设备ID"
-            value={formData.deviceId}
-            onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
-            placeholder="输入设备ID"
-          />
-          <Input
-            label="设备名称"
-            value={formData.deviceName}
-            onChange={(e) => setFormData({ ...formData, deviceName: e.target.value })}
-            placeholder="输入设备名称"
-          />
-          <Select
-            label="设备类型"
-            value={formData.deviceType}
-            onChange={(value) => setFormData({ ...formData, deviceType: value })}
-          >
-            <Option value="IP_PHONE">IP电话</Option>
-            <Option value="ATA">ATA</Option>
-            <Option value="GATEWAY">网关</Option>
-          </Select>
-          <Input
-            label="型号"
-            value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            placeholder="输入型号"
-          />
-          <Input
-            label="IP地址"
-            value={formData.ipAddress}
-            onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
-            placeholder="输入IP地址"
-          />
-          <Select
-            label="组织"
-            value={formData.orgId}
-            onChange={(value) => setFormData({ ...formData, orgId: value })}
-          >
-            {orgsData?.map((org: any) => (
-              <Option key={org.id} value={org.id}>{org.name}</Option>
-            ))}
-          </Select>
-        </Space>
+      <Modal title={getModalTitle()} open={!!modalType} onCancel={() => { setModalType(''); form.resetFields() }}
+        onOk={() => form.submit()} width={480} destroyOnClose>
+        <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ marginTop: 8 }}>
+          {renderModalFields()}
+        </Form>
       </Modal>
+
+      <Drawer title={`话机详情 - ${selectedDevice?.macAddress || ''}`} open={detailOpen} onClose={() => setDetailOpen(false)} width={640} destroyOnClose
+        extra={selectedDevice?.status !== 'retired' && <Button onClick={() => { setDetailOpen(false); openModal('edit', selectedDevice) }}>编辑</Button>}>
+        {selectedDevice && (
+          <>
+            <Descriptions bordered size="small" column={2} style={{ marginBottom: 24 }}>
+              <Descriptions.Item label="MAC地址">{selectedDevice.macAddress}</Descriptions.Item>
+              <Descriptions.Item label="状态"><Tag color={DEV_STATUS_COLORS[selectedDevice.status]}>{DEV_STATUS_NAMES[selectedDevice.status]}</Tag></Descriptions.Item>
+              <Descriptions.Item label="型号">{selectedDevice.model || '-'}</Descriptions.Item>
+              <Descriptions.Item label="品牌">{selectedDevice.brand || '-'}</Descriptions.Item>
+              <Descriptions.Item label="使用人">{selectedDevice.assignedTo || '-'}</Descriptions.Item>
+              <Descriptions.Item label="组织">{selectedDevice.orgName || selectedDevice.orgId || '-'}</Descriptions.Item>
+              <Descriptions.Item label="备注" span={2}>{selectedDevice.remark || '-'}</Descriptions.Item>
+            </Descriptions>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h4>已绑定号码 ({boundPhones?.length || 0})</h4>
+              {(selectedDevice.status === 'active' || selectedDevice.status === 'stock') && (
+                <Button size="small" onClick={() => { setDetailOpen(false); openModal('bindPhone', selectedDevice) }}>绑定号码</Button>
+              )}
+            </div>
+            <Table size="small" dataSource={boundPhones || []} rowKey="phoneId" pagination={false}
+              columns={[
+                { title: '号码', dataIndex: 'phoneNumber', width: 140 },
+                { title: '分机号', dataIndex: 'extensionNumber', width: 100 },
+                { title: '状态', dataIndex: 'status', width: 80, render: (s: string) => <Tag>{s}</Tag> },
+                { title: '线路', dataIndex: 'lineOrder', width: 60 },
+                { title: '操作', width: 60, render: (_: any, r: any) => <Button size="small" danger onClick={() => unbindMut.mutate(r.phoneId)}>解绑</Button> }
+              ]} />
+          </>
+        )}
+      </Drawer>
     </div>
   )
 }

@@ -23,6 +23,8 @@ import DeviceManagement from '@/pages/DeviceManagement'
 import RoleManagement from '@/pages/RoleManagement'
 import UserManagement from '@/pages/UserManagement'
 import AuditLogManagement from '@/pages/AuditLogManagement'
+import ChangePassword from '@/pages/ChangePassword'
+import NotificationPopover from '@/components/NotificationPopover'
 
 // Layout components replaced with plain divs for reliable flex layout
 
@@ -170,9 +172,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <input type="text" placeholder="搜索..." />
             </div>
 
-            <Badge dot style={{ backgroundColor: 'var(--accent)' }}>
-              <Button type="text" icon={<BellOutlined style={{ fontSize: 18 }} />} style={{ color: 'var(--text-secondary)', width: 42, height: 42 }} />
-            </Badge>
+            <NotificationPopover />
 
             <Dropdown
               menu={{ items: userDropdownItems, onClick: handleUserMenuClick }}
@@ -269,6 +269,7 @@ const App = () => (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/dashboard" element={<PrivateRouteWithLayout><Dashboard /></PrivateRouteWithLayout>} />
         <Route path="/work-orders" element={<PrivateRouteWithLayout><WorkOrderManagement /></PrivateRouteWithLayout>} />
         <Route path="/phones" element={<PrivateRouteWithLayout><PhoneManagement /></PrivateRouteWithLayout>} />

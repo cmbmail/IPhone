@@ -1,7 +1,7 @@
 import { request } from './request'
 
 export const deviceApi = {
-  getList: (params?: { page?: number; size?: number }) =>
+  getList: (params?: { page?: number; size?: number; status?: string }) =>
     request.get('/devices', { params }),
   getById: (id: number) =>
     request.get(`/devices/${id}`),

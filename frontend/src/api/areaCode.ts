@@ -14,5 +14,8 @@ export const areaCodeApi = {
 
   create: (data: CreateAreaCodeMappingDTO) => request.post<AreaCodeOrgMapping>('/area-codes', data),
 
-  delete: (id: number) => request.delete(`/area-codes/${id}`)
+  delete: (id: number) => request.delete(`/area-codes/${id}`),
+
+  update: (id: number, data: Record<string, unknown>) =>
+    request.put(`/area-codes/${id}`, data),
 }

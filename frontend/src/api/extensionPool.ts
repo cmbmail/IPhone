@@ -12,5 +12,8 @@ export const extensionPoolApi = {
 
   create: (data: CreateExtensionPoolDTO) => request.post<ExtensionPool>('/extension-pools', data),
 
-  delete: (id: number) => request.delete(`/extension-pools/${id}`)
+  delete: (id: number) => request.delete(`/extension-pools/${id}`),
+
+  update: (id: number, data: Record<string, unknown>) =>
+    request.put(`/extension-pools/${id}`, data),
 }

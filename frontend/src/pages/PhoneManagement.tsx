@@ -1,416 +1,308 @@
 import { useState } from 'react'
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Dropdown } from 'antd'
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Dropdown, Drawer, Timeline, Descriptions, InputNumber, Popconfirm } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { phoneApi } from '@/api/phone'
 import { orgApi } from '@/api/org'
-import type { PhoneNumber, CreatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest } from '@/types/phone'
+import type { PhoneNumber, CreatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest, PhoneChangeRequest } from '@/types/phone'
 
 const { Option } = Select
 
 const STATUS_COLORS: Record<string, string> = {
-  idle: 'default',
-  active: 'success',
-  stopped: 'warning',
-  cancelled: 'error',
-  reserved: 'processing',
-  disabled: 'error'
+  idle: 'default', active: 'success', stopped: 'warning', cancelled: 'error', reserved: 'processing', disabled: 'error'
 }
-
 const STATUS_NAMES: Record<string, string> = {
-  idle: '空闲',
-  active: '使用中',
-  stopped: '停用',
-  cancelled: '已取消',
-  reserved: '已预留',
-  disabled: '已禁用'
+  idle: '空闲', active: '使用中', stopped: '停用', cancelled: '已拆机', reserved: '已预留', disabled: '已禁用'
 }
 
-const STATUS_OPTIONS = ['idle', 'active', 'stopped', 'cancelled', 'reserved', 'disabled']
+const ACTION_NAMES: Record<string, string> = {
+  allocate: '分配', reclaim: '回收', surrender: '拆机', trouble: '停机', restore: '复机',
+  change_user: '过户', change_org: '转移', change_number: '换号', change_extension: '换分机号',
+  reserve: '预留', release: '释放', disable: '禁用', enable: '启用'
+}
 
 const PhoneManagement = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false)
-  const [isReclaimModalOpen, setIsReclaimModalOpen] = useState(false)
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
-  const [isSurrenderModalOpen, setIsSurrenderModalOpen] = useState(false)
-  const [selectedPhone, setSelectedPhone] = useState<number | null>(null)
-  const [selectedNewStatus, setSelectedNewStatus] = useState<string>('')
-  const [createForm] = Form.useForm()
-  const [allocateForm] = Form.useForm()
-  const [reclaimForm] = Form.useForm()
-  const [statusForm] = Form.useForm()
-  const [surrenderForm] = Form.useForm()
-  const queryClient = useQueryClient()
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
+  const [searchNumber, setSearchNumber] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined)
+  const [filterOrgId, setFilterOrgId] = useState<number | undefined>(undefined)
+
+  // Modals
+  const [selectedPhone, setSelectedPhone] = useState<PhoneNumber | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [modalType, setModalType] = useState<string>('')
+  const [form] = Form.useForm()
+  const qc = useQueryClient()
 
   const { data: phonesData, isLoading } = useQuery({
-    queryKey: ['phones'],
+    queryKey: ['phones', page, pageSize, filterStatus, filterOrgId],
     queryFn: async () => {
-      const response = await phoneApi.getAll({ page: 0, size: 100 })
-      return response.data.data
+      const params: any = { page, size: pageSize }
+      if (filterStatus) params.status = filterStatus
+      if (filterOrgId) params.orgId = filterOrgId
+      const res = await phoneApi.getAll(params)
+      return res.data.data
     }
   })
 
   const { data: orgsData } = useQuery({
     queryKey: ['orgs'],
+    queryFn: async () => { const r = await orgApi.getAll(); return r.data.data }
+  })
+
+  const { data: historyData } = useQuery({
+    queryKey: ['phone-history', selectedPhone?.id],
     queryFn: async () => {
-      const response = await orgApi.getAll()
-      return response.data.data
-    }
+      if (!selectedPhone) return null
+      const r = await phoneApi.getHistory(selectedPhone.id, { page: 0, size: 50 })
+      return r.data.data?.content || []
+    },
+    enabled: !!selectedPhone && detailOpen
   })
 
-  const createMutation = useMutation({
-    mutationFn: (data: CreatePhoneDTO) => phoneApi.create(data),
-    onSuccess: () => {
-      message.success('电话创建成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-      setIsCreateModalOpen(false)
-      createForm.resetFields()
-    }
+  const mut = (fn: any, msg: string) => useMutation({
+    mutationFn: fn,
+    onSuccess: () => { message.success(msg); qc.invalidateQueries({ queryKey: ['phones'] }); setModalType(''); form.resetFields() }
   })
 
-  const allocateMutation = useMutation({
-    mutationFn: (data: PhoneAllocationRequest) => phoneApi.allocate(data),
-    onSuccess: () => {
-      message.success('电话分配成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-      setIsAllocateModalOpen(false)
-      allocateForm.resetFields()
+  const allocateMut = mut((d: PhoneAllocationRequest) => phoneApi.allocate(d), '分配成功')
+  const reclaimMut = mut((d: PhoneReclaimRequest) => phoneApi.reclaim(d), '回收成功')
+  const surrenderMut = mut((d: PhoneSurrenderRequest) => phoneApi.surrender(d), '拆机成功')
+  const reserveMut = mut((d: PhoneReserveRequest) => phoneApi.reserve(d), '预留成功')
+  const releaseMut = mut((d: PhoneReserveRequest) => phoneApi.release(d), '释放成功')
+  const statusMut = mut((d: PhoneStatusChangeRequest) => phoneApi.changeStatus(d), '状态变更成功')
+  const changeUserMut = mut((d: PhoneChangeRequest) => phoneApi.changeUser(d), '过户成功')
+  const changeOrgMut = mut((d: PhoneChangeRequest) => phoneApi.changeOrg(d), '转移成功')
+  const changeNumberMut = mut((d: PhoneChangeRequest) => phoneApi.changeNumber(d), '换号成功')
+  const changeExtMut = mut((d: PhoneChangeRequest) => phoneApi.changeExtension(d), '换分机号成功')
+
+  const openModal = (type: string, phone: PhoneNumber) => {
+    setSelectedPhone(phone)
+    form.resetFields()
+    form.setFieldsValue({ phoneId: phone.id })
+    setModalType(type)
+  }
+
+  const handleSubmit = (values: any) => {
+    const data = { ...values, phoneId: selectedPhone?.id }
+    switch (modalType) {
+      case 'allocate': allocateMut.mutate(data); break
+      case 'reclaim': reclaimMut.mutate(data); break
+      case 'surrender': surrenderMut.mutate(data); break
+      case 'reserve': reserveMut.mutate(data); break
+      case 'release': releaseMut.mutate(data); break
+      case 'changeUser': changeUserMut.mutate(data); break
+      case 'changeOrg': changeOrgMut.mutate(data); break
+      case 'changeNumber': changeNumberMut.mutate(data); break
+      case 'changeExtension': changeExtMut.mutate(data); break
+      case 'status': statusMut.mutate(data); break
     }
-  })
+  }
 
-  const reclaimMutation = useMutation({
-    mutationFn: (data: PhoneReclaimRequest) => phoneApi.reclaim(data),
-    onSuccess: () => {
-      message.success('电话回收成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-      setIsReclaimModalOpen(false)
-      reclaimForm.resetFields()
+  const openDetail = (phone: PhoneNumber) => {
+    setSelectedPhone(phone)
+    setDetailOpen(true)
+  }
+
+  const getActionButtons = (r: PhoneNumber) => {
+    const btns: React.ReactNode[] = []
+    switch (r.status) {
+      case 'idle':
+        btns.push(
+          <Button key="alloc" size="small" type="primary" onClick={() => openModal('allocate', r)}>分配</Button>,
+          <Button key="reserve" size="small" onClick={() => openModal('reserve', r)}>预留</Button>,
+          <Button key="disable" size="small" danger onClick={() => openModal('status', r)}>禁用</Button>,
+          <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
+        )
+        break
+      case 'active':
+        btns.push(
+          <Button key="reclaim" size="small" danger onClick={() => openModal('reclaim', r)}>回收</Button>,
+          <Button key="changeUser" size="small" onClick={() => openModal('changeUser', r)}>过户</Button>,
+          <Button key="changeNumber" size="small" onClick={() => openModal('changeNumber', r)}>换号</Button>,
+          <Button key="changeOrg" size="small" onClick={() => openModal('changeOrg', r)}>转移</Button>,
+          <Button key="changeExt" size="small" onClick={() => openModal('changeExtension', r)}>换分机号</Button>,
+          <Button key="stop" size="small" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'stopped' }); setModalType('status') }}>停机</Button>,
+          <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
+        )
+        break
+      case 'stopped':
+        btns.push(
+          <Button key="restore" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'active' }); setModalType('status') }}>复机</Button>,
+          <Button key="reclaim" size="small" onClick={() => openModal('reclaim', r)}>回收</Button>,
+          <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
+        )
+        break
+      case 'reserved':
+        btns.push(
+          <Button key="release" size="small" onClick={() => openModal('release', r)}>释放</Button>,
+          <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
+        )
+        break
+      case 'disabled':
+        btns.push(
+          <Button key="enable" size="small" type="primary" onClick={() => { setSelectedPhone(r); form.setFieldsValue({ phoneId: r.id, newStatus: 'idle' }); setModalType('status') }}>解除禁用</Button>,
+          <Button key="surrender" size="small" danger onClick={() => openModal('surrender', r)}>拆机</Button>,
+        )
+        break
     }
-  })
-
-  const statusMutation = useMutation({
-    mutationFn: (data: PhoneStatusChangeRequest) => phoneApi.changeStatus(data),
-    onSuccess: () => {
-      message.success('状态变更成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-      setIsStatusModalOpen(false)
-      statusForm.resetFields()
-    }
-  })
-
-  const surrenderMutation = useMutation({
-    mutationFn: (data: PhoneSurrenderRequest) => phoneApi.surrender(data),
-    onSuccess: () => {
-      message.success('电话销户成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-      setIsSurrenderModalOpen(false)
-      surrenderForm.resetFields()
-    }
-  })
-
-  const reserveMutation = useMutation({
-    mutationFn: (data: PhoneReserveRequest) => phoneApi.reserve(data),
-    onSuccess: () => {
-      message.success('电话预留成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-    }
-  })
-
-  const releaseMutation = useMutation({
-    mutationFn: (data: PhoneReserveRequest) => phoneApi.release(data),
-    onSuccess: () => {
-      message.success('电话释放成功')
-      queryClient.invalidateQueries({ queryKey: ['phones'] })
-    }
-  })
-
-  const handleCreateSubmit = (values: any) => {
-    createMutation.mutate(values)
-  }
-
-  const handleAllocateSubmit = (values: any) => {
-    allocateMutation.mutate(values)
-  }
-
-  const handleReclaimSubmit = (values: any) => {
-    reclaimMutation.mutate(values)
-  }
-
-  const handleStatusSubmit = (values: any) => {
-    statusMutation.mutate({ phoneId: selectedPhone, newStatus: selectedNewStatus, ...values })
-  }
-
-  const handleSurrenderSubmit = (values: any) => {
-    surrenderMutation.mutate(values)
-  }
-
-  const handleReserve = (id: number) => {
-    reserveMutation.mutate({ phoneId: id })
-  }
-
-  const handleRelease = (id: number) => {
-    releaseMutation.mutate({ phoneId: id })
-  }
-
-  const openAllocateModal = (id: number) => {
-    setSelectedPhone(id)
-    allocateForm.setFieldsValue({ phoneId: id })
-    setIsAllocateModalOpen(true)
-  }
-
-  const openReclaimModal = (id: number) => {
-    setSelectedPhone(id)
-    reclaimForm.setFieldsValue({ phoneId: id })
-    setIsReclaimModalOpen(true)
-  }
-
-  const openStatusModal = (id: number, currentStatus: string) => {
-    setSelectedPhone(id)
-    statusForm.setFieldsValue({ phoneId: id, currentStatus })
-    setIsStatusModalOpen(true)
-  }
-
-  const openSurrenderModal = (id: number) => {
-    setSelectedPhone(id)
-    surrenderForm.setFieldsValue({ phoneId: id })
-    setIsSurrenderModalOpen(true)
-  }
-
-  const getStatusMenuItems = (record: PhoneNumber) => {
-    return STATUS_OPTIONS.filter(s => s !== record.status).map(status => ({
-      key: status,
-      label: `改为 ${STATUS_NAMES[status]}`,
-      onClick: () => {
-        setSelectedNewStatus(status)
-        openStatusModal(record.id, record.status)
-      }
-    }))
+    return btns
   }
 
   const columns = [
-    { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140 },
-    { title: '用户ID', dataIndex: 'userId', key: 'userId', width: 120 },
+    { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140, render: (t: string, r: PhoneNumber) => <a onClick={() => openDetail(r)}>{t}</a> },
+    { title: '使用人', dataIndex: 'userId', key: 'userId', width: 100 },
     { title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100 },
+    { title: '组织ID', dataIndex: 'orgId', key: 'orgId', width: 80 },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: string) => <Tag color={STATUS_COLORS[s]}>{STATUS_NAMES[s]}</Tag> },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status: string) => (
-        <Tag color={STATUS_COLORS[status] || 'default'}>
-          {STATUS_NAMES[status]}
-        </Tag>
-      )
-    },
-    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 280,
-      render: (_: any, record: PhoneNumber) => (
-        <Space>
-          {record.status === 'idle' && (
-            <>
-              <Button size="small" type="primary" onClick={() => openAllocateModal(record.id)}>
-                分配
-              </Button>
-              <Button size="small" onClick={() => handleReserve(record.id)}>
-                预留
-              </Button>
-            </>
-          )}
-          {record.status === 'active' && (
-            <>
-              <Button size="small" danger onClick={() => openReclaimModal(record.id)}>
-                回收
-              </Button>
-              <Button size="small" onClick={() => openSurrenderModal(record.id)}>
-                销户
-              </Button>
-            </>
-          )}
-          {record.status === 'reserved' && (
-            <>
-              <Button size="small" type="primary" onClick={() => openAllocateModal(record.id)}>
-                分配
-              </Button>
-              <Button size="small" onClick={() => handleRelease(record.id)}>
-                释放
-              </Button>
-            </>
-          )}
-          {record.status === 'stopped' && (
-            <Button size="small" onClick={() => openSurrenderModal(record.id)}>
-              销户
-            </Button>
-          )}
-          <Dropdown menu={{ items: getStatusMenuItems(record) }}>
-            <Button size="small">变更状态</Button>
-          </Dropdown>
-        </Space>
-      )
+      title: '操作', key: 'actions', width: 320,
+      render: (_: any, r: PhoneNumber) => <Space size={4} wrap>{getActionButtons(r)}</Space>
     }
   ]
 
+  const getModalTitle = () => {
+    const map: Record<string, string> = {
+      allocate: '分配号码', reclaim: '回收号码', surrender: '拆机', reserve: '预留号码',
+      release: '释放预留', changeUser: '过户', changeOrg: '转移', changeNumber: '换号',
+      changeExtension: '换分机号', status: '状态变更'
+    }
+    return map[modalType] || '操作'
+  }
+
+  const renderModalFields = () => {
+    switch (modalType) {
+      case 'allocate':
+        return (
+          <>
+            <Form.Item name="userId" label="使用人工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
+            <Form.Item name="orgId" label="归属组织" rules={[{ required: true }]}>
+              <Select placeholder="选择组织">{orgsData?.map((o: any) => <Option key={o.id} value={o.id}>{o.name}</Option>)}</Select>
+            </Form.Item>
+            <Form.Item name="extensionNumber" label="分机号"><Input placeholder="自动分配则留空" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'reclaim':
+        return (
+          <>
+            <Form.Item name="reason" label="回收原因"><Input.TextArea placeholder="输入回收原因" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'surrender':
+        return (
+          <>
+            <Form.Item name="surrenderType" label="拆机类型" rules={[{ required: true }]}>
+              <Select><Option value="surrender">拆机</Option><Option value="cancel">取消</Option></Select>
+            </Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'reserve':
+        return <Form.Item name="remark" label="预留原因" rules={[{ required: true }]}><Input.TextArea /></Form.Item>
+      case 'release':
+        return <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+      case 'changeUser':
+        return (
+          <>
+            <Form.Item name="userId" label="新使用人工号" rules={[{ required: true }]}><Input placeholder="输入新使用人员工号" /></Form.Item>
+            <Form.Item name="extensionNumber" label="新分机号"><Input placeholder="留空自动判定" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'changeOrg':
+        return (
+          <>
+            <Form.Item name="orgId" label="新归属组织" rules={[{ required: true }]}>
+              <Select placeholder="选择新组织">{orgsData?.map((o: any) => <Option key={o.id} value={o.id}>{o.name}</Option>)}</Select>
+            </Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'changeNumber':
+        return (
+          <>
+            <Form.Item name="phoneNumber" label="新电话号码" rules={[{ required: true }]}><Input placeholder="输入新号码(需为空闲状态)" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'changeExtension':
+        return (
+          <>
+            <Form.Item name="extensionNumber" label="新分机号" rules={[{ required: true }]}><Input placeholder="输入新分机号" /></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      case 'status':
+        return (
+          <>
+            <Form.Item label="目标状态"><Tag color={STATUS_COLORS[form.getFieldValue('newStatus')]}>{STATUS_NAMES[form.getFieldValue('newStatus')]}</Tag></Form.Item>
+            <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
+          </>
+        )
+      default: return null
+    }
+  }
+
   return (
     <div>
-      <Button
-        type="primary"
-        onClick={() => {
-          createForm.resetFields()
-          setIsCreateModalOpen(true)
-        }}
-        style={{ marginBottom: 16 }}
-      >
-        添加电话
-      </Button>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Input.Search placeholder="搜索号码/分机号" style={{ width: 220 }} allowClear onSearch={v => { setSearchNumber(v); setPage(0) }} />
+        <Select placeholder="状态筛选" allowClear style={{ width: 140 }} onChange={v => { setFilterStatus(v); setPage(0) }}>
+          {Object.entries(STATUS_NAMES).map(([k, v]) => <Option key={k} value={k}>{v}</Option>)}
+        </Select>
+        <Select placeholder="组织筛选" allowClear style={{ width: 180 }} onChange={v => { setFilterOrgId(v); setPage(0) }}>
+          {orgsData?.map((o: any) => <Option key={o.id} value={o.id}>{o.name}</Option>)}
+        </Select>
+      </div>
 
-      <Table
-        columns={columns}
-        dataSource={phonesData?.content}
-        loading={isLoading}
-        rowKey="id"
-        pagination={{
-          total: phonesData?.totalElements,
-          pageSize: 20
-        }}
+      <Table columns={columns} dataSource={phonesData?.content} loading={isLoading} rowKey="id"
+        pagination={{ current: page + 1, pageSize, total: phonesData?.totalElements, showSizeChanger: true, showTotal: t => `共 ${t} 条`,
+          onChange: (p, ps) => { setPage(p - 1); setPageSize(ps) } }}
+        scroll={{ x: 1200 }}
       />
 
-      <Modal
-        title="添加电话"
-        open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
-        onOk={() => createForm.submit()}
-      >
-        <Form form={createForm} onFinish={handleCreateSubmit} layout="vertical">
-          <Form.Item name="phoneNumber" label="电话号码" rules={[{ required: true }]}>
-            <Input placeholder="输入电话号码" />
-          </Form.Item>
-          <Form.Item name="extensionNumber" label="分机号码">
-            <Input placeholder="输入分机号" />
-          </Form.Item>
-          <Form.Item name="orgId" label="组织">
-            <Select placeholder="选择组织">
-              {orgsData?.map((org: any) => (
-                <Option key={org.id} value={org.id}>
-                  {org.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea />
-          </Form.Item>
+      <Modal title={getModalTitle()} open={!!modalType} onCancel={() => { setModalType(''); form.resetFields() }}
+        onOk={() => form.submit()} confirmLoading={allocateMut.isLoading || reclaimMut.isLoading || surrenderMut.isLoading || changeUserMut.isLoading || changeOrgMut.isLoading || changeNumberMut.isLoading || changeExtMut.isLoading || statusMut.isLoading || reserveMut.isLoading || releaseMut.isLoading}
+        width={480} destroyOnClose>
+        <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ marginTop: 8 }}>
+          {renderModalFields()}
         </Form>
       </Modal>
 
-      <Modal
-        title="分配电话"
-        open={isAllocateModalOpen}
-        onCancel={() => setIsAllocateModalOpen(false)}
-        onOk={() => allocateForm.submit()}
-      >
-        <Form form={allocateForm} onFinish={handleAllocateSubmit} layout="vertical">
-          <Form.Item name="phoneId" label="电话ID" hidden>
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item name="userId" label="用户ID" rules={[{ required: true }]}>
-            <Input placeholder="输入用户ID" />
-          </Form.Item>
-          <Form.Item name="orgId" label="组织" rules={[{ required: true }]}>
-            <Select placeholder="选择组织">
-              {orgsData?.map((org: any) => (
-                <Option key={org.id} value={org.id}>
-                  {org.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="extensionNumber" label="分机号码">
-            <Input placeholder="输入分机号" />
-          </Form.Item>
-          <Form.Item name="workOrderNo" label="工单号">
-            <Input placeholder="输入工单号" />
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="回收电话"
-        open={isReclaimModalOpen}
-        onCancel={() => setIsReclaimModalOpen(false)}
-        onOk={() => reclaimForm.submit()}
-      >
-        <Form form={reclaimForm} onFinish={handleReclaimSubmit} layout="vertical">
-          <Form.Item name="phoneId" label="电话ID" hidden>
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item name="reason" label="原因">
-            <Input.TextArea placeholder="输入回收原因" />
-          </Form.Item>
-          <Form.Item name="workOrderNo" label="工单号">
-            <Input placeholder="输入工单号" />
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="变更状态"
-        open={isStatusModalOpen}
-        onCancel={() => setIsStatusModalOpen(false)}
-        onOk={() => statusForm.submit()}
-      >
-        <Form form={statusForm} onFinish={handleStatusSubmit} layout="vertical">
-          <Form.Item name="phoneId" label="电话ID" hidden>
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item name="currentStatus" label="当前状态">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item label="新状态">
-            <Tag color={STATUS_COLORS[selectedNewStatus] || 'default'}>
-              {STATUS_NAMES[selectedNewStatus]}
-            </Tag>
-          </Form.Item>
-          <Form.Item name="workOrderNo" label="工单号">
-            <Input placeholder="输入工单号" />
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="电话销户"
-        open={isSurrenderModalOpen}
-        onCancel={() => setIsSurrenderModalOpen(false)}
-        onOk={() => surrenderForm.submit()}
-      >
-        <Form form={surrenderForm} onFinish={handleSurrenderSubmit} layout="vertical">
-          <Form.Item name="phoneId" label="电话ID" hidden>
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item name="surrenderType" label="销户类型" rules={[{ required: true }]}>
-            <Select placeholder="选择销户类型">
-              <Option value="surrender">销户</Option>
-              <Option value="cancel">取消</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="workOrderNo" label="工单号">
-            <Input placeholder="输入工单号" />
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <Drawer title={`号码详情 - ${selectedPhone?.phoneNumber}`} open={detailOpen} onClose={() => setDetailOpen(false)} width={640} destroyOnClose>
+        {selectedPhone && (
+          <>
+            <Descriptions bordered size="small" column={2} style={{ marginBottom: 24 }}>
+              <Descriptions.Item label="号码">{selectedPhone.phoneNumber}</Descriptions.Item>
+              <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedPhone.status]}>{STATUS_NAMES[selectedPhone.status]}</Tag></Descriptions.Item>
+              <Descriptions.Item label="使用人">{selectedPhone.userId || '-'}</Descriptions.Item>
+              <Descriptions.Item label="分机号">{selectedPhone.extensionNumber || '-'}</Descriptions.Item>
+              <Descriptions.Item label="分机号类型">{selectedPhone.extensionType === 'auto' ? '自动(跟人)' : selectedPhone.extensionType === 'manual' ? '手动(跟号)' : '-'}</Descriptions.Item>
+              <Descriptions.Item label="组织ID">{selectedPhone.orgId || '-'}</Descriptions.Item>
+              <Descriptions.Item label="二次入库">{selectedPhone.isReentry ? '是' : '否'}</Descriptions.Item>
+              <Descriptions.Item label="版本号">{selectedPhone.version}</Descriptions.Item>
+              <Descriptions.Item label="备注" span={2}>{selectedPhone.remark || '-'}</Descriptions.Item>
+              <Descriptions.Item label="创建时间" span={2}>{selectedPhone.createdAt}</Descriptions.Item>
+            </Descriptions>
+            <h4 style={{ marginBottom: 12 }}>操作历史</h4>
+            <Timeline items={(historyData || []).map((h: any) => ({
+              color: h.action === 'surrender' ? 'red' : h.action === 'allocate' ? 'green' : 'blue',
+              children: (
+                <div>
+                  <div><strong>{ACTION_NAMES[h.action] || h.action}</strong> <span style={{ color: '#999', fontSize: 12 }}>{h.operatedAt}</span></div>
+                  <div style={{ fontSize: 12, color: '#666' }}>
+                    {h.fromStatus && h.toStatus && <span>{STATUS_NAMES[h.fromStatus]} → {STATUS_NAMES[h.toStatus]} | </span>}
+                    {h.fromUser && h.toUser && <span>{h.fromUser} → {h.toUser} | </span>}
+                    操作人: {h.operator} {h.remark && `| ${h.remark}`}
+                  </div>
+                </div>
+              )
+            }))} />
+          </>
+        )}
+      </Drawer>
     </div>
   )
 }

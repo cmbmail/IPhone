@@ -9,8 +9,14 @@ export const workOrderApi = {
     request.post('/work-orders', data),
   accept: (id: number, handlerId: number, handlerName: string) =>
     request.post(`/work-orders/${id}/accept`, null, { params: { handlerId, handlerName } }),
+  process: (id: number) =>
+    request.post(`/work-orders/${id}/process`),
   complete: (id: number, remark?: string) =>
     request.post(`/work-orders/${id}/complete`, null, { params: { remark } }),
   reject: (id: number, reason: string) =>
     request.post(`/work-orders/${id}/reject`, null, { params: { reason } }),
+  executeItem: (itemId: number) =>
+    request.post(`/work-orders/items/${itemId}/execute`),
+  batchSplit: (id: number) =>
+    request.post(`/work-orders/${id}/batch-split`),
 }
