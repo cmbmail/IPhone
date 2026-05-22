@@ -116,7 +116,7 @@ const ExtensionPoolManagement = () => {
       render: (v: string) => v || '-',
     },
     {
-      title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
+      title: '固定电话', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
       render: (v: string) => v || '-',
     },
     {
