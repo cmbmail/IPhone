@@ -242,7 +242,7 @@ public class InvoiceService {
         InvoiceDistribution distribution = InvoiceDistribution.builder()
                 .invoiceId(invoice.getId())
                 .recipientUser(recipientUser)
-                .distributionStatus(InvoiceDistribution.DistributionStatus.success)
+                .distributionStatus(InvoiceDistribution.DIST_SUCCESS)
                 .build();
         invoiceDistributionRepository.save(distribution);
 

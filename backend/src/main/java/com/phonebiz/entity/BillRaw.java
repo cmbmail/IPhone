@@ -9,24 +9,27 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "bill_raw")
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BillRaw {
+public class BillRaw extends BaseEntity {
 
     public static final int IMPORT_PENDING = 0;
     public static final int IMPORT_PROCESSED = 1;
     public static final int IMPORT_ERROR = 2;
 
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public static final int CHARGE_MONTHLY_RENT = 1;
+    public static final int CHARGE_CALL = 2;
+    public static final int CHARGE_SMS = 3;
+    public static final int CHARGE_DATA = 4;
+    public static final int CHARGE_OTHER = 5;
 
     @Column(name = "bill_month", length = 7, nullable = false)
     private String billMonth;
@@ -40,8 +43,13 @@ public class BillRaw {
     @Column(name = "charge_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal chargeAmount;
 
-    @Column(name = "charge_type", length = 50)
-    private String chargeType;
+    public static final int CHARGE_TYPE_PHONE = 0;
+    public static final int CHARGE_TYPE_RECORDING = 1;
+    public static final int CHARGE_TYPE_RINGTONE = 2;
+    public static final int CHARGE_TYPE_FLASH_SMS = 3;
+
+    @Column(name = "charge_type")
+    private Integer chargeType;
 
     @Column(name = "billing_start_date")
     private LocalDate billingStartDate;
@@ -51,9 +59,10 @@ public class BillRaw {
 
     @Column(name = "raw_data", columnDefinition = "JSON")
     private String rawData;
-    @Column(name = "import_status", nullable = false, length = 20)
+
+    @Column(name = "import_status", nullable = false)
     @Builder.Default
-    private Integer importStatus = BillRaw.IMPORT_PENDING;
+    private Integer importStatus = IMPORT_PENDING;
 
     @Column(name = "import_error_msg", length = 500)
     private String importErrorMsg;
@@ -63,7 +72,6 @@ public class BillRaw {
 
     @Column(name = "imported_at")
     private LocalDateTime importedAt;
-
 
     @Column(name = "user_id", length = 20)
     private String userId;
@@ -109,6 +117,7 @@ public class BillRaw {
 
     @Column(name = "remark", length = 500)
     private String remark;
+
     @Column(name = "sub_number", length = 20)
     private String subNumber;
 
@@ -121,12 +130,8 @@ public class BillRaw {
     @Column(name = "closing_time", length = 50)
     private String closingTime;
 
-
     @PrePersist
     protected void onCreate() {
-        importedAt = LocalDateTime.now();
+        if (importedAt == null) importedAt = LocalDateTime.now();
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

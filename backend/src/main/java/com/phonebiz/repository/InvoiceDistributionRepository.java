@@ -14,5 +14,5 @@ public interface InvoiceDistributionRepository extends JpaRepository<InvoiceDist
 
     List<InvoiceDistribution> findByRecipientUser(String recipientUser);
 
-    long countByInvoiceIdAndDistributionStatus(Long invoiceId, InvoiceDistribution.DistributionStatus status);
+    long countByInvoiceIdAndDistributionStatus(Long invoiceId, Integer status);
 }

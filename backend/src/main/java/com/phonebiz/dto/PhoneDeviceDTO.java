@@ -22,7 +22,7 @@ public class PhoneDeviceDTO {
     private String orgName;
     private String assignedTo;
     private String assignedEmployeeName;
-    private String status;
+    private Integer status;
     private String remark;
     private Integer boundPhoneCount;
     private LocalDateTime createdAt;

@@ -4,16 +4,20 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "phone_history")
-public class PhoneHistory {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PhoneHistory extends BaseEntity {
 
     @Column(name = "phone_id", nullable = false)
     private Long phoneId;
@@ -24,11 +28,11 @@ public class PhoneHistory {
     @Column(nullable = false, length = 30)
     private String action;
 
-    @Column(name = "from_status", length = 20)
-    private String fromStatus;
+    @Column(name = "from_status")
+    private Integer fromStatus;
 
-    @Column(name = "to_status", length = 20)
-    private String toStatus;
+    @Column(name = "to_status")
+    private Integer toStatus;
 
     @Column(name = "from_user", length = 20)
     private String fromUser;
@@ -49,12 +53,13 @@ public class PhoneHistory {
     private String operator;
 
     @Column(name = "operated_at", nullable = false)
-    private LocalDateTime operatedAt = LocalDateTime.now();
+    private LocalDateTime operatedAt;
 
     @Column(length = 500)
     private String remark;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @PrePersist
+    protected void onCreate() {
+        if (operatedAt == null) operatedAt = LocalDateTime.now();
+    }
 }
-

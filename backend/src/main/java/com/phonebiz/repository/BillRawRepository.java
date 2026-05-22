@@ -37,17 +37,17 @@ public interface BillRawRepository extends JpaRepository<BillRaw, Long> {
     @Query("UPDATE BillRaw b SET b.importStatus = 1 WHERE b.billMonth = :billMonth AND b.importStatus = 0")
     void markAllAsProcessedByBillMonth(@Param("billMonth") String billMonth);
 
-    List<BillRaw> findByBillMonthAndChargeType(String billMonth, String chargeType);
+    List<BillRaw> findByBillMonthAndChargeType(String billMonth, Integer chargeType);
 
-    Page<BillRaw> findByBillMonthAndChargeType(String billMonth, String chargeType, Pageable pageable);
+    Page<BillRaw> findByBillMonthAndChargeType(String billMonth, Integer chargeType, Pageable pageable);
 
-    List<BillRaw> findByChargeType(String chargeType);
+    List<BillRaw> findByChargeType(Integer chargeType);
 
-    Page<BillRaw> findByChargeType(String chargeType, Pageable pageable);
+    Page<BillRaw> findByChargeType(Integer chargeType, Pageable pageable);
 
-    int countByBillMonthAndChargeType(String billMonth, String chargeType);
+    int countByBillMonthAndChargeType(String billMonth, Integer chargeType);
 
-    int countByChargeType(String chargeType);
+    int countByChargeType(Integer chargeType);
 
     // Summary by branch (level-1 org) for a given bill month
     // Joins bill_raw.department -> org_structure.name to find the level-1 ancestor branch

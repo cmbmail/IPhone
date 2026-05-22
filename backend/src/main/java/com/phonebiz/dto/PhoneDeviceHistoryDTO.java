@@ -16,8 +16,8 @@ public class PhoneDeviceHistoryDTO {
     private Long deviceId;
     private String macAddress;
     private String action;
-    private String fromStatus;
-    private String toStatus;
+    private Integer fromStatus;
+    private Integer toStatus;
     private String fromAssigned;
     private String toAssigned;
     private String operator;

@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhoneSnapshot {
+public class PhoneSnapshot extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,8 +35,9 @@ public class PhoneSnapshot {
     @Column(name = "extension", length = 20)
     private String extension;
 
-    @Column(name = "status", length = 20, nullable = false)
-    private String status;
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private Integer status = 0;
 
     @Column(name = "org_id")
     private Long orgId;
@@ -60,24 +61,4 @@ public class PhoneSnapshot {
     @Column(name = "is_allocatable")
     @Builder.Default
     private Boolean isAllocatable = false;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

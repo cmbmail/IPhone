@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
+import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.entity.PhoneSnapshot;
 import com.phonebiz.service.SnapshotService;
 
@@ -46,9 +47,9 @@ public class SnapshotController {
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
     public ApiResponse<Map<String, Object>> getSnapshotCount(@PathVariable String month) {
         int total = snapshotService.getSnapshotCount(month);
-        int active = snapshotService.getSnapshotCountByStatus(month, "ACTIVE");
-        int stopped = snapshotService.getSnapshotCountByStatus(month, "STOPPED");
-        int cancelled = snapshotService.getSnapshotCountByStatus(month, "CANCELLED");
+        int active = snapshotService.getSnapshotCountByStatus(month, PhoneNumber.PS_ACTIVE);
+        int stopped = snapshotService.getSnapshotCountByStatus(month, PhoneNumber.PS_STOPPED);
+        int cancelled = snapshotService.getSnapshotCountByStatus(month, PhoneNumber.PS_CANCELLED);
         
         return ApiResponse.success(Map.of(
                 "total", total,

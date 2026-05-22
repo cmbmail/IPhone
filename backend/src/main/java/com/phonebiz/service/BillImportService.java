@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.entity.BillRaw;
+import com.phonebiz.entity.BillRaw;
 import com.phonebiz.repository.BillRawRepository;
 
 @Slf4j
@@ -57,7 +58,7 @@ public class BillImportService {
             for (int si = 0; si < workbook.getNumberOfSheets(); si++) {
                 Sheet sheet = workbook.getSheetAt(si);
                 String sheetName = sheet.getSheetName();
-                String chargeType = resolveChargeType(sheetName);
+                Integer chargeType = resolveChargeType(sheetName);
                 log.info("Processing sheet '{}' as chargeType={}", sheetName, chargeType);
 
                 Row headerRow = sheet.getRow(0);
@@ -90,13 +91,13 @@ public class BillImportService {
         }
     }
 
-    private String resolveChargeType(String sheetName) {
-        if (sheetName == null) return "PHONE";
+    private Integer resolveChargeType(String sheetName) {
+        if (sheetName == null) return BillRaw.CHARGE_TYPE_PHONE;
         String s = sheetName.toLowerCase();
-        if (s.contains("录音") || s.contains("recording")) return "RECORDING";
-        if (s.contains("彩铃") || s.contains("ringtone")) return "RINGTONE";
-        if (s.contains("闪信") || s.contains("flash") || s.contains("sms") || s.contains("来电名片") || s.contains("名片") || s.contains("明细")) return "FLASH_SMS";
-        return "PHONE";
+        if (s.contains("录音") || s.contains("recording")) return BillRaw.CHARGE_TYPE_RECORDING;
+        if (s.contains("彩铃") || s.contains("ringtone")) return BillRaw.CHARGE_TYPE_RINGTONE;
+        if (s.contains("闪信") || s.contains("flash") || s.contains("sms") || s.contains("来电名片") || s.contains("名片") || s.contains("明细")) return BillRaw.CHARGE_TYPE_FLASH_SMS;
+        return BillRaw.CHARGE_TYPE_PHONE;
     }
 
     private boolean isSkipRow(Row row) {
@@ -110,7 +111,7 @@ public class BillImportService {
         return false;
     }
 
-    private BillRaw buildBillRaw(Row row, String billMonth, String chargeType, String fileName, String operator) {
+    private BillRaw buildBillRaw(Row row, String billMonth, Integer chargeType, String fileName, String operator) {
         BillRaw b = new BillRaw();
         b.setBillMonth(billMonth);
         b.setChargeType(chargeType);
@@ -126,10 +127,10 @@ public class BillImportService {
         }
 
         switch (chargeType) {
-            case "PHONE" -> fillPhone(b, vals);
-            case "RECORDING" -> fillRecording(b, vals);
-            case "RINGTONE" -> fillRingtone(b, vals);
-            case "FLASH_SMS" -> fillFlashSms(b, vals);
+            case 0 -> fillPhone(b, vals);
+            case 1 -> fillRecording(b, vals);
+            case 2 -> fillRingtone(b, vals);
+            case 3 -> fillFlashSms(b, vals);
             default -> fillPhone(b, vals);
         }
 

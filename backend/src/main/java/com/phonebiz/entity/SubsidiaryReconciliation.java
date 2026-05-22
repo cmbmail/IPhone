@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubsidiaryReconciliation {
+public class SubsidiaryReconciliation extends BaseEntity {
 
     public static final int RECON_PENDING = 0;
     public static final int RECON_SUBSIDIARY_CONFIRMED = 1;
@@ -33,16 +33,16 @@ public class SubsidiaryReconciliation {
     @Column(name = "subsidiary_org_id", nullable = false)
     private Long subsidiaryOrgId;
 
-    @Column(name = "total_amount", nullable = false, precision = 14, scale = 2)
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Column(name = "invoice_count", nullable = false)
     @Builder.Default
     private Integer invoiceCount = 0;
-    @Column(name = "reconciliation_status", nullable = false, length = 30)
+    @Column(name = "reconciliation_status", nullable = false)
     @Builder.Default
-    private ReconciliationStatus reconciliationStatus = ReconciliationStatus.pending;
+    private Integer reconciliationStatus = RECON_PENDING;
 
     @Column(name = "subsidiary_confirm_by", length = 50)
     private String subsidiaryConfirmBy;
@@ -58,30 +58,4 @@ public class SubsidiaryReconciliation {
 
     @Column(name = "remark", length = 500)
     private String remark;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    public enum ReconciliationStatus {
-        pending,
-        confirmed_by_subsidiary,
-        confirmed_by_group
-    }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

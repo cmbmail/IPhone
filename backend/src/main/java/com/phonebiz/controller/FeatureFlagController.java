@@ -58,7 +58,7 @@ public class FeatureFlagController {
     @PutMapping("/{featureKey}/scope")
     @AuditLog(module = "system", operation = "更新开关范围", targetType = "SysFeatureFlag", targetId = "#featureKey")
     public ApiResponse<SysFeatureFlag> updateFeatureFlagScope(@PathVariable String featureKey,
-                                                              @RequestParam String scopeType,
+                                                              @RequestParam Integer scopeType,
                                                               @RequestParam String scopeValue) {
         return ApiResponse.success(featureFlagService.updateFeatureFlagScope(featureKey, scopeType, scopeValue));
     }
@@ -71,7 +71,7 @@ public class FeatureFlagController {
         private String featureName;
         private String description;
         private Boolean isEnabled;
-        private String scopeType;
+        private Integer scopeType;
         private String scopeValue;
     }
 }

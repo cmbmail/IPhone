@@ -25,7 +25,7 @@ public interface PhoneSnapshotRepository extends JpaRepository<PhoneSnapshot, Lo
 
     List<PhoneSnapshot> findBySnapshotMonthAndCostCenterCode(String snapshotMonth, String costCenterCode);
 
-    List<PhoneSnapshot> findBySnapshotMonthAndStatus(String snapshotMonth, String status);
+    List<PhoneSnapshot> findBySnapshotMonthAndStatus(String snapshotMonth, Integer status);
 
     @Query("SELECT DISTINCT p.snapshotMonth FROM PhoneSnapshot p ORDER BY p.snapshotMonth DESC")
     List<String> findDistinctSnapshotMonths();
@@ -37,7 +37,7 @@ public interface PhoneSnapshotRepository extends JpaRepository<PhoneSnapshot, Lo
 
     int countBySnapshotMonth(String snapshotMonth);
 
-    int countBySnapshotMonthAndStatus(String snapshotMonth, String status);
+    int countBySnapshotMonthAndStatus(String snapshotMonth, Integer status);
 
     int countBySnapshotMonthAndOrgId(String snapshotMonth, Long orgId);
 

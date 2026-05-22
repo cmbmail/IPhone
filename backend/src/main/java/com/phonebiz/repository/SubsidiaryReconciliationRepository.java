@@ -24,21 +24,21 @@ public interface SubsidiaryReconciliationRepository extends JpaRepository<Subsid
 
     Page<SubsidiaryReconciliation> findByBillMonthAndSubsidiaryOrgId(String billMonth, Long subsidiaryOrgId, Pageable pageable);
 
-    List<SubsidiaryReconciliation> findByBillMonthAndReconciliationStatus(String billMonth, SubsidiaryReconciliation.ReconciliationStatus status);
+    List<SubsidiaryReconciliation> findByBillMonthAndReconciliationStatus(String billMonth, Integer status);
 
-    List<SubsidiaryReconciliation> findBySubsidiaryOrgIdAndReconciliationStatus(Long subsidiaryOrgId, SubsidiaryReconciliation.ReconciliationStatus status);
+    List<SubsidiaryReconciliation> findBySubsidiaryOrgIdAndReconciliationStatus(Long subsidiaryOrgId, Integer status);
 
-    List<SubsidiaryReconciliation> findByReconciliationStatus(SubsidiaryReconciliation.ReconciliationStatus status);
+    List<SubsidiaryReconciliation> findByReconciliationStatus(Integer status);
 
     @Modifying
     @Query("UPDATE SubsidiaryReconciliation r SET r.reconciliationStatus = :status, r.subsidiaryConfirmBy = :confirmBy, r.subsidiaryConfirmAt = CURRENT_TIMESTAMP WHERE r.id = :id")
-    void confirmBySubsidiary(@Param("id") Long id, @Param("status") SubsidiaryReconciliation.ReconciliationStatus status, @Param("confirmBy") String confirmBy);
+    void confirmBySubsidiary(@Param("id") Long id, @Param("status") Integer status, @Param("confirmBy") String confirmBy);
 
     @Modifying
     @Query("UPDATE SubsidiaryReconciliation r SET r.reconciliationStatus = :status, r.groupConfirmBy = :confirmBy, r.groupConfirmAt = CURRENT_TIMESTAMP WHERE r.id = :id")
-    void confirmByGroup(@Param("id") Long id, @Param("status") SubsidiaryReconciliation.ReconciliationStatus status, @Param("confirmBy") String confirmBy);
+    void confirmByGroup(@Param("id") Long id, @Param("status") Integer status, @Param("confirmBy") String confirmBy);
 
     int countByBillMonth(String billMonth);
 
-    int countByBillMonthAndReconciliationStatus(String billMonth, SubsidiaryReconciliation.ReconciliationStatus status);
+    int countByBillMonthAndReconciliationStatus(String billMonth, Integer status);
 }

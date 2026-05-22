@@ -58,16 +58,16 @@ public class FeatureFlagService {
             return false;
         }
 
-        if (flag.getScopeType() == null || "ALL".equals(flag.getScopeType())) {
+        if (flag.getScopeType() == null || flag.getScopeType() == null || flag.getScopeType() == SysFeatureFlag.SCOPE_ALL) {
             return true;
         }
 
-        if ("ORGANIZATION".equals(flag.getScopeType()) && orgId != null) {
+        if (flag.getScopeType() != null && flag.getScopeType() == SysFeatureFlag.SCOPE_ORGANIZATION && orgId != null) {
             return flag.getScopeValue() != null && 
                    flag.getScopeValue().contains(orgId.toString());
         }
 
-        if ("USER".equals(flag.getScopeType()) && userId != null) {
+        if (flag.getScopeType() != null && flag.getScopeType() == SysFeatureFlag.SCOPE_USER && userId != null) {
             return flag.getScopeValue() != null && 
                    flag.getScopeValue().contains(userId.toString());
         }
@@ -83,7 +83,7 @@ public class FeatureFlagService {
 
     @Transactional
     public SysFeatureFlag createFeatureFlag(String featureKey, String featureName, String description, 
-                                           boolean isEnabled, String scopeType, String scopeValue) {
+                                           boolean isEnabled, Integer scopeType, String scopeValue) {
         if (featureFlagRepository.existsByFeatureKey(featureKey)) {
             throw new BusinessException(ErrorCode.SYS_004);
         }
@@ -115,7 +115,7 @@ public class FeatureFlagService {
     }
 
     @Transactional
-    public SysFeatureFlag updateFeatureFlagScope(String featureKey, String scopeType, String scopeValue) {
+    public SysFeatureFlag updateFeatureFlagScope(String featureKey, Integer scopeType, String scopeValue) {
         SysFeatureFlag flag = featureFlagRepository.findByFeatureKey(featureKey)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_003));
 

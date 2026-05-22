@@ -41,14 +41,14 @@ public class BillController {
     @GetMapping
     public ApiResponse<Page<BillRaw>> getBills(
             @RequestParam(required = false) String billMonth,
-            @RequestParam(required = false) String chargeType,
+            @RequestParam(required = false) Integer chargeType,
             @PageableDefault(size = 20, sort = "importedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<BillRaw> page;
-        if (billMonth != null && !billMonth.isEmpty() && chargeType != null && !chargeType.isEmpty()) {
+        if (billMonth != null && !billMonth.isEmpty() && chargeType != null) {
             page = billRawRepository.findByBillMonthAndChargeType(billMonth, chargeType, pageable);
         } else if (billMonth != null && !billMonth.isEmpty()) {
             page = billRawRepository.findByBillMonth(billMonth, pageable);
-        } else if (chargeType != null && !chargeType.isEmpty()) {
+        } else if (chargeType != null) {
             page = billRawRepository.findByChargeType(chargeType, pageable);
         } else {
             page = billRawRepository.findAll(pageable);

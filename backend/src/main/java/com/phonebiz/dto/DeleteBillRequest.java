@@ -1,6 +1,7 @@
 package com.phonebiz.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
@@ -11,7 +12,7 @@ public class DeleteBillRequest {
     private String billMonth;
 
     @NotBlank(message = "chargeType is required")
-    private String chargeType;
+    private Integer chargeType;
 
     @NotBlank(message = "password is required")
     private String password;

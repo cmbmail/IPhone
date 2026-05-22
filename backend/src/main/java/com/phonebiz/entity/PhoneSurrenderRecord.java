@@ -5,16 +5,23 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "phone_surrender_record")
-public class PhoneSurrenderRecord {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PhoneSurrenderRecord extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public static final int SURRENDER_TYPE_DECOMMISSION = 1;
+    public static final int SURRENDER_TYPE_CANCEL = 2;
 
     @Column(name = "phone_id", nullable = false)
     private Long phoneId;
@@ -31,8 +38,9 @@ public class PhoneSurrenderRecord {
     @Column(name = "surrender_date", nullable = false)
     private LocalDate surrenderDate;
 
-    @Column(name = "surrender_type", nullable = false, length = 20)
-    private String surrenderType;
+    @Column(name = "surrender_type", nullable = false)
+    @Builder.Default
+    private Integer surrenderType = SURRENDER_TYPE_DECOMMISSION;
 
     @Column(nullable = false, length = 50)
     private String operator;
@@ -44,9 +52,10 @@ public class PhoneSurrenderRecord {
     private String remark;
 
     @Column(name = "archived_at", nullable = false)
-    private LocalDateTime archivedAt = LocalDateTime.now();
+    private LocalDateTime archivedAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @PrePersist
+    protected void onCreate() {
+        if (archivedAt == null) archivedAt = LocalDateTime.now();
+    }
 }
-

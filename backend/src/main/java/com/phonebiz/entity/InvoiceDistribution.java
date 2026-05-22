@@ -7,32 +7,30 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "invoice_distribution")
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceDistribution {
+public class InvoiceDistribution extends BaseEntity {
 
     public static final int DIST_FAILED = 0;
     public static final int DIST_SUCCESS = 1;
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "invoice_id", nullable = false)
     private Long invoiceId;
 
     @Column(name = "recipient_user", length = 50, nullable = false)
     private String recipientUser;
-    @Column(name = "distribution_status", nullable = false, length = 20)
+
+    @Column(name = "distribution_status", nullable = false)
     @Builder.Default
-    private DistributionStatus distributionStatus = DistributionStatus.success;
+    private Integer distributionStatus = DIST_SUCCESS;
 
     @Column(name = "fail_reason", length = 200)
     private String failReason;
@@ -42,14 +40,6 @@ public class InvoiceDistribution {
 
     @PrePersist
     protected void onCreate() {
-        notifiedAt = LocalDateTime.now();
+        if (notifiedAt == null) notifiedAt = LocalDateTime.now();
     }
-
-    public enum DistributionStatus {
-        success,
-        failed
-    }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

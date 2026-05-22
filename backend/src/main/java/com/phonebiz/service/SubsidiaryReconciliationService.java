@@ -46,7 +46,7 @@ public class SubsidiaryReconciliationService {
         if (!existing.isEmpty()) {
             // Only delete pending ones, keep confirmed records
             List<SubsidiaryReconciliation> pending = existing.stream()
-                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.pending)
+                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.RECON_PENDING)
                 .toList();
             if (!pending.isEmpty()) {
                 pending.forEach(e -> e.setDeletedAt(LocalDateTime.now())); reconciliationRepository.saveAll(pending);
@@ -72,7 +72,7 @@ public class SubsidiaryReconciliationService {
                     .invoiceCount((int) allocations.stream()
                             .filter(a -> entry.getKey().equals(a.getSnapshotOrgId()))
                             .count())
-                    .reconciliationStatus(SubsidiaryReconciliation.ReconciliationStatus.pending)
+                    .reconciliationStatus(SubsidiaryReconciliation.RECON_PENDING)
                     .build();
 
             reconciliationRepository.save(reconciliation);
@@ -86,11 +86,11 @@ public class SubsidiaryReconciliationService {
         SubsidiaryReconciliation reconciliation = reconciliationRepository.findById(reconciliationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_001));
 
-        if (reconciliation.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_group) {
+        if (reconciliation.getReconciliationStatus() == SubsidiaryReconciliation.RECON_GROUP_CONFIRMED) {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        reconciliation.setReconciliationStatus(SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_subsidiary);
+        reconciliation.setReconciliationStatus(SubsidiaryReconciliation.RECON_SUBSIDIARY_CONFIRMED);
         reconciliation.setSubsidiaryConfirmBy(confirmBy);
         reconciliation.setSubsidiaryConfirmAt(LocalDateTime.now());
 
@@ -111,11 +111,11 @@ public class SubsidiaryReconciliationService {
         SubsidiaryReconciliation reconciliation = reconciliationRepository.findById(reconciliationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_001));
 
-        if (reconciliation.getReconciliationStatus() != SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_subsidiary) {
+        if (reconciliation.getReconciliationStatus() != SubsidiaryReconciliation.RECON_SUBSIDIARY_CONFIRMED) {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        reconciliation.setReconciliationStatus(SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_group);
+        reconciliation.setReconciliationStatus(SubsidiaryReconciliation.RECON_GROUP_CONFIRMED);
         reconciliation.setGroupConfirmBy(confirmBy);
         reconciliation.setGroupConfirmAt(LocalDateTime.now());
 
@@ -140,10 +140,10 @@ public class SubsidiaryReconciliationService {
     public List<SubsidiaryReconciliation> getPendingReconciliations(Long orgId) {
         if (orgId != null) {
             return reconciliationRepository.findBySubsidiaryOrgIdAndReconciliationStatus(
-                    orgId, SubsidiaryReconciliation.ReconciliationStatus.pending);
+                    orgId, SubsidiaryReconciliation.RECON_PENDING);
         }
         return reconciliationRepository.findByReconciliationStatus(
-                SubsidiaryReconciliation.ReconciliationStatus.pending);
+                SubsidiaryReconciliation.RECON_PENDING);
     }
 
     @Transactional(readOnly = true)
@@ -152,13 +152,13 @@ public class SubsidiaryReconciliationService {
 
         long totalCount = reconciliations.size();
         long pendingCount = reconciliations.stream()
-                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.pending)
+                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.RECON_PENDING)
                 .count();
         long subsidiaryConfirmedCount = reconciliations.stream()
-                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_subsidiary)
+                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.RECON_SUBSIDIARY_CONFIRMED)
                 .count();
         long groupConfirmedCount = reconciliations.stream()
-                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.confirmed_by_group)
+                .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.RECON_GROUP_CONFIRMED)
                 .count();
 
         BigDecimal totalAmount = reconciliations.stream()
@@ -200,7 +200,7 @@ public class SubsidiaryReconciliationService {
             result.put("invoiceAmount", r.getTotalAmount().toPlainString());
             result.put("diffAmount", "0.00");
             result.put("diffPercentage", 0.0);
-            result.put("status", r.getReconciliationStatus().name().toUpperCase());
+            result.put("status", reconStatusName(r.getReconciliationStatus()));
             result.put("subsidiaryConfirm", r.getSubsidiaryConfirmBy() != null ? "CONFIRMED" : "PENDING");
             result.put("subsidiaryConfirmBy", r.getSubsidiaryConfirmBy());
             result.put("subsidiaryConfirmAt", r.getSubsidiaryConfirmAt() != null ? r.getSubsidiaryConfirmAt().format(FORMATTER) : null);
@@ -211,5 +211,14 @@ public class SubsidiaryReconciliationService {
             result.put("updatedAt", r.getUpdatedAt() != null ? r.getUpdatedAt().format(FORMATTER) : null);
             return result;
         });
+    }
+    private static String reconStatusName(Integer status) {
+        if (status == null) return "UNKNOWN";
+        return switch (status) {
+            case 0 -> "RECON_PENDING";
+            case 1 -> "RECON_SUBSIDIARY_CONFIRMED";
+            case 2 -> "RECON_GROUP_CONFIRMED";
+            default -> "UNKNOWN";
+        };
     }
 }

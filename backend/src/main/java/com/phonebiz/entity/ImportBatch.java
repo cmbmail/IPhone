@@ -18,6 +18,14 @@ import lombok.NoArgsConstructor;
 @Table(name = "import_batch")
 public class ImportBatch extends BaseEntity {
 
+    public static final int IMPORT_TYPE_PHONE = 1;
+    public static final int IMPORT_TYPE_BILL = 2;
+    public static final int IMPORT_TYPE_DEVICE = 3;
+    public static final int IMPORT_TYPE_EMPLOYEE = 4;
+    public static final int IMPORT_TYPE_INVOICE = 5;
+    public static final int IMPORT_TYPE_OTHER = 6;
+
+
     public static final int BATCH_PENDING = 0;
     public static final int BATCH_PROCESSING = 1;
     public static final int BATCH_COMPLETED = 2;

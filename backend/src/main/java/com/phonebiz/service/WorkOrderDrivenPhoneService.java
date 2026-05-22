@@ -18,6 +18,7 @@ import com.phonebiz.dto.WorkOrderDTO;
 import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.entity.WorkOrderItem;
+import com.phonebiz.entity.PhoneSurrenderRecord;
 import com.phonebiz.repository.PhoneNumberRepository;
 
 @Slf4j
@@ -311,12 +312,12 @@ public class WorkOrderDrivenPhoneService {
                 phoneService.allocatePhone(request, operator);
             }
             case "surrender" -> {
-                phoneService.surrenderPhone(phoneId, "WORK_ORDER", operator, workOrderNo, "工单回收");
+                phoneService.surrenderPhone(phoneId, PhoneSurrenderRecord.SURRENDER_TYPE_DECOMMISSION, operator, workOrderNo, "工单回收");
             }
             case "reclaim" -> {
                 PhoneReclaimRequest request = new PhoneReclaimRequest();
                 request.setPhoneId(phoneId);
-                request.setReason("WORK_ORDER");
+                request.setReason("工单强制回收");
                 phoneService.reclaimPhone(request, operator);
             }
             case "transfer" -> {

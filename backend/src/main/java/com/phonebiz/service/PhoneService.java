@@ -130,7 +130,7 @@ public class PhoneService {
 
         String fromUser = phone.getUserId();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         phone.setUserId(request.getUserId());
         phone.setOrgId(request.getOrgId());
@@ -151,7 +151,7 @@ public class PhoneService {
             phoneId,
             "allocate",
             fromStatus,
-            "active",
+            PhoneNumber.PS_ACTIVE,
             fromUser,
             request.getUserId(),
             fromOrg,
@@ -178,7 +178,7 @@ public class PhoneService {
 
         String fromUser = phone.getUserId();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         phone.setUserId(null);
         phone.setOrgId(null);
@@ -193,7 +193,7 @@ public class PhoneService {
             phoneId,
             "reclaim",
             fromStatus,
-            "idle",
+            PhoneNumber.PS_IDLE,
             fromUser,
             null,
             fromOrg,
@@ -208,7 +208,7 @@ public class PhoneService {
     }
 
     @Transactional
-    public void recordHistory(Long phoneId, String action, String fromStatus, String toStatus,
+    public void recordHistory(Long phoneId, String action, Integer fromStatus, Integer toStatus,
                               String fromUser, String toUser, String fromOrg, String toOrg,
                               String operator, String workOrderNo, String remark) {
         PhoneNumber phone = getPhoneById(phoneId);
@@ -246,7 +246,7 @@ public class PhoneService {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         if (!isValidStatusTransition(phone.getStatus(), newStatus)) {
             throw new BusinessException(ErrorCode.PHONE_200);
@@ -261,7 +261,7 @@ public class PhoneService {
             phoneId,
             "change_status",
             fromStatus,
-            String.valueOf(newStatus),
+            newStatus,
             phone.getUserId(),
             phone.getUserId(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
@@ -276,7 +276,7 @@ public class PhoneService {
     }
 
     @Transactional
-    public PhoneSurrenderRecord surrenderPhone(Long phoneId, String surrenderType, String operator, String workOrderNo, String remark) {
+    public PhoneSurrenderRecord surrenderPhone(Long phoneId, Integer surrenderType, String operator, String workOrderNo, String remark) {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
@@ -298,7 +298,7 @@ public class PhoneService {
 
         PhoneSurrenderRecord savedRecord = surrenderRepository.save(record);
 
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
         phone.setStatus(PhoneNumber.PS_CANCELLED);
         phone.setUserId(null);
         phone.setOrgId(null);
@@ -312,7 +312,7 @@ public class PhoneService {
             phoneId,
             "surrender",
             fromStatus,
-            "cancelled",
+            PhoneNumber.PS_CANCELLED,
             record.getFinalUser(),
             null,
             record.getFinalOrg(),
@@ -335,7 +335,7 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.PHONE_005);
         }
 
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
         phone.setStatus(PhoneNumber.PS_RESERVED);
         phone.setUpdatedBy(operator);
 
@@ -345,7 +345,7 @@ public class PhoneService {
             phoneId,
             "reserve",
             fromStatus,
-            "reserved",
+            PhoneNumber.PS_RESERVED,
             phone.getUserId(),
             phone.getUserId(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
@@ -368,7 +368,7 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.PHONE_005);
         }
 
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
         phone.setStatus(PhoneNumber.PS_IDLE);
         phone.setUpdatedBy(operator);
 
@@ -378,7 +378,7 @@ public class PhoneService {
             phoneId,
             "release",
             fromStatus,
-            "idle",
+            PhoneNumber.PS_IDLE,
             phone.getUserId(),
             phone.getUserId(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
@@ -422,7 +422,7 @@ public class PhoneService {
         }
 
         String fromUser = phone.getUserId();
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         phone.setUserId(newUserId);
         phone.setUpdatedBy(operator);
@@ -461,7 +461,7 @@ public class PhoneService {
         }
 
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         phone.setOrgId(newOrgId);
         phone.setUpdatedBy(operator);
@@ -504,7 +504,7 @@ public class PhoneService {
         }
 
         String fromNumber = phone.getPhoneNumber();
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         phone.setPhoneNumber(newPhoneNumber);
         phone.setUpdatedBy(operator);
@@ -557,8 +557,8 @@ public class PhoneService {
         recordHistory(
             phone1.getId(),
             "swap_number",
-            String.valueOf(phone1.getStatus()),
-            String.valueOf(phone1.getStatus()),
+            phone1.getStatus(),
+            phone1.getStatus(),
             phone1.getUserId(),
             phone1.getUserId(),
             phone1.getOrgId() != null ? String.valueOf(phone1.getOrgId()) : null,
@@ -571,8 +571,8 @@ public class PhoneService {
         recordHistory(
             phone2.getId(),
             "swap_number",
-            String.valueOf(phone2.getStatus()),
-            String.valueOf(phone2.getStatus()),
+            phone2.getStatus(),
+            phone2.getStatus(),
             phone2.getUserId(),
             phone2.getUserId(),
             phone2.getOrgId() != null ? String.valueOf(phone2.getOrgId()) : null,
@@ -607,8 +607,8 @@ public class PhoneService {
         recordHistory(
             phoneId,
             "change_extension",
-            String.valueOf(phone.getStatus()),
-            String.valueOf(phone.getStatus()),
+            phone.getStatus(),
+            phone.getStatus(),
             phone.getUserId(),
             phone.getUserId(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
@@ -630,7 +630,7 @@ public class PhoneService {
         String fromUser = phone.getUserId();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
         String fromNumber = phone.getPhoneNumber();
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
         boolean hasChanges = false;
         StringBuilder changeDetails = new StringBuilder();
 
@@ -722,7 +722,7 @@ public class PhoneService {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
-        String fromStatus = String.valueOf(phone.getStatus());
+        Integer fromStatus = phone.getStatus();
 
         if (!isValidStatusTransition(phone.getStatus(), newStatus)) {
             throw new BusinessException(ErrorCode.PHONE_200);
@@ -737,7 +737,7 @@ public class PhoneService {
             phoneId,
             "status_change",
             fromStatus,
-            String.valueOf(newStatus),
+            newStatus,
             phone.getUserId(),
             phone.getUserId(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,

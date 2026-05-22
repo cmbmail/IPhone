@@ -11,7 +11,7 @@ public class PhoneSurrenderRequest {
     private Long phoneId;
 
     @NotNull(message = "Surrender type is required")
-    private String surrenderType;
+    private Integer surrenderType;
 
     private String workOrderNo;
 

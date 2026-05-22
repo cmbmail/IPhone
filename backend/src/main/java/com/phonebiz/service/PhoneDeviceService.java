@@ -143,7 +143,7 @@ public class PhoneDeviceService {
                 .build();
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "录入", null, String.valueOf(saved.getStatus()), null, null, null);
+        saveHistory(saved, "录入", null, saved.getStatus(), null, null, null);
         return toDTO(saved);
     }
 
@@ -200,7 +200,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "分配", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, saved.getAssignedTo(), request.getRemark());
+        saveHistory(saved, "分配", fromStatus, saved.getStatus(), fromAssigned, saved.getAssignedTo(), request.getRemark());
         return toDTO(saved);
     }
 
@@ -224,7 +224,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "回收", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, null, remark);
+        saveHistory(saved, "回收", fromStatus, saved.getStatus(), fromAssigned, null, remark);
         return toDTO(saved);
     }
 
@@ -246,7 +246,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "停用", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "停用", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -268,7 +268,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "恢复", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "恢复", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -290,7 +290,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "送修", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "送修", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
         unbindAllPhones(device.getId());
         return toDTO(saved);
     }
@@ -313,7 +313,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "修复完成", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "修复完成", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
         return toDTO(saved);
     }
 
@@ -334,7 +334,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "报废", String.valueOf(fromStatus), String.valueOf(saved.getStatus()), fromAssigned, null, remark);
+        saveHistory(saved, "报废", fromStatus, saved.getStatus(), fromAssigned, null, remark);
         unbindAllPhones(device.getId());
         return toDTO(saved);
     }
@@ -435,7 +435,7 @@ public class PhoneDeviceService {
         dto.setPurchaseDate(device.getPurchaseDate());
         dto.setOrgId(device.getOrgId());
         dto.setAssignedTo(device.getAssignedTo());
-        dto.setStatus(String.valueOf(device.getStatus()));
+        dto.setStatus(device.getStatus());
         dto.setRemark(device.getRemark());
         dto.setCreatedAt(device.getCreatedAt());
         dto.setUpdatedAt(device.getUpdatedAt());
@@ -503,7 +503,7 @@ public class PhoneDeviceService {
                 .build();
     }
 
-    private void saveHistory(PhoneDevice device, String action, String fromStatus, String toStatus, String fromAssigned, String toAssigned, String remark) {
+    private void saveHistory(PhoneDevice device, String action, Integer fromStatus, Integer toStatus, String fromAssigned, String toAssigned, String remark) {
         PhoneDeviceHistory history = PhoneDeviceHistory.builder()
                 .deviceId(device.getId())
                 .macAddress(device.getMacAddress())

@@ -7,18 +7,17 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name = "phone_device_history")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhoneDeviceHistory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class PhoneDeviceHistory extends BaseEntity {
 
     @Column(name = "device_id", nullable = false)
     private Long deviceId;
@@ -29,11 +28,11 @@ public class PhoneDeviceHistory {
     @Column(name = "action", nullable = false, length = 30)
     private String action;
 
-    @Column(name = "from_status", length = 20)
-    private String fromStatus;
+    @Column(name = "from_status")
+    private Integer fromStatus;
 
-    @Column(name = "to_status", length = 20)
-    private String toStatus;
+    @Column(name = "to_status")
+    private Integer toStatus;
 
     @Column(name = "from_assigned", length = 20)
     private String fromAssigned;
@@ -50,14 +49,11 @@ public class PhoneDeviceHistory {
     @Column(name = "remark", length = 500)
     private String remark;
 
+    @Column(name = "error_message", length = 500)
+    private String errorMessage;
+
     @PrePersist
     protected void onCreate() {
-        if (operatedAt == null) {
-            operatedAt = LocalDateTime.now();
-        }
+        if (operatedAt == null) operatedAt = LocalDateTime.now();
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }
-

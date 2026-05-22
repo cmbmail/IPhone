@@ -178,7 +178,7 @@ public class SnapshotService {
                 .phoneId(phone.getId())
                 .phoneNumber(phone.getPhoneNumber())
                 .extension(phone.getExtensionNumber())
-                .status(String.valueOf(phone.getStatus()))
+                .status(phone.getStatus())
                 .orgId(orgId)
                 .orgName(orgName)
                 .costCenterCode(costCenterCode)
@@ -216,7 +216,7 @@ public class SnapshotService {
     }
 
     @Transactional(readOnly = true)
-    public int getSnapshotCountByStatus(String snapshotMonth, String status) {
+    public int getSnapshotCountByStatus(String snapshotMonth, Integer status) {
         return phoneSnapshotRepository.countBySnapshotMonthAndStatus(snapshotMonth, status);
     }
 
