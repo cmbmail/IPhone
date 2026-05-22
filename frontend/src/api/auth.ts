@@ -7,8 +7,8 @@ export const authApi = {
   getCurrentUser: () =>
     request.get('/auth/me'),
 
-  changePassword: (oldPassword: string, newPassword: string) =>
-    request.post('/auth/change-password', { oldPassword, newPassword }),
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
+    request.post('/auth/change-password', data),
 
   health: () =>
     request.get('/auth/health'),

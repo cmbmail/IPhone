@@ -4,6 +4,38 @@ import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
 import { request } from '@/api/request'
 
+const ANNOUNCEMENT_TYPE_NAMES: Record<string, string> = {
+  SYSTEM: '系统公告',
+  MAINTENANCE: '维护通知',
+  POLICY: '政策变更',
+  OPERATION: '运营通知',
+  OTHER: '其他'
+}
+
+const ANNOUNCEMENT_TYPE_COLORS: Record<string, string> = {
+  SYSTEM: 'blue',
+  MAINTENANCE: 'orange',
+  POLICY: 'purple',
+  OPERATION: 'cyan',
+  OTHER: 'default',
+}
+
+const WO_STATUS_NAMES: Record<string, string> = {
+  PENDING: '待处理',
+  ACCEPTED: '已接受',
+  PROCESSING: '处理中',
+  COMPLETED: '已完成',
+  REJECTED: '已拒绝',
+}
+
+const WO_STATUS_COLORS: Record<string, string> = {
+  PENDING: 'warning',
+  ACCEPTED: 'processing',
+  PROCESSING: 'processing',
+  COMPLETED: 'success',
+  REJECTED: 'error'
+}
+
 interface RecentBill {
   id: number
   orgName: string
@@ -18,6 +50,8 @@ const Dashboard = () => {
   const [orgCount, setOrgCount] = useState(0)
   const [userCount, setUserCount] = useState(0)
   const [recentBills, setRecentBills] = useState<RecentBill[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [workOrders, setWorkOrders] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

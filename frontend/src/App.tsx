@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ConfigProvider, Menu, Button, Avatar, Badge, Input, Dropdown, Modal, Form, Popconfirm, message } from 'antd'
-import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, SearchOutlined, LogoutOutlined, LockOutlined, TeamOutlined, WalletOutlined, PhoneOutlined, AppstoreOutlined, EnvironmentOutlined, DesktopOutlined, CheckOutlined, BarChartOutlined, CarryOutOutlined, AccountBookOutlined, SwapOutlined, AuditOutlined, ApartmentOutlined, SafetyCertificateOutlined, FileTextOutlined } from '@ant-design/icons'
+import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, SearchOutlined, LogoutOutlined, LockOutlined, TeamOutlined, WalletOutlined, PhoneOutlined, AppstoreOutlined, EnvironmentOutlined, DesktopOutlined, CheckOutlined, BarChartOutlined, CarryOutOutlined, AccountBookOutlined, SwapOutlined, AuditOutlined, ApartmentOutlined, SafetyCertificateOutlined, FileTextOutlined, NotificationOutlined } from '@ant-design/icons'
 import zhCN from 'antd/locale/zh_CN'
 import { PrivateRoute } from '@/components/PrivateRoute'
 import { useAuthStore } from '@/stores/authStore'
@@ -23,6 +23,7 @@ import DeviceManagement from '@/pages/DeviceManagement'
 import RoleManagement from '@/pages/RoleManagement'
 import UserManagement from '@/pages/UserManagement'
 import AuditLogManagement from '@/pages/AuditLogManagement'
+import AnnouncementManagement from '@/pages/AnnouncementManagement'
 import ChangePassword from '@/pages/ChangePassword'
 import NotificationPopover from '@/components/NotificationPopover'
 
@@ -286,6 +287,7 @@ const App = () => (
         <Route path="/roles" element={<PrivateRouteWithLayout><RoleManagement /></PrivateRouteWithLayout>} />
         <Route path="/user-management" element={<PrivateRouteWithLayout><UserManagement /></PrivateRouteWithLayout>} />
         <Route path="/audit-logs" element={<PrivateRouteWithLayout><AuditLogManagement /></PrivateRouteWithLayout>} />
+        <Route path="/announcements" element={<PrivateRouteWithLayout><AnnouncementManagement /></PrivateRouteWithLayout>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
