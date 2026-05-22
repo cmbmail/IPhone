@@ -209,7 +209,7 @@ const AnnouncementManagement = () => {
   return (
     <div>
       <Card>
-        <Space style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 150 }} allowClear placeholder="状态筛选">
             <Option value="PUBLISHED">已发布</Option>
             <Option value="DRAFT">草稿</Option>
@@ -220,7 +220,7 @@ const AnnouncementManagement = () => {
             form.resetFields()
             setIsModalOpen(true)
           }}>发布公告</Button>
-        </Space>
+        </div>
 
         <Table
           columns={columns}
