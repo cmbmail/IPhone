@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
+import { Spin } from 'antd'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ConfigProvider, Menu, Button, Avatar, Badge, Input, Dropdown, Modal, Form, Popconfirm, message } from 'antd'
 import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, SearchOutlined, LogoutOutlined, LockOutlined, TeamOutlined, WalletOutlined, PhoneOutlined, AppstoreOutlined, EnvironmentOutlined, DesktopOutlined, CheckOutlined, BarChartOutlined, CarryOutOutlined, AccountBookOutlined, SwapOutlined, AuditOutlined, ApartmentOutlined, SafetyCertificateOutlined, FileTextOutlined, NotificationOutlined } from '@ant-design/icons'
@@ -7,27 +8,31 @@ import { PrivateRoute } from '@/components/PrivateRoute'
 import { useAuthStore } from '@/stores/authStore'
 import { authApi } from '@/api/auth'
 import Login from '@/pages/Login'
-import Dashboard from '@/pages/Dashboard'
-import OrgManagement from '@/pages/OrgManagement'
-import CostCenterManagement from '@/pages/CostCenterManagement'
-import PhoneManagement from '@/pages/PhoneManagement'
-import PhoneOwnershipPage from '@/pages/PhoneOwnership'
-import ExtensionPoolManagement from '@/pages/ExtensionPoolManagement'
-import AreaCodeManagement from '@/pages/AreaCodeManagement'
-import BillAllocationManagement from '@/pages/BillAllocationManagement'
-import InvoiceManagement from '@/pages/InvoiceManagement'
-import SubsidiaryReconciliationPage from '@/pages/SubsidiaryReconciliationPage'
-import BillManagement from '@/pages/BillManagement'
-import ReportCenter from '@/pages/ReportCenter'
-import WorkOrderManagement from '@/pages/WorkOrderManagement'
-import DeviceManagement from '@/pages/DeviceManagement'
-import RoleManagement from '@/pages/RoleManagement'
-import UserManagement from '@/pages/UserManagement'
-import AuditLogManagement from '@/pages/AuditLogManagement'
-import AnnouncementManagement from '@/pages/AnnouncementManagement'
-import ChangePassword from '@/pages/ChangePassword'
+
 import NotificationPopover from '@/components/NotificationPopover'
 import GlobalSearch from '@/components/GlobalSearch'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+
+// Lazy-loaded page components for code-splitting
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const OrgManagement = lazy(() => import('@/pages/OrgManagement'))
+const CostCenterManagement = lazy(() => import('@/pages/CostCenterManagement'))
+const PhoneManagement = lazy(() => import('@/pages/PhoneManagement'))
+const PhoneOwnershipPage = lazy(() => import('@/pages/PhoneOwnership'))
+const ExtensionPoolManagement = lazy(() => import('@/pages/ExtensionPoolManagement'))
+const AreaCodeManagement = lazy(() => import('@/pages/AreaCodeManagement'))
+const BillAllocationManagement = lazy(() => import('@/pages/BillAllocationManagement'))
+const InvoiceManagement = lazy(() => import('@/pages/InvoiceManagement'))
+const SubsidiaryReconciliationPage = lazy(() => import('@/pages/SubsidiaryReconciliationPage'))
+const BillManagement = lazy(() => import('@/pages/BillManagement'))
+const ReportCenter = lazy(() => import('@/pages/ReportCenter'))
+const WorkOrderManagement = lazy(() => import('@/pages/WorkOrderManagement'))
+const DeviceManagement = lazy(() => import('@/pages/DeviceManagement'))
+const RoleManagement = lazy(() => import('@/pages/RoleManagement'))
+const UserManagement = lazy(() => import('@/pages/UserManagement'))
+const AuditLogManagement = lazy(() => import('@/pages/AuditLogManagement'))
+const AnnouncementManagement = lazy(() => import('@/pages/AnnouncementManagement'))
+const ChangePassword = lazy(() => import('@/pages/ChangePassword'))
 
 // Layout components replaced with plain divs for reliable flex layout
 
@@ -270,7 +275,7 @@ const PrivateRouteWithLayout = ({ children }: { children: React.ReactNode }) => 
 const App = () => (
   <ConfigProvider locale={zhCN}>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
+      <ErrorBoundary><Suspense fallback={<div style={{display:"flex",justifyContent:"center",alignItems:"center",height:"100%"}}><Spin size="large" /></div>}><Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/dashboard" element={<PrivateRouteWithLayout><Dashboard /></PrivateRouteWithLayout>} />
@@ -293,7 +298,7 @@ const App = () => (
         <Route path="/announcements" element={<PrivateRouteWithLayout><AnnouncementManagement /></PrivateRouteWithLayout>} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></Suspense></ErrorBoundary>
     </BrowserRouter>
   </ConfigProvider>
 )

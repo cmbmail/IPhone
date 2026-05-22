@@ -1,4 +1,5 @@
 import axios from "axios"
+import { message } from "antd"
 
 const baseURL = "/api"
 
@@ -136,6 +137,15 @@ request.interceptors.response.use(
         localStorage.removeItem("loginTime")
         window.location.href = "/login"
       }
+    }
+
+    // Network error / timeout handling
+    if (!error.response) {
+      message.error(error.code === 'ECONNABORTED' ? '请求超时，请稍后重试' : '网络连接异常，请检查网络')
+    } else if (error.response.status >= 500) {
+      message.error('服务器错误，请稍后重试')
+    } else if (error.response.status === 429) {
+      message.warning('操作过于频繁，请稍后重试')
     }
 
     return Promise.reject(error)
