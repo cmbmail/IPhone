@@ -18,7 +18,7 @@ public class UpdateEmployeeRequest {
     private String position;
 
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "Invalid phone number format")
-    private String phone;
+    private String phoneNumber;
 
     @Email(message = "Invalid email format")
     private String email;

@@ -84,7 +84,7 @@ public class EmployeeService {
         employee.setName(request.getName());
         employee.setOrgId(request.getOrgId());
         employee.setPosition(request.getPosition());
-        employee.setPhone(request.getPhone());
+        employee.setPhoneNumber(request.getPhoneNumber());
         employee.setEmail(request.getEmail());
         employee.setIsVirtual(request.getIsVirtual() != null ? request.getIsVirtual() : false);
 
@@ -127,8 +127,8 @@ public class EmployeeService {
             employee.setPosition(request.getPosition());
         }
 
-        if (request.getPhone() != null) {
-            employee.setPhone(request.getPhone());
+        if (request.getPhoneNumber() != null) {
+            employee.setPhoneNumber(request.getPhoneNumber());
         }
 
         if (request.getEmail() != null) {

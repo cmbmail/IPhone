@@ -23,7 +23,7 @@ public class CreateEmployeeRequest {
     private String position;
 
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "Invalid phone number format")
-    private String phone;
+    private String phoneNumber;
 
     @jakarta.validation.constraints.Email(message = "Invalid email format")
     private String email;

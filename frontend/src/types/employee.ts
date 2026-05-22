@@ -5,7 +5,7 @@ export interface Employee {
   orgId: number
   orgName?: string
   position?: string
-  phone?: string
+  phoneNumber?: string
   email?: string
   status: 0 | 1
   entryDate?: string
@@ -22,7 +22,7 @@ export interface CreateEmployeeDTO {
   name: string
   orgId: number
   position?: string
-  phone?: string
+  phoneNumber?: string
   email?: string
   entryDate?: string
   isVirtual?: boolean
@@ -32,7 +32,7 @@ export interface UpdateEmployeeDTO {
   name?: string
   orgId?: number
   position?: string
-  phone?: string
+  phoneNumber?: string
   email?: string
   status?: 0 | 1
   leaveDate?: string
