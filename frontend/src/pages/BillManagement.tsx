@@ -161,17 +161,6 @@ const BillManagement = () => {
     },
   })
 
-  const { data: allocationStatus } = useQuery({
-    queryKey: ['bill-allocation-status', billMonth, chargeType],
-    queryFn: async () => {
-      const res = await request.get('/bills/allocation-status', {
-        params: { billMonth, chargeType }
-      })
-      return res.data?.data
-    },
-    enabled: importAndAllocateMutation.isPending || importAndAllocateMutation.isSuccess,
-    refetchInterval: importAndAllocateMutation.isPending ? 2000 : false,
-  })
 
   const deleteMutation = useMutation({
     mutationFn: (password: string) => billApi.delete(billMonth, chargeType, password),
@@ -203,15 +192,6 @@ const BillManagement = () => {
     },
   })
 
-  const handleUpload = (file: File) => {
-    if (uploadMode === 'importAndAllocate') {
-      importAndAllocateMutation.mutate({ file, month: billMonth })
-    } else {
-      importMutation.mutate({ file, month: billMonth })
-    }
-    return false
-  }
-
   const importAndAllocateMutation = useMutation({
     mutationFn: ({ file, month }: { file: File; month: string }) =>
       billApi.importAndAllocate(month, file),
@@ -224,6 +204,15 @@ const BillManagement = () => {
       message.error(error.response?.data?.message || '导入分摊失败')
     },
   })
+  const handleUpload = (file: File) => {
+    if (uploadMode === 'importAndAllocate') {
+      importAndAllocateMutation.mutate({ file, month: billMonth })
+    } else {
+      importMutation.mutate({ file, month: billMonth })
+    }
+    return false
+  }
+
 
   const tabItems = CHARGE_TABS.map(tab => ({
     key: tab.key,

@@ -21,6 +21,25 @@ function keysToCamelCase(obj: any): any {
   return obj
 }
 
+// Convert camelCase string to snake_case
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+}
+
+// Recursively convert object keys from camelCase to snake_case
+function keysToSnakeCase(obj: any): any {
+  if (obj === null || obj === undefined) return obj
+  if (Array.isArray(obj)) return obj.map(keysToSnakeCase)
+  if (typeof obj === "object") {
+    const result: any = {}
+    for (const key of Object.keys(obj)) {
+      result[toSnakeCase(key)] = keysToSnakeCase(obj[key])
+    }
+    return result
+  }
+  return obj
+}
+
 const request = axios.create({
   baseURL,
   timeout: 10000,
@@ -59,6 +78,14 @@ request.interceptors.request.use(
     const token = getStoredToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    // Convert request body keys from camelCase to snake_case for JSON payloads
+    if (config.data && typeof config.data === "object" && !(config.data instanceof FormData)) {
+      config.data = keysToSnakeCase(config.data)
+    }
+    // Convert request params keys from camelCase to snake_case
+    if (config.params && typeof config.params === "object") {
+      config.params = keysToSnakeCase(config.params)
     }
     return config
   },
