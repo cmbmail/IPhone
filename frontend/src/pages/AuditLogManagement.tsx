@@ -38,7 +38,15 @@ const AuditLogManagement = () => {
     { title: '耗时', dataIndex: 'costTime', key: 'costTime', width: 60, render: (v: number) => v + 'ms' },
   ]
 
-  const modules = ['org', 'employee', 'user', 'phone', 'device', 'bill', 'invoice', 'role', 'work-order', 'reconciliation', 'system']
+  // Extract unique modules from API data
+  useEffect(() => {
+    if (auditData?.content) {
+      const uniqueModules = [...new Set(auditData.content.map((item: any) => item.module).filter(Boolean))]
+      if (uniqueModules.length > 0) setModules(uniqueModules as string[])
+    }
+  }, [auditData])
+
+  const [modules, setModules] = useState<string[]>(['org', 'employee', 'user', 'phone', 'device', 'bill', 'invoice', 'role', 'work-order', 'reconciliation', 'system'])
 
   return (
     <Card>

@@ -1,14 +1,14 @@
 import { request } from './request'
 
 export const workOrderApi = {
-  getList: (params?: { status?: string; page?: number; size?: number }) =>
+  getList: (params?: Record<string, unknown>) =>
     request.get('/work-orders', { params }),
   getById: (id: number) =>
     request.get(`/work-orders/${id}`),
   create: (data: Record<string, unknown>) =>
     request.post('/work-orders', data),
-  accept: (id: number, handlerId: number, handlerName: string) =>
-    request.post(`/work-orders/${id}/accept`, null, { params: { handlerId, handlerName } }),
+  accept: (id: number) =>
+    request.post(`/work-orders/${id}/accept`),
   process: (id: number) =>
     request.post(`/work-orders/${id}/process`),
   complete: (id: number, remark?: string) =>

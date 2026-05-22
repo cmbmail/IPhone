@@ -43,7 +43,4 @@ public class ImportBatch extends BaseEntity {
 
     @Column(name = "operator", length = 100)
     private String operator;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

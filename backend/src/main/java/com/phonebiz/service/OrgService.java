@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -146,7 +147,7 @@ public class OrgService {
             throw new BusinessException(ErrorCode.ORG_004, "Cannot delete organization with children");
         }
 
-        orgRepository.delete(org);
+        org.setDeletedAt(LocalDateTime.now()); orgRepository.save(org);
     }
 
     @Transactional(readOnly = true)

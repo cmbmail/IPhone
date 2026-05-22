@@ -78,7 +78,6 @@ public class WorkOrderController {
     @PreAuthorize("hasAuthority('wo:create') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "创建工单", targetType = "WorkOrder")
     public ApiResponse<WorkOrderDTO> createWorkOrder(@Valid @RequestBody CreateWorkOrderRequest request, Authentication authentication) {
-        // L-04: Get requesterId from authenticated user
         String username = authentication != null ? authentication.getName() : "system";
         Long requesterId = sysUserRepository.findByUsername(username)
                 .map(SysUser::getId)
@@ -106,10 +105,12 @@ public class WorkOrderController {
     @PostMapping("/{id}/accept")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN') or hasRole('OPS')")
     @AuditLog(module = "work-order", operation = "接单", targetType = "WorkOrder", targetId = "#id")
-    public ApiResponse<WorkOrderDTO> acceptWorkOrder(@PathVariable Long id,
-                                                    @RequestParam Long handlerId,
-                                                    @RequestParam String handlerName) {
-        return ApiResponse.success(workOrderService.acceptWorkOrder(id, handlerId, handlerName));
+    public ApiResponse<WorkOrderDTO> acceptWorkOrder(@PathVariable Long id, Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : "system";
+        Long handlerId = sysUserRepository.findByUsername(username)
+                .map(SysUser::getId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004));
+        return ApiResponse.success(workOrderService.acceptWorkOrder(id, handlerId, username));
     }
 
     @PostMapping("/{id}/process")

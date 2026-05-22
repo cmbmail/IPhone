@@ -8,11 +8,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: false
     open-in-view: false
     properties:
       hibernate:
+        ddl-auto: none
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false  # L-10: Disabled - only enable for debugging
         jdbc:

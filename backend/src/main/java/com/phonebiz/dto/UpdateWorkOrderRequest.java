@@ -7,15 +7,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.phonebiz.entity.WorkOrder;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateWorkOrderRequest {
 
-    private String status;
+    private Integer status;
 
     private Long handlerId;
 
@@ -23,4 +21,3 @@ public class UpdateWorkOrderRequest {
 
     private String description;
 }
-

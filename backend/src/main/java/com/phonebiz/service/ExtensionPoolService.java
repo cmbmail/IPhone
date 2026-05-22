@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -72,7 +73,7 @@ public class ExtensionPoolService {
 
     @Transactional
     public void deletePool(Long id) {
-        poolRepository.deleteById(id);
+        poolRepository.findById(id).ifPresent(e -> { e.setDeletedAt(LocalDateTime.now()); poolRepository.save(e); });
     }
 
     @Transactional(readOnly = true)

@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -87,7 +88,7 @@ public class CostCenterService {
 
     @Transactional
     public void deleteCostCenter(Long id) {
-        costCenterRepository.deleteById(id);
+        costCenterRepository.findById(id).ifPresent(e -> { e.setDeletedAt(LocalDateTime.now()); costCenterRepository.save(e); });
     }
 }
 

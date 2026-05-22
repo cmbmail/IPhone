@@ -65,4 +65,8 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
 
     @Query("SELECT p.phoneNumber FROM PhoneNumber p")
     List<String> findAllPhoneNumbers();
+
+    @Query("SELECT p FROM PhoneNumber p WHERE p.phoneNumber LIKE %:keyword% OR p.remark LIKE %:keyword%")
+    List<PhoneNumber> searchByKeyword(@Param("keyword") String keyword);
+
 }

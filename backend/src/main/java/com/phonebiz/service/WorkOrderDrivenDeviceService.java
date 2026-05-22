@@ -14,6 +14,7 @@ import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreateWorkOrderRequest;
 import com.phonebiz.dto.WorkOrderDTO;
 import com.phonebiz.entity.PhoneDevice;
+import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.entity.WorkOrderItem;
 import com.phonebiz.repository.PhoneDeviceRepository;
 
@@ -26,7 +27,7 @@ public class WorkOrderDrivenDeviceService {
     private final ApplicationContext applicationContext;
     private final PhoneDeviceService phoneDeviceService;
     private final PhoneDeviceRepository phoneDeviceRepository;
-    
+
     private WorkOrderService getWorkOrderService() {
         return applicationContext.getBean(WorkOrderService.class);
     }
@@ -41,7 +42,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("assign")
                 .fromValue(device.getAssignedTo())
@@ -49,17 +50,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_ASSIGN")
+                .type(1)
                 .title("话机分配工单 - MAC: " + device.getMacAddress())
                 .description("将话机 " + device.getMacAddress() + " 分配给员工 " + employeeNo)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device assign work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -73,7 +74,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("reclaim")
                 .fromValue(device.getAssignedTo())
@@ -81,17 +82,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_RECLAIM")
+                .type(WorkOrder.WO_PHONE_RECLAIM)
                 .title("话机回收工单 - MAC: " + device.getMacAddress())
                 .description("回收话机 " + device.getMacAddress())
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device reclaim work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -105,7 +106,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("repair")
                 .fromValue(String.valueOf(device.getStatus()))
@@ -113,17 +114,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_REPAIR")
+                .type(1)
                 .title("话机送修工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 送修")
-                .priority("HIGH")
+                .priority(WorkOrder.WO_HIGH)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device repair work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -137,7 +138,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("retire")
                 .fromValue(String.valueOf(device.getStatus()))
@@ -145,17 +146,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_RETIRE")
+                .type(1)
                 .title("话机报废工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 报废")
-                .priority("HIGH")
+                .priority(WorkOrder.WO_HIGH)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device retire work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -169,7 +170,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("bind_phone")
                 .fromValue(null)
@@ -177,17 +178,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_BIND_PHONE")
+                .type(1)
                 .title("话机绑定号码工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 绑定分机 " + extensionNumber)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device bind phone work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -201,7 +202,7 @@ public class WorkOrderDrivenDeviceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("DEVICE")
+                .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetId(deviceId)
                 .action("unbind_phone")
                 .fromValue(extensionNumber)
@@ -209,17 +210,17 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("DEVICE_UNBIND_PHONE")
+                .type(1)
                 .title("话机解绑号码工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 解绑分机 " + extensionNumber)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Device unbind phone work order created: {} for device {}", workOrder.getWorkOrderNo(), deviceId);
-        
+
         return workOrder;
     }
 
@@ -245,19 +246,15 @@ public class WorkOrderDrivenDeviceService {
                 phoneDeviceService.retireDevice(deviceId, "工单报废");
             }
             case "bind_phone" -> {
-                // 需要从工单项获取分机号，这里假设 toValue 包含分机号
                 com.phonebiz.dto.BindPhoneRequest bindRequest = new com.phonebiz.dto.BindPhoneRequest();
                 bindRequest.setExtensionNumber(item.getToValue());
                 phoneDeviceService.bindPhone(deviceId, bindRequest);
             }
             case "unbind_phone" -> {
-                // P1-08: Unbind phone from device using extension number lookup
                 String extensionNumber = item.getFromValue();
                 if (extensionNumber != null) {
-                    // Find mapping by extension and unbind
                     phoneDeviceService.unbindPhoneByExtension(deviceId, extensionNumber);
                 } else {
-                    // If no extension specified, unbind all
                     phoneDeviceService.unbindAllPhonesForDevice(deviceId);
                 }
             }
@@ -265,4 +262,3 @@ public class WorkOrderDrivenDeviceService {
         }
     }
 }
-

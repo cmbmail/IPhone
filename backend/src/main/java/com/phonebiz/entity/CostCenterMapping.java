@@ -34,7 +34,4 @@ public class CostCenterMapping extends BaseEntity {
     public enum CostCenterStatus {
         active, inactive
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

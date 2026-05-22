@@ -10,16 +10,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.phonebiz.entity.WorkOrder;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateWorkOrderRequest {
 
-    @NotBlank(message = "工单类型不能为空")
-    private String type;
+    @NotNull(message = "工单类型不能为空")
+    private Integer type;
 
     @NotBlank(message = "工单标题不能为空")
     private String title;
@@ -27,7 +25,7 @@ public class CreateWorkOrderRequest {
     private String description;
 
     @NotNull(message = "优先级不能为空")
-    private String priority;
+    private Integer priority;
 
     private Long handlerId;
 
@@ -38,11 +36,10 @@ public class CreateWorkOrderRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class WorkOrderItemRequest {
-        private String itemType;
+        private Integer itemType;
         private Long targetId;
         private String action;
         private String fromValue;
         private String toValue;
     }
 }
-

@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -74,7 +75,7 @@ public class AreaCodeService {
 
     @Transactional
     public void deleteMapping(Long id) {
-        mappingRepository.deleteById(id);
+        mappingRepository.findById(id).ifPresent(e -> { e.setDeletedAt(LocalDateTime.now()); mappingRepository.save(e); });
     }
 }
 

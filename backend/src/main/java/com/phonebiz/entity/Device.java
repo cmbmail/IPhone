@@ -65,7 +65,4 @@ public class Device extends BaseEntity {
 
     @Column(name = "remark", length = 500)
     private String remark;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

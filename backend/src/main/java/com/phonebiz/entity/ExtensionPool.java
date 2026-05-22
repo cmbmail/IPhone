@@ -27,7 +27,4 @@ public class ExtensionPool extends BaseEntity {
 
     @Column(name = "allocated_by", nullable = false, length = 50)
     private String allocatedBy;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

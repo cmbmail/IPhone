@@ -83,7 +83,4 @@ public class OrgStructure extends BaseEntity {
             throw new BusinessException(ErrorCode.ORG_003);
         }
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

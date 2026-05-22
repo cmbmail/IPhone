@@ -27,6 +27,7 @@ import AuditLogManagement from '@/pages/AuditLogManagement'
 import AnnouncementManagement from '@/pages/AnnouncementManagement'
 import ChangePassword from '@/pages/ChangePassword'
 import NotificationPopover from '@/components/NotificationPopover'
+import GlobalSearch from '@/components/GlobalSearch'
 
 // Layout components replaced with plain divs for reliable flex layout
 
@@ -171,12 +172,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </span>
             </div>
           </div>
-
           <div className="header-right">
-            <div className="search-box">
-              <SearchOutlined style={{ fontSize: 16, color: 'var(--text-muted)' }} />
-              <input type="text" placeholder="搜索..." />
-            </div>
+            <GlobalSearch />
 
             <NotificationPopover />
 

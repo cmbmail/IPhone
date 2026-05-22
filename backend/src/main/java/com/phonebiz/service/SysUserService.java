@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -304,7 +305,7 @@ public class SysUserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_001));
 
         // Delete sys_user
-        userRepository.delete(user);
+        user.setDeletedAt(LocalDateTime.now()); userRepository.save(user);
         // Deactivate employee
         employee.setStatus(Employee.EMP_INACTIVE);
         employee.setUpdatedBy(operator);

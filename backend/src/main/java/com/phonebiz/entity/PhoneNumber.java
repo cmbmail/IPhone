@@ -56,7 +56,4 @@ public class PhoneNumber extends BaseEntity {
     @Column(nullable = false)
     @Version
     private Long version = 0L;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { Table, Button, Card, Select, Tag, Space, Modal, message, Input, Row, Col, Statistic, Drawer, Descriptions, Timeline } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workOrderApi } from '@/api/workOrder'
+import { useAuthStore } from '@/stores/authStore'
 import { PlusOutlined, CheckOutlined, EyeOutlined } from '@ant-design/icons'
+import type { WorkOrder, WorkOrderItem } from '@/types/workOrder'
 
 const { Option } = Select
 const { TextArea } = Input
 
 const STATUS_COLORS: Record<number, string> = {
-  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 4: 'error', 5: 'default', 6: 'default'
+  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 4: 'default', 5: 'error'
 }
 const STATUS_NAMES: Record<number, string> = {
   0: '待处理', 1: '已接受', 2: '处理中', 3: '已完成', 4: '已归档', 5: '已取消'
@@ -25,33 +27,16 @@ const TYPE_NAMES: Record<number, string> = {
   1: '号码分配', 2: '号码转移', 3: '号码变更', 4: '组织变更', 5: '号码回收', 6: '号码交回', 7: '号码启用', 8: '号码停用'
 }
 
-interface WorkOrderItem {
-  id: number
-  itemType: number
-  description: string
-  status: number
-  result: string | null
-  executedAt: string | null
-  error: string | null
+const ITEM_TYPE_NAMES: Record<number, string> = {
+  1: '号码', 2: '设备', 3: '员工'
 }
 
-interface WorkOrder {
-  id: number
-  workOrderNo: string
-  title: string
-  description: string
-  orderType: number
-  priority: number
-  status: number
-  requesterName: string
-  requesterId: number
-  handlerName: string | null
-  handlerId: number | null
-  remark: string | null
-  rejectReason: string | null
-  createdAt: string
-  updatedAt: string
-  items?: WorkOrderItem[]
+const ITEM_STATUS_NAMES: Record<number, string> = {
+  0: '待执行', 1: '执行中', 2: '已完成', 3: '失败', 4: '已跳过'
+}
+
+const ITEM_STATUS_COLORS: Record<number, string> = {
+  0: 'processing', 1: 'processing', 2: 'success', 3: 'error', 4: 'default'
 }
 
 const WorkOrderManagement = () => {
@@ -61,6 +46,7 @@ const WorkOrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
   const [formData, setFormData] = useState({ title: '', description: '', priority: 2, type: 1 })
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
 
   const { data: orderData, isLoading, refetch } = useQuery({
     queryKey: ['work-orders', status],
@@ -72,7 +58,7 @@ const WorkOrderManagement = () => {
   })
 
   const acceptMutation = useMutation({
-    mutationFn: (id: number) => workOrderApi.accept(id, 1, 'admin'),
+    mutationFn: (id: number) => workOrderApi.accept(id),
     onSuccess: () => {
       message.success('工单已接受')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
@@ -124,7 +110,7 @@ const WorkOrderManagement = () => {
   const handleAccept = (record: WorkOrder) => {
     Modal.confirm({
       title: '接受工单',
-      content: `接受工单 ${record.workOrderNo}？`,
+      content: `接受工单 ${record.workOrderNo}？将指派给您（${user?.username || '当前用户'}）处理`,
       onOk: () => acceptMutation.mutate(record.id)
     })
   }
@@ -135,8 +121,8 @@ const WorkOrderManagement = () => {
       content: `标记工单 ${record.workOrderNo} 为已完成？`,
       onOk: () => completeMutation.mutate(record.id)
     })
-
   }
+
   const handleReject = (record: WorkOrder) => {
     let rejectReason = ''
     Modal.confirm({
@@ -160,7 +146,8 @@ const WorkOrderManagement = () => {
 
   const handleViewDetail = (record: WorkOrder) => {
     workOrderApi.getById(record.id).then(res => {
-      setSelectedOrder(res.data?.data || record)
+      const detail = res.data?.data
+      setSelectedOrder(detail || record)
       setDetailDrawerOpen(true)
     }).catch(() => {
       setSelectedOrder(record)
@@ -182,7 +169,7 @@ const WorkOrderManagement = () => {
     {
       title: '类型',
       dataIndex: 'orderType',
-      key: 'type',
+      key: 'orderType',
       width: 120,
       render: (type: number) => TYPE_NAMES[type] || type
     },
@@ -292,7 +279,7 @@ const WorkOrderManagement = () => {
               <Descriptions.Item label="类型">{TYPE_NAMES[selectedOrder.orderType] || selectedOrder.orderType}</Descriptions.Item>
               <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
-              <Descriptions.Item label="申请人">{selectedOrder.requesterName}</Descriptions.Item>
+              <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>
               <Descriptions.Item label="处理人">{selectedOrder.handlerName || '-'}</Descriptions.Item>
               <Descriptions.Item label="创建时间">{selectedOrder.createdAt}</Descriptions.Item>
               <Descriptions.Item label="描述" span={2}>{selectedOrder.description || '-'}</Descriptions.Item>
@@ -307,21 +294,24 @@ const WorkOrderManagement = () => {
             {selectedOrder.items && selectedOrder.items.length > 0 && (
               <>
                 <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 15 }}>工单项</div>
-                {selectedOrder.items.map((item) => (
+                {selectedOrder.items.map((item: WorkOrderItem) => (
                   <Timeline.Item
                     key={item.id}
                     color={item.status === 2 ? 'green' : item.status === 3 ? 'red' : 'blue'}
                   >
                     <div style={{ paddingBottom: 8 }}>
                       <div>
-                        <Tag>{TYPE_NAMES[item.itemType] || item.itemType}</Tag>
-                        <Tag color={item.status === 2 ? 'success' : item.status === 3 ? 'error' : 'processing'}>
-                          {item.status === 2 ? '已完成' : item.status === 3 ? '失败' : '待执行'}
+                        <Tag>{ITEM_TYPE_NAMES[item.itemType] || item.itemType}</Tag>
+                        <Tag color={ITEM_STATUS_COLORS[item.status] || 'default'}>
+                          {ITEM_STATUS_NAMES[item.status] || item.status}
                         </Tag>
                       </div>
-                      <div style={{ color: '#666', marginTop: 4 }}>{item.description}</div>
-                      {item.result && <div style={{ color: '#52c41a', marginTop: 4 }}>结果: {item.result}</div>}
-                      {item.error && <div style={{ color: '#ff4d4f', marginTop: 4 }}>错误: {item.error}</div>}
+                      {item.description && <div style={{ color: '#666', marginTop: 4 }}>{item.description}</div>}
+                      {item.action && !item.description && <div style={{ color: '#666', marginTop: 4 }}>操作: {item.action}</div>}
+                      {item.fromValue && item.toValue && (
+                        <div style={{ color: '#999', marginTop: 2 }}>{item.fromValue} → {item.toValue}</div>
+                      )}
+                      {item.errorMessage && <div style={{ color: '#ff4d4f', marginTop: 4 }}>错误: {item.errorMessage}</div>}
                       {item.executedAt && <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>执行时间: {item.executedAt}</div>}
                       {(item.status === 0 || item.status === 3) && (
                         <Button

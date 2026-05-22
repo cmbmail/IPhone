@@ -1,5 +1,6 @@
 package com.phonebiz.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -145,7 +146,7 @@ public class SysRoleService {
         }
 
         rolePermissionRepository.deleteByRoleId(id);
-        roleRepository.delete(role);
+        role.setDeletedAt(LocalDateTime.now()); roleRepository.save(role);
         log.info("Role deleted: {} ({})", role.getName(), role.getCode());
     }
 }

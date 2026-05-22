@@ -65,7 +65,4 @@ public class SysUser extends BaseEntity {
     public boolean needsPasswordChange() {
         return passwordChangedAt == null;
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

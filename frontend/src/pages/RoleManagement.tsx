@@ -173,7 +173,13 @@ const RoleManagement: React.FC = () => {
       if (count > 0) {
         // Query users by role_id via /employees endpoint is not available
         // We'll show the count only for now
-        setRoleUsers([{ id: 0, username: '', employee_no: '', role: '', status: '' }] as any)
+        // Fetch actual users for this role
+            try {
+              const res = await request.get(`/roles/${record.id}/users`)
+              setRoleUsers(res.data?.data || [])
+            } catch {
+              setRoleUsers([])
+            }
       } else {
         setRoleUsers([])
       }

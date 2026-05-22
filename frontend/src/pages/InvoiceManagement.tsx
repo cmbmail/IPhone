@@ -24,6 +24,7 @@ const STATUS_NAMES: Record<number, string> = {
 const InvoiceManagement = () => {
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
   const [status, setStatus] = useState<number | ''>('')
+  const [selectedOrgId, setSelectedOrgId] = useState<number>(1)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
@@ -80,7 +81,7 @@ const InvoiceManagement = () => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('billMonth', billMonth)
-    formData.append('sourceOrgId', '1')
+    formData.append('sourceOrgId', String(selectedOrgId || 1))
 
     setUploading(true)
     try {
@@ -206,6 +207,30 @@ const InvoiceManagement = () => {
           <Select value={billMonth} onChange={setBillMonth} style={{ width: '100%' }} placeholder="选择账单月份">
             {months.map(m => <Option key={m} value={m}>{m}</Option>)}
           </Select>
+          <div style={{ marginBottom: 16 }}>
+            <Select
+              value={selectedOrgId}
+              onChange={setSelectedOrgId}
+              style={{ width: '100%' }}
+              placeholder="选择来源组织"
+            >
+              {(orgsData || []).map((org: any) => (
+                <Select.Option key={org.id} value={org.id}>{org.name}</Select.Option>
+              ))}
+            </Select>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Select
+              value={selectedOrgId}
+              onChange={setSelectedOrgId}
+              style={{ width: '100%' }}
+              placeholder="选择来源组织"
+            >
+              {(orgsData || []).map((org: any) => (
+                <Select.Option key={org.id} value={org.id}>{org.name}</Select.Option>
+              ))}
+            </Select>
+          </div>
           <Upload.Dragger
             accept=".pdf,.jpg,.jpeg,.png"
             beforeUpload={handleUpload}

@@ -24,7 +24,4 @@ public class AreaCodeOrgMapping extends BaseEntity {
 
     @Column(nullable = false)
     private Integer priority = 1;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

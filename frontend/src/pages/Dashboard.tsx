@@ -148,7 +148,7 @@ const Dashboard = () => {
           <Card>
             <Statistic title="组织数量" value={orgCount} prefix={<TeamOutlined />} valueStyle={{ color: '#52c41a' }} />
             <div style={{ marginTop: 16 }}>
-              <Progress percent={orgCount > 0 ? Math.min(Math.round(orgCount / 15 * 100), 100) : 0} strokeColor="#52c41a" />
+              <Progress percent={orgCount > 0 ? 100 : 0} strokeColor="#52c41a" />
               <div style={{ marginTop: 8, fontSize: 12, color: '#8c8c8c' }}>用户总数: {userCount}</div>
             </div>
           </Card>

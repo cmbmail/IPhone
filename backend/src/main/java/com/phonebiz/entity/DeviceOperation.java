@@ -49,7 +49,4 @@ public class DeviceOperation extends BaseEntity {
 
     @Column(name = "error_message", length = 500)
     private String errorMessage;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

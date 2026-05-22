@@ -37,6 +37,10 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
 
     @Query("SELECT COUNT(o) FROM WorkOrder o WHERE o.createdAt BETWEEN :start AND :end")
     long countBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query("SELECT w FROM WorkOrder w WHERE w.workOrderNo LIKE %:keyword% OR w.title LIKE %:keyword% OR w.description LIKE %:keyword%")
+    List<WorkOrder> searchByKeyword(@Param("keyword") String keyword);
+
 }
 
 

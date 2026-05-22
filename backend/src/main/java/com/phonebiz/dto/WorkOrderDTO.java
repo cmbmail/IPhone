@@ -11,8 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.phonebiz.entity.WorkOrder;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,9 +19,9 @@ public class WorkOrderDTO {
 
     private Long id;
     private String workOrderNo;
-    private String type;
-    private String status;
-    private String priority;
+    private Integer orderType;
+    private Integer status;
+    private Integer priority;
     private Long requesterId;
     private String requesterName;
     private Long handlerId;
@@ -33,8 +31,8 @@ public class WorkOrderDTO {
     private String description;
     private LocalDateTime completedAt;
     private String remark;
+    private String rejectReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<WorkOrderItemDTO> items;
 }
-

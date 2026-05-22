@@ -29,7 +29,4 @@ public class SysRole extends BaseEntity {
 
     @Column(name = "is_system", nullable = false)
     private Boolean isSystem = false;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

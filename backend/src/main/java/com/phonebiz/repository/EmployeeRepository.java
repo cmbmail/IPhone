@@ -36,5 +36,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.orgId = :orgId AND e.status = 1")
     long countActiveByOrgId(@Param("orgId") Long orgId);
+
+    @Query("SELECT e FROM Employee e WHERE e.name LIKE %:keyword% OR e.employeeNo LIKE %:keyword%")
+    List<Employee> searchByKeyword(@Param("keyword") String keyword);
+
 }
 

@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.entity.Invoice;
+import com.phonebiz.entity.Notification;
 import com.phonebiz.entity.InvoiceDistribution;
 import com.phonebiz.entity.InvoiceFile;
 import com.phonebiz.entity.OrgStructure;
@@ -247,7 +248,7 @@ public class InvoiceService {
 
         notificationService.createNotification(
                 1L,
-                com.phonebiz.entity.Notification.NotificationType.SYSTEM_ALERT,
+                Notification.TYPE_SYSTEM_ALERT,
                 "发票已分发",
                 String.format("发票 %s 已分发至您的组织", invoice.getInvoiceNo()),
                 invoice.getId(),
@@ -328,7 +329,7 @@ public class InvoiceService {
 
         invoiceFileRepository.deleteByInvoiceId(id);
         invoiceDistributionRepository.deleteAll(invoiceDistributionRepository.findByInvoiceId(id));
-        invoiceRepository.delete(invoice);
+        invoice.setDeletedAt(LocalDateTime.now()); invoiceRepository.save(invoice);
 
         log.info("Invoice deleted: id={}", id);
     }

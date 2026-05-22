@@ -16,6 +16,7 @@ import com.phonebiz.dto.PhoneAllocationRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
 import com.phonebiz.dto.WorkOrderDTO;
 import com.phonebiz.entity.PhoneNumber;
+import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.entity.WorkOrderItem;
 import com.phonebiz.repository.PhoneNumberRepository;
 
@@ -28,7 +29,7 @@ public class WorkOrderDrivenPhoneService {
     private final ApplicationContext applicationContext;
     private final PhoneService phoneService;
     private final PhoneNumberRepository phoneRepository;
-    
+
     private WorkOrderService getWorkOrderService() {
         return applicationContext.getBean(WorkOrderService.class);
     }
@@ -43,7 +44,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("allocate")
                 .fromValue(null)
@@ -51,17 +52,17 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_ALLOCATE")
+                .type(WorkOrder.WO_PHONE_ALLOCATE)
                 .title("号码分配工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 分配到组织 " + targetOrgId)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone allocation work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -75,7 +76,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("surrender")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
@@ -83,22 +84,22 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_SURRENDER")
+                .type(WorkOrder.WO_PHONE_SURRENDER)
                 .title("号码回收工单 - " + phone.getPhoneNumber())
                 .description("回收号码 " + phone.getPhoneNumber())
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone surrender work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
     @Transactional
-    public WorkOrderDTO transferPhoneByWorkOrder(Long phoneId, Long fromOrgId, Long toOrgId, 
+    public WorkOrderDTO transferPhoneByWorkOrder(Long phoneId, Long fromOrgId, Long toOrgId,
                                                Long requesterId, String requesterName) {
         if (!featureFlagService.isFeatureEnabled(FeatureFlagService.FEATURE_WORK_ORDER_DRIVEN)) {
             throw new BusinessException(ErrorCode.SYS_001);
@@ -108,7 +109,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("transfer")
                 .fromValue(fromOrgId.toString())
@@ -116,17 +117,17 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_TRANSFER")
+                .type(WorkOrder.WO_PHONE_TRANSFER)
                 .title("号码过户工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 从组织 " + fromOrgId + " 过户到组织 " + toOrgId)
-                .priority("HIGH")
+                .priority(WorkOrder.WO_HIGH)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone transfer work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -141,7 +142,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("change_number")
                 .fromValue(phone.getPhoneNumber())
@@ -149,17 +150,17 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_CHANGE_NUMBER")
+                .type(WorkOrder.WO_PHONE_CHANGE_NUMBER)
                 .title("号码变更工单 - " + phone.getPhoneNumber() + " -> " + newPhoneNumber)
                 .description("将号码 " + phone.getPhoneNumber() + " 变更为 " + newPhoneNumber)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone number change work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -174,7 +175,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("change_org")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
@@ -182,17 +183,17 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_CHANGE_ORG")
+                .type(WorkOrder.WO_PHONE_CHANGE_ORG)
                 .title("号码组织变更工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 变更到组织 " + newOrgId)
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone org change work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -206,7 +207,7 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("reclaim")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
@@ -214,17 +215,17 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_RECLAIM")
+                .type(WorkOrder.WO_PHONE_RECLAIM)
                 .title("号码回收工单 - " + phone.getPhoneNumber())
                 .description("强制回收号码 " + phone.getPhoneNumber())
-                .priority("HIGH")
+                .priority(WorkOrder.WO_HIGH)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone reclaim work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -238,25 +239,25 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("enable")
                 .fromValue(String.valueOf(phone.getStatus()))
-                .toValue("active")
+                .toValue(String.valueOf(PhoneNumber.PS_ACTIVE))
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_ENABLE")
+                .type(WorkOrder.WO_PHONE_ENABLE)
                 .title("号码启用工单 - " + phone.getPhoneNumber())
                 .description("启用号码 " + phone.getPhoneNumber())
-                .priority("NORMAL")
+                .priority(WorkOrder.WO_NORMAL)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone enable work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -270,25 +271,25 @@ public class WorkOrderDrivenPhoneService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
-                .itemType("PHONE")
+                .itemType(WorkOrderItem.ITEM_PHONE)
                 .targetId(phoneId)
                 .action("disable")
                 .fromValue(String.valueOf(phone.getStatus()))
-                .toValue("disabled")
+                .toValue(String.valueOf(PhoneNumber.PS_DISABLED))
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type("PHONE_DISABLE")
+                .type(WorkOrder.WO_PHONE_DISABLE)
                 .title("号码停机工单 - " + phone.getPhoneNumber())
                 .description("停机号码 " + phone.getPhoneNumber())
-                .priority("HIGH")
+                .priority(WorkOrder.WO_HIGH)
                 .items(List.of(itemRequest))
                 .build();
 
         WorkOrderDTO workOrder = getWorkOrderService().createWorkOrder(request, requesterId, requesterName);
-        
+
         log.info("Phone disable work order created: {} for phone {}", workOrder.getWorkOrderNo(), phoneId);
-        
+
         return workOrder;
     }
 
@@ -304,10 +305,9 @@ public class WorkOrderDrivenPhoneService {
                 PhoneAllocationRequest request = new PhoneAllocationRequest();
                 request.setPhoneId(phoneId);
                 request.setOrgId(Long.parseLong(item.getToValue()));
-                // Use the toValue as the target userId (item carries the target user/employee info)
-            if (item.getToValue() != null && !item.getToValue().isEmpty()) {
-                request.setUserId(item.getToValue());
-            }
+                if (item.getToValue() != null && !item.getToValue().isEmpty()) {
+                    request.setUserId(item.getToValue());
+                }
                 phoneService.allocatePhone(request, operator);
             }
             case "surrender" -> {
@@ -338,4 +338,3 @@ public class WorkOrderDrivenPhoneService {
         }
     }
 }
-

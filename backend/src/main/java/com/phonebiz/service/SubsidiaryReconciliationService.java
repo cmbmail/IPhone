@@ -22,6 +22,7 @@ import com.phonebiz.common.ErrorCode;
 import com.phonebiz.entity.BillAllocation;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.entity.SubsidiaryReconciliation;
+import com.phonebiz.entity.Notification;
 import com.phonebiz.repository.BillAllocationRepository;
 import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.SubsidiaryReconciliationRepository;
@@ -48,7 +49,7 @@ public class SubsidiaryReconciliationService {
                 .filter(r -> r.getReconciliationStatus() == SubsidiaryReconciliation.ReconciliationStatus.pending)
                 .toList();
             if (!pending.isEmpty()) {
-                reconciliationRepository.deleteAll(pending);
+                pending.forEach(e -> e.setDeletedAt(LocalDateTime.now())); reconciliationRepository.saveAll(pending);
                 log.info("Deleted {} pending reconciliation records for month {}", pending.size(), billMonth);
             }
         }
@@ -95,7 +96,7 @@ public class SubsidiaryReconciliationService {
 
         notificationService.createNotification(
                 1L,
-                com.phonebiz.entity.Notification.NotificationType.SYSTEM_ALERT,
+                Notification.TYPE_SYSTEM_ALERT,
                 "子公司对账已确认",
                 String.format("子公司对账记录 %d 已由 %s 确认", reconciliationId, confirmBy),
                 reconciliationId,

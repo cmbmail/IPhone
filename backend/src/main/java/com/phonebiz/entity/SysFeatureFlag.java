@@ -48,7 +48,4 @@ public class SysFeatureFlag extends BaseEntity {
         USER,
         CUSTOM
     }
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

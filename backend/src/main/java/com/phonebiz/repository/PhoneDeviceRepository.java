@@ -33,5 +33,9 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     Page<PhoneDevice> findByOrgIdsAndStatus(@Param("orgIds") List<Long> orgIds,
                                             @Param("status") Integer status,
                                             Pageable pageable);
+
+    @Query("SELECT d FROM PhoneDevice d WHERE d.macAddress LIKE %:keyword% OR d.assignedTo LIKE %:keyword%")
+    List<PhoneDevice> searchByKeyword(@Param("keyword") String keyword);
+
 }
 

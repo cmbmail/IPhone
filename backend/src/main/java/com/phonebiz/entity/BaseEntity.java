@@ -7,12 +7,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.annotations.Where;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 import lombok.Data;
 
 @Data
+@Where(clause = "deleted_at IS NULL")
 @MappedSuperclass
 public abstract class BaseEntity {
 

@@ -110,7 +110,7 @@ public class DeviceService {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_001));
         
-        deviceRepository.delete(device);
+        device.setDeletedAt(LocalDateTime.now()); deviceRepository.save(device);
         log.info("Device {} deleted", device.getDeviceId());
     }
 

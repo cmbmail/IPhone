@@ -85,9 +85,9 @@ public class WorkOrderService {
 
         WorkOrder workOrder = WorkOrder.builder()
                 .workOrderNo(workOrderNo)
-                .type(mapTypeToInteger(request.getType()))
+                .type(request.getType())
                 .status(WorkOrder.WO_PENDING)
-                .priority(mapPriorityToInteger(request.getPriority()))
+                .priority(request.getPriority())
                 .requesterId(requesterId)
                 .requesterName(requesterName)
                 .handlerId(request.getHandlerId())
@@ -104,7 +104,7 @@ public class WorkOrderService {
             for (CreateWorkOrderRequest.WorkOrderItemRequest itemRequest : request.getItems()) {
                 WorkOrderItem item = WorkOrderItem.builder()
                         .workOrderId(saved.getId())
-                        .itemType(mapItemTypeToInteger(itemRequest.getItemType()))
+                        .itemType(itemRequest.getItemType())
                         .targetId(itemRequest.getTargetId())
                         .action(itemRequest.getAction())
                         .fromValue(itemRequest.getFromValue())
@@ -128,7 +128,7 @@ public class WorkOrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_001));
 
         if (request.getStatus() != null) {
-            Integer newStatus = mapStatusToInteger(request.getStatus());
+            Integer newStatus = request.getStatus();
             if (!isValidStatusTransition(workOrder.getStatus(), newStatus)) {
                 throw new BusinessException(ErrorCode.WO_002);
             }
@@ -170,7 +170,7 @@ public class WorkOrderService {
         }
 
         workOrderItemRepository.findByWorkOrderId(id).forEach(workOrderItemRepository::delete);
-        workOrderRepository.delete(workOrder);
+        workOrder.setDeletedAt(LocalDateTime.now()); workOrderRepository.save(workOrder);
 
         log.info("Work order deleted: {}", workOrder.getWorkOrderNo());
     }
@@ -205,9 +205,9 @@ public class WorkOrderService {
         return WorkOrderDTO.builder()
                 .id(workOrder.getId())
                 .workOrderNo(workOrder.getWorkOrderNo())
-                .type(String.valueOf(workOrder.getType()))
-                .status(String.valueOf(workOrder.getStatus()))
-                .priority(String.valueOf(workOrder.getPriority()))
+                .orderType(workOrder.getType())
+                .status(workOrder.getStatus())
+                .priority(workOrder.getPriority())
                 .requesterId(workOrder.getRequesterId())
                 .requesterName(workOrder.getRequesterName())
                 .handlerId(workOrder.getHandlerId())
@@ -217,25 +217,46 @@ public class WorkOrderService {
                 .description(workOrder.getDescription())
                 .completedAt(workOrder.getCompletedAt())
                 .remark(workOrder.getRemark())
+                .rejectReason(workOrder.getStatus() == WorkOrder.WO_CANCELLED ? workOrder.getRemark() : null)
                 .createdAt(workOrder.getCreatedAt())
                 .updatedAt(workOrder.getUpdatedAt())
                 .build();
     }
 
     private WorkOrderItemDTO toItemDTO(WorkOrderItem item) {
+        String description = buildItemDescription(item);
         return WorkOrderItemDTO.builder()
                 .id(item.getId())
                 .workOrderId(item.getWorkOrderId())
-                .itemType(String.valueOf(item.getItemType()))
+                .itemType(item.getItemType())
                 .targetId(item.getTargetId())
                 .action(item.getAction())
                 .fromValue(item.getFromValue())
                 .toValue(item.getToValue())
-                .status(String.valueOf(item.getStatus()))
+                .status(item.getStatus())
                 .executedAt(item.getExecutedAt())
                 .errorMessage(item.getErrorMessage())
                 .remark(item.getRemark())
+                .description(description)
                 .build();
+    }
+
+    private String buildItemDescription(WorkOrderItem item) {
+        StringBuilder sb = new StringBuilder();
+        if (item.getAction() != null) {
+            sb.append(item.getAction());
+        }
+        if (item.getFromValue() != null || item.getToValue() != null) {
+            sb.append(": ");
+            if (item.getFromValue() != null) {
+                sb.append(item.getFromValue());
+            }
+            sb.append(" → ");
+            if (item.getToValue() != null) {
+                sb.append(item.getToValue());
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     @Transactional
@@ -378,7 +399,7 @@ public class WorkOrderService {
         WorkOrderItem item = workOrderItemRepository.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.WO_003));
 
-        if (item.getStatus() != WorkOrderItem.ITEM_PENDING) {
+        if (item.getStatus() != WorkOrderItem.ITEM_PENDING && item.getStatus() != WorkOrderItem.ITEM_FAILED) {
             throw new BusinessException(ErrorCode.WO_004);
         }
 
@@ -423,56 +444,11 @@ public class WorkOrderService {
 
         WorkOrder workOrder = workOrderRepository.findById(workOrderId).orElse(null);
         if (workOrder != null && workOrder.getStatus() == WorkOrder.WO_PROCESSING) {
-            if (pendingCount == 0) {
+            if (pendingCount == 0 && failedCount == 0) {
                 workOrder.setStatus(WorkOrder.WO_COMPLETED);
                 workOrder.setCompletedAt(LocalDateTime.now());
                 workOrderRepository.save(workOrder);
             }
         }
-    }
-
-    private int mapTypeToInteger(String type) {
-        return switch (type.toUpperCase()) {
-            case "ALLOCATE" -> WorkOrder.WO_PHONE_ALLOCATE;
-            case "TRANSFER" -> WorkOrder.WO_PHONE_TRANSFER;
-            case "CHANGE_NUMBER" -> WorkOrder.WO_PHONE_CHANGE_NUMBER;
-            case "CHANGE_ORG" -> WorkOrder.WO_PHONE_CHANGE_ORG;
-            case "RECLAIM" -> WorkOrder.WO_PHONE_RECLAIM;
-            case "SURRENDER" -> WorkOrder.WO_PHONE_SURRENDER;
-            case "ENABLE" -> WorkOrder.WO_PHONE_ENABLE;
-            case "DISABLE" -> WorkOrder.WO_PHONE_DISABLE;
-            default -> throw new BusinessException(ErrorCode.SYS_001);
-        };
-    }
-
-    private int mapPriorityToInteger(String priority) {
-        return switch (priority.toUpperCase()) {
-            case "LOW" -> WorkOrder.WO_LOW;
-            case "NORMAL" -> WorkOrder.WO_NORMAL;
-            case "HIGH" -> WorkOrder.WO_HIGH;
-            case "URGENT" -> WorkOrder.WO_URGENT;
-            default -> throw new BusinessException(ErrorCode.SYS_001);
-        };
-    }
-
-    private int mapStatusToInteger(String status) {
-        return switch (status.toUpperCase()) {
-            case "PENDING" -> WorkOrder.WO_PENDING;
-            case "ACCEPTED" -> WorkOrder.WO_ACCEPTED;
-            case "PROCESSING" -> WorkOrder.WO_PROCESSING;
-            case "COMPLETED" -> WorkOrder.WO_COMPLETED;
-            case "ARCHIVED" -> WorkOrder.WO_ARCHIVED;
-            case "CANCELLED", "REJECTED" -> WorkOrder.WO_CANCELLED;
-            default -> throw new BusinessException(ErrorCode.SYS_001);
-        };
-    }
-
-    private int mapItemTypeToInteger(String itemType) {
-        return switch (itemType.toUpperCase()) {
-            case "PHONE" -> WorkOrderItem.ITEM_PHONE;
-            case "DEVICE" -> WorkOrderItem.ITEM_DEVICE;
-            case "EMPLOYEE" -> WorkOrderItem.ITEM_EMPLOYEE;
-            default -> throw new BusinessException(ErrorCode.SYS_001);
-        };
     }
 }

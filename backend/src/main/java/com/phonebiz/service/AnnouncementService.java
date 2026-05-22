@@ -69,7 +69,7 @@ public class AnnouncementService {
 
     @Transactional
     public void deleteAnnouncement(Long id) {
-        announcementRepository.deleteById(id);
+        announcementRepository.findById(id).ifPresent(e -> { e.setDeletedAt(LocalDateTime.now()); announcementRepository.save(e); });
     }
 
     @Transactional

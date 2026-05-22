@@ -244,7 +244,7 @@ const BillManagement = () => {
         </Col>
         <Col span={6}>
           <Card size="small">
-            <Statistic title="总金额" value={0} prefix="¥" suffix="元" valueStyle={{ color: tabConfig.color }} />
+            <Statistic title="总金额" value={(billData?.content || []).reduce((s: any, r: any) => s + (r.chargeAmount || 0), 0)} prefix="¥" suffix="元" valueStyle={{ color: tabConfig.color }} />
           </Card>
         </Col>
       </Row>

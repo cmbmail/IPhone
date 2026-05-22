@@ -40,4 +40,8 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
                                          @Param("status") Integer status,
                                          @Param("deptOrgId") Long deptOrgId,
                                          Pageable pageable);
+
+    @Query("SELECT e FROM ExtensionNumber e WHERE e.extensionNumber LIKE %:keyword% OR e.userName LIKE %:keyword%")
+    List<ExtensionNumber> searchByKeyword(@Param("keyword") String keyword);
+
 }

@@ -47,7 +47,4 @@ public class Announcement extends BaseEntity {
     private Integer priority;
     @Column(name = "status", nullable = false, length = 20)
     private Integer status;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }

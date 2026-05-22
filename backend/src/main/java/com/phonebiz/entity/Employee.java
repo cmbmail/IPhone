@@ -50,8 +50,5 @@ public class Employee extends BaseEntity {
 
     @Column(name = "is_virtual", nullable = false)
     private Boolean isVirtual = false;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 }
 

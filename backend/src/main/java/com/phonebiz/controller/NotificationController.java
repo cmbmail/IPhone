@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
-import com.phonebiz.common.EnumHelper;
 import com.phonebiz.entity.Notification;
 import com.phonebiz.service.NotificationService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,12 +37,10 @@ public class NotificationController {
 
     @GetMapping("/status/{status}")
     public ApiResponse<Page<Notification>> getNotificationsByStatus(
-            @PathVariable String status,
+            @PathVariable Integer status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Long userId = getCurrentUserId();
-        Notification.NotificationStatus notificationStatus =
-            EnumHelper.parse(Notification.NotificationStatus.class, status);
-        return ApiResponse.success(notificationService.getNotificationsByStatus(userId, notificationStatus, pageable));
+        return ApiResponse.success(notificationService.getNotificationsByStatus(userId, status, pageable));
     }
 
     @GetMapping("/unread-count")
@@ -88,14 +85,14 @@ public class NotificationController {
         return ApiResponse.success("Archived notifications cleaned", null);
     }
 
-    /** H-08: Get current user ID from authentication to prevent IDOR */
+    /** Get current user ID from JWT authentication */
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) throw new BusinessException(ErrorCode.AUTH_004);
         return notificationService.getUserIdByUsername(auth.getName());
     }
 
-    /** H-08: Verify notification ownership to prevent IDOR */
+    /** Verify notification ownership to prevent IDOR */
     private void verifyOwnership(Long notificationId) {
         Long currentUserId = getCurrentUserId();
         Notification notification = notificationService.getNotificationById(notificationId);

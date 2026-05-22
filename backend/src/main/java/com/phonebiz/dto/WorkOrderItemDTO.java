@@ -15,14 +15,14 @@ public class WorkOrderItemDTO {
 
     private Long id;
     private Long workOrderId;
-    private String itemType;
+    private Integer itemType;
     private Long targetId;
     private String action;
     private String fromValue;
     private String toValue;
-    private String status;
+    private Integer status;
     private LocalDateTime executedAt;
     private String errorMessage;
     private String remark;
+    private String description;
 }
-
