@@ -79,7 +79,7 @@ public class ExtensionNumberService {
         ext.setDeptName(null);
         ext.setBranchName(null);
         ext.setPhoneNumber(null);
-        ext.setStatus(ExtStatus.AVAILABLE);
+        ext.setStatus(ExtStatus.IDLE);
         ext.setWorkOrderId(null);
         ext.setUpdatedBy(operator);
 
@@ -102,7 +102,7 @@ public class ExtensionNumberService {
                 .workOrderNo(woNo)
                 .type(type)
                 .status(WorkOrder.WorkOrderStatus.COMPLETED)
-                .priority(WorkOrder.WorkOrderPriority.MEDIUM)
+                .priority(WorkOrder.WorkOrderPriority.NORMAL)
                 .requesterName(operator)
                 .handlerName(operator)
                 .title(title)

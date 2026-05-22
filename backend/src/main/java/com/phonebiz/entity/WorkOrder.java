@@ -81,7 +81,7 @@ public class WorkOrder extends BaseEntity {
 
     public enum WorkOrderPriority {
         LOW,
-        MEDIUM,
+        NORMAL,
         HIGH,
         URGENT
     }

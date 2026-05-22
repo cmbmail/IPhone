@@ -7,7 +7,7 @@ import { request } from '@/api/request'
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   AVAILABLE: { label: '可分配', color: 'green' },
-  IDLE: { label: '闲置', color: 'orange' },
+  IDLE: { label: '闲置(无电话)', color: 'orange' },
   ALLOCATED: { label: '已占用', color: 'blue' },
 }
 

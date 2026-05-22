@@ -52,7 +52,7 @@ public class WorkOrderDrivenDeviceService {
                 .type("DEVICE_ASSIGN")
                 .title("话机分配工单 - MAC: " + device.getMacAddress())
                 .description("将话机 " + device.getMacAddress() + " 分配给员工 " + employeeNo)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -84,7 +84,7 @@ public class WorkOrderDrivenDeviceService {
                 .type("DEVICE_RECLAIM")
                 .title("话机回收工单 - MAC: " + device.getMacAddress())
                 .description("回收话机 " + device.getMacAddress())
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -180,7 +180,7 @@ public class WorkOrderDrivenDeviceService {
                 .type("DEVICE_BIND_PHONE")
                 .title("话机绑定号码工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 绑定分机 " + extensionNumber)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -212,7 +212,7 @@ public class WorkOrderDrivenDeviceService {
                 .type("DEVICE_UNBIND_PHONE")
                 .title("话机解绑号码工单 - MAC: " + device.getMacAddress())
                 .description("话机 " + device.getMacAddress() + " 解绑分机 " + extensionNumber)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 

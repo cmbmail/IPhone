@@ -54,7 +54,7 @@ public class WorkOrderDrivenPhoneService {
                 .type("PHONE_ALLOCATE")
                 .title("号码分配工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 分配到组织 " + targetOrgId)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -86,7 +86,7 @@ public class WorkOrderDrivenPhoneService {
                 .type("PHONE_SURRENDER")
                 .title("号码回收工单 - " + phone.getPhoneNumber())
                 .description("回收号码 " + phone.getPhoneNumber())
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -152,7 +152,7 @@ public class WorkOrderDrivenPhoneService {
                 .type("PHONE_CHANGE_NUMBER")
                 .title("号码变更工单 - " + phone.getPhoneNumber() + " -> " + newPhoneNumber)
                 .description("将号码 " + phone.getPhoneNumber() + " 变更为 " + newPhoneNumber)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -185,7 +185,7 @@ public class WorkOrderDrivenPhoneService {
                 .type("PHONE_CHANGE_ORG")
                 .title("号码组织变更工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 变更到组织 " + newOrgId)
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
@@ -249,7 +249,7 @@ public class WorkOrderDrivenPhoneService {
                 .type("PHONE_ENABLE")
                 .title("号码启用工单 - " + phone.getPhoneNumber())
                 .description("启用号码 " + phone.getPhoneNumber())
-                .priority("MEDIUM")
+                .priority("NORMAL")
                 .items(List.of(itemRequest))
                 .build();
 
