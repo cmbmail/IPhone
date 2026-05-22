@@ -30,7 +30,7 @@ public class PhoneDevice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "mac_address", nullable = false, length = 12)
+    @Column(name = "mac_address", nullable = false, length = 20)
     private String macAddress;
 
     @Column(name = "model", length = 100)
@@ -55,7 +55,7 @@ public class PhoneDevice {
 
     @Column(name = "version", nullable = false)
     @Version
-    private Integer version;
+    private Long version = 0L;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -77,7 +77,7 @@ public class PhoneDevice {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (version == null) {
-            version = 0;
+            version = 0L;
         }
         if (status == null) {
             status = PD_STOCK;

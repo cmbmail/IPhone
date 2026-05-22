@@ -105,7 +105,7 @@ public class WorkOrderService {
                 WorkOrderItem item = WorkOrderItem.builder()
                         .workOrderId(saved.getId())
                         .itemType(itemRequest.getItemType())
-                        .targetId(itemRequest.getTargetId())
+                        .targetRefId(itemRequest.getTargetRefId())
                         .action(itemRequest.getAction())
                         .fromValue(itemRequest.getFromValue())
                         .toValue(itemRequest.getToValue())
@@ -229,7 +229,7 @@ public class WorkOrderService {
                 .id(item.getId())
                 .workOrderId(item.getWorkOrderId())
                 .itemType(item.getItemType())
-                .targetId(item.getTargetId())
+                .targetRefId(item.getTargetRefId())
                 .action(item.getAction())
                 .fromValue(item.getFromValue())
                 .toValue(item.getToValue())
@@ -344,8 +344,8 @@ public class WorkOrderService {
         List<WorkOrderItem> items = workOrderItemRepository.findByWorkOrderId(id);
 
         Map<Long, List<WorkOrderItem>> itemsByOrg = items.stream()
-                .filter(item -> item.getTargetId() != null)
-                .collect(Collectors.groupingBy(WorkOrderItem::getTargetId));
+                .filter(item -> item.getTargetRefId() != null)
+                .collect(Collectors.groupingBy(WorkOrderItem::getTargetRefId));
 
         String batchId = UUID.randomUUID().toString().replace("-", "").substring(0, 32);
         List<WorkOrderDTO> result = new ArrayList<>();
@@ -371,7 +371,7 @@ public class WorkOrderService {
                 WorkOrderItem newItem = WorkOrderItem.builder()
                         .workOrderId(savedChild.getId())
                         .itemType(item.getItemType())
-                        .targetId(item.getTargetId())
+                        .targetRefId(item.getTargetRefId())
                         .action(item.getAction())
                         .fromValue(item.getFromValue())
                         .toValue(item.getToValue())
@@ -427,7 +427,7 @@ public class WorkOrderService {
     }
 
     private void executeItemAction(WorkOrderItem item) {
-        log.info("Executing work order item: action={}, targetId={}, itemType={}", item.getAction(), item.getTargetId(), item.getItemType());
+        log.info("Executing work order item: action={}, targetId={}, itemType={}", item.getAction(), item.getTargetRefId(), item.getItemType());
 
         if (item.getItemType() == WorkOrderItem.ITEM_PHONE) {
             workOrderDrivenPhoneService.executePhoneWorkOrderItem(item);

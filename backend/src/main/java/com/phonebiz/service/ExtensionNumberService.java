@@ -115,7 +115,7 @@ public class ExtensionNumberService {
         WorkOrderItem item = WorkOrderItem.builder()
                 .workOrderId(wo.getId())
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(targetId)
+                .targetRefId(targetId)
                 .action(String.valueOf(type))
                 .fromValue(fromValue)
                 .toValue(toValue)

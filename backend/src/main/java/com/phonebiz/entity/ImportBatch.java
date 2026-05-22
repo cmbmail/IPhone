@@ -32,7 +32,7 @@ public class ImportBatch extends BaseEntity {
     public static final int BATCH_FAILED = 3;
 
 
-    @Column(name = "batch_id", unique = true, nullable = false, length = 32)
+    @Column(name = "batch_id", unique = true, nullable = false, length = 50)
     private String batchId;
 
     @Column(name = "total_count", nullable = false)

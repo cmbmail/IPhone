@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PhoneDeviceHistoryDTO {
     private Long id;
-    private Long deviceId;
+    private Long phoneDeviceId;
     private String macAddress;
     private String action;
     private Integer fromStatus;

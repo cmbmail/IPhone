@@ -19,13 +19,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PhoneDeviceHistory extends BaseEntity {
 
-    @Column(name = "device_id", nullable = false)
-    private Long deviceId;
+    @Column(name = "phone_device_id", nullable = false)
+    private Long phoneDeviceId;
 
-    @Column(name = "mac_address", nullable = false, length = 12)
+    @Column(name = "mac_address", nullable = false, length = 20)
     private String macAddress;
 
-    @Column(name = "action", nullable = false, length = 30)
+    @Column(name = "action", nullable = false, length = 50)
     private String action;
 
     @Column(name = "from_status")
@@ -40,7 +40,7 @@ public class PhoneDeviceHistory extends BaseEntity {
     @Column(name = "to_assigned", length = 20)
     private String toAssigned;
 
-    @Column(name = "operator", nullable = false, length = 50)
+    @Column(name = "operator", nullable = false, length = 100)
     private String operator;
 
     @Column(name = "operated_at", nullable = false)

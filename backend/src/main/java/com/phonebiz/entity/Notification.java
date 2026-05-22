@@ -36,8 +36,8 @@ public class Notification extends BaseEntity {
     public static final int TYPE_WORK_ORDER_ASSIGNED = 8;
     public static final int TYPE_IMPORT_COMPLETED = 9;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "sys_user_id", nullable = false)
+    private Long sysUserId;
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;

@@ -43,7 +43,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("assign")
                 .fromValue(device.getAssignedTo())
                 .toValue(employeeNo)
@@ -75,7 +75,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("reclaim")
                 .fromValue(device.getAssignedTo())
                 .toValue(null)
@@ -107,7 +107,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("repair")
                 .fromValue(String.valueOf(device.getStatus()))
                 .toValue(String.valueOf(PhoneDevice.PD_REPAIRING))
@@ -139,7 +139,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("retire")
                 .fromValue(String.valueOf(device.getStatus()))
                 .toValue(String.valueOf(PhoneDevice.PD_RETIRED))
@@ -171,7 +171,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("bind_phone")
                 .fromValue(null)
                 .toValue(extensionNumber)
@@ -203,7 +203,7 @@ public class WorkOrderDrivenDeviceService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_DEVICE)
-                .targetId(deviceId)
+                .targetRefId(deviceId)
                 .action("unbind_phone")
                 .fromValue(extensionNumber)
                 .toValue(null)
@@ -227,7 +227,7 @@ public class WorkOrderDrivenDeviceService {
     @Transactional
     public void executeDeviceWorkOrderItem(WorkOrderItem item) {
         String action = item.getAction();
-        Long deviceId = item.getTargetId();
+        Long deviceId = item.getTargetRefId();
         String operator = item.getOperator();
 
         switch (action) {

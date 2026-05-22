@@ -16,7 +16,7 @@ public class WorkOrderItemDTO {
     private Long id;
     private Long workOrderId;
     private Integer itemType;
-    private Long targetId;
+    private Long targetRefId;
     private String action;
     private String fromValue;
     private String toValue;

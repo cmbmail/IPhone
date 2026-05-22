@@ -46,7 +46,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("allocate")
                 .fromValue(null)
                 .toValue(targetOrgId.toString())
@@ -78,7 +78,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("surrender")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
                 .toValue(null)
@@ -111,7 +111,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("transfer")
                 .fromValue(fromOrgId.toString())
                 .toValue(toOrgId.toString())
@@ -144,7 +144,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("change_number")
                 .fromValue(phone.getPhoneNumber())
                 .toValue(newPhoneNumber)
@@ -177,7 +177,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("change_org")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
                 .toValue(newOrgId.toString())
@@ -209,7 +209,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("reclaim")
                 .fromValue(phone.getOrgId() != null ? phone.getOrgId().toString() : null)
                 .toValue(null)
@@ -241,7 +241,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("enable")
                 .fromValue(String.valueOf(phone.getStatus()))
                 .toValue(String.valueOf(PhoneNumber.PS_ACTIVE))
@@ -273,7 +273,7 @@ public class WorkOrderDrivenPhoneService {
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
                 .itemType(WorkOrderItem.ITEM_PHONE)
-                .targetId(phoneId)
+                .targetRefId(phoneId)
                 .action("disable")
                 .fromValue(String.valueOf(phone.getStatus()))
                 .toValue(String.valueOf(PhoneNumber.PS_DISABLED))
@@ -297,7 +297,7 @@ public class WorkOrderDrivenPhoneService {
     @Transactional
     public void executePhoneWorkOrderItem(WorkOrderItem item) {
         String action = item.getAction();
-        Long phoneId = item.getTargetId();
+        Long phoneId = item.getTargetRefId();
         String operator = item.getOperator();
         String workOrderNo = null;
 

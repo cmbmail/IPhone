@@ -35,8 +35,8 @@ public class WorkOrderItem extends BaseEntity {
     @Column(name = "item_type", nullable = false, length = 20)
     private Integer itemType;
 
-    @Column(name = "target_id")
-    private Long targetId;
+    @Column(name = "target_ref_id")
+    private Long targetRefId;
 
     @Column(name = "action", nullable = false, length = 50)
     private String action;

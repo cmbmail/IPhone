@@ -37,7 +37,7 @@ public class CreateWorkOrderRequest {
     @AllArgsConstructor
     public static class WorkOrderItemRequest {
         private Integer itemType;
-        private Long targetId;
+        private Long targetRefId;
         private String action;
         private String fromValue;
         private String toValue;

@@ -34,17 +34,17 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public Page<Notification> getNotifications(Long userId, Pageable pageable) {
-        return notificationRepository.findByUserId(userId, pageable);
+        return notificationRepository.findBySysUserId(userId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Notification> getNotificationsByStatus(Long userId, Integer status, Pageable pageable) {
-        return notificationRepository.findByUserIdAndStatus(userId, status, pageable);
+        return notificationRepository.findBySysUserIdAndStatus(userId, status, pageable);
     }
 
     @Transactional(readOnly = true)
     public long countUnread(Long userId) {
-        return notificationRepository.countByUserIdAndStatus(userId, Notification.STATUS_UNREAD);
+        return notificationRepository.countBySysUserIdAndStatus(userId, Notification.STATUS_UNREAD);
     }
 
     @Transactional
@@ -58,7 +58,7 @@ public class NotificationService {
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        List<Notification> unread = notificationRepository.findByUserIdAndStatus(userId, Notification.STATUS_UNREAD);
+        List<Notification> unread = notificationRepository.findBySysUserIdAndStatus(userId, Notification.STATUS_UNREAD);
         for (Notification n : unread) {
             n.setStatus(Notification.STATUS_READ);
             n.setReadAt(LocalDateTime.now());
@@ -81,7 +81,7 @@ public class NotificationService {
 
     @Transactional
     public void cleanArchived(Long userId) {
-        List<Notification> archived = notificationRepository.findByUserIdAndStatus(userId, Notification.STATUS_ARCHIVED);
+        List<Notification> archived = notificationRepository.findBySysUserIdAndStatus(userId, Notification.STATUS_ARCHIVED);
         archived.forEach(e -> e.setDeletedAt(LocalDateTime.now())); notificationRepository.saveAll(archived);
     }
 
@@ -91,9 +91,9 @@ public class NotificationService {
     }
 
     @Transactional
-    public Notification createNotification(Long userId, Integer type, String title, String content, Long sourceId, String sourceType) {
+    public Notification createNotification(Long sysUserId, Integer type, String title, String content, Long sourceId, String sourceType) {
         Notification notification = Notification.builder()
-                .userId(userId)
+                .sysUserId(sysUserId)
                 .type(type)
                 .title(title)
                 .content(content)

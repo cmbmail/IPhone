@@ -22,8 +22,8 @@ public class DevicePhoneMapping {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "device_id", nullable = false)
-    private Long deviceId;
+    @Column(name = "phone_device_id", nullable = false)
+    private Long phoneDeviceId;
 
     @Column(name = "phone_id", nullable = false)
     private Long phoneId;

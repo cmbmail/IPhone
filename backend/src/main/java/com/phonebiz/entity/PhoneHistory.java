@@ -22,10 +22,10 @@ public class PhoneHistory extends BaseEntity {
     @Column(name = "phone_id", nullable = false)
     private Long phoneId;
 
-    @Column(name = "phone_number", nullable = false, length = 20)
+    @Column(name = "phone_number", nullable = false, length = 50)
     private String phoneNumber;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 50)
     private String action;
 
     @Column(name = "from_status")
@@ -34,10 +34,10 @@ public class PhoneHistory extends BaseEntity {
     @Column(name = "to_status")
     private Integer toStatus;
 
-    @Column(name = "from_user", length = 20)
+    @Column(name = "from_user", length = 50)
     private String fromUser;
 
-    @Column(name = "to_user", length = 20)
+    @Column(name = "to_user", length = 50)
     private String toUser;
 
     @Column(name = "from_org", length = 200)

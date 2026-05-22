@@ -11,7 +11,7 @@ import com.phonebiz.entity.PhoneDeviceHistory;
 
 @Repository
 public interface PhoneDeviceHistoryRepository extends JpaRepository<PhoneDeviceHistory, Long> {
-    List<PhoneDeviceHistory> findByDeviceIdOrderByOperatedAtDesc(Long deviceId);
-    Page<PhoneDeviceHistory> findByDeviceIdOrderByOperatedAtDesc(Long deviceId, Pageable pageable);
+    List<PhoneDeviceHistory> findByPhoneDeviceIdOrderByOperatedAtDesc(Long deviceId);
+    Page<PhoneDeviceHistory> findByPhoneDeviceIdOrderByOperatedAtDesc(Long deviceId, Pageable pageable);
 }
 

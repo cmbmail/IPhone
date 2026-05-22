@@ -96,7 +96,7 @@ public class NotificationController {
     private void verifyOwnership(Long notificationId) {
         Long currentUserId = getCurrentUserId();
         Notification notification = notificationService.getNotificationById(notificationId);
-        if (notification == null || !notification.getUserId().equals(currentUserId)) {
+        if (notification == null || !notification.getSysUserId().equals(currentUserId)) {
             throw new BusinessException(ErrorCode.SYS_002, "Notification not found or access denied");
         }
     }

@@ -64,7 +64,7 @@ public class PhoneDeviceService {
     public List<BoundPhoneDTO> getBoundPhones(Long deviceId) {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByDeviceId(deviceId);
+        List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByPhoneDeviceId(deviceId);
         if (mappings.isEmpty()) return List.of();
 
         // Batch load all related data
@@ -108,7 +108,7 @@ public class PhoneDeviceService {
     public List<PhoneDeviceHistoryDTO> getDeviceHistory(Long deviceId) {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        List<PhoneDeviceHistory> historyList = phoneDeviceHistoryRepository.findByDeviceIdOrderByOperatedAtDesc(deviceId);
+        List<PhoneDeviceHistory> historyList = phoneDeviceHistoryRepository.findByPhoneDeviceIdOrderByOperatedAtDesc(deviceId);
         return historyList.stream().map(this::toHistoryDTO).collect(Collectors.toList());
     }
 
@@ -355,17 +355,17 @@ public class PhoneDeviceService {
         if (phone.getExtensionNumber() == null || phone.getExtensionNumber().isEmpty()) {
             throw new BusinessException(ErrorCode.DEVICE_PHONE_NO_EXTENSION);
         }
-        if (devicePhoneMappingRepository.existsByDeviceIdAndPhoneId(deviceId, phone.getId())) {
+        if (devicePhoneMappingRepository.existsByPhoneDeviceIdAndPhoneId(deviceId, phone.getId())) {
             throw new BusinessException(ErrorCode.DEVICE_PHONE_ALREADY_BOUND);
         }
 
-        int maxLineOrder = devicePhoneMappingRepository.findByDeviceId(deviceId).stream()
+        int maxLineOrder = devicePhoneMappingRepository.findByPhoneDeviceId(deviceId).stream()
                 .mapToInt(DevicePhoneMapping::getLineOrder)
                 .max()
                 .orElse(0);
 
         DevicePhoneMapping mapping = DevicePhoneMapping.builder()
-                .deviceId(deviceId)
+                .phoneDeviceId(deviceId)
                 .phoneId(phone.getId())
                 .lineOrder(maxLineOrder + 1)
                 .build();
@@ -378,9 +378,9 @@ public class PhoneDeviceService {
     public void unbindPhone(Long deviceId, Long phoneId) {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
-        devicePhoneMappingRepository.findByDeviceIdAndPhoneId(deviceId, phoneId)
+        devicePhoneMappingRepository.findByPhoneDeviceIdAndPhoneId(deviceId, phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
-        devicePhoneMappingRepository.deleteByDeviceIdAndPhoneId(deviceId, phoneId);
+        devicePhoneMappingRepository.deleteByPhoneDeviceIdAndPhoneId(deviceId, phoneId);
         log.info("话机{}解绑号码{}成功", deviceId, phoneId);
     }
 
@@ -391,9 +391,9 @@ public class PhoneDeviceService {
         // Look up phone by extension number, then find and delete the mapping
         com.phonebiz.entity.PhoneNumber phone = phoneNumberRepository.findByExtensionNumber(extensionNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_002, "Phone with extension " + extensionNumber + " not found"));
-        devicePhoneMappingRepository.findByDeviceIdAndPhoneId(deviceId, phone.getId())
+        devicePhoneMappingRepository.findByPhoneDeviceIdAndPhoneId(deviceId, phone.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.SYS_002, "Binding not found for extension " + extensionNumber));
-        devicePhoneMappingRepository.deleteByDeviceIdAndPhoneId(deviceId, phone.getId());
+        devicePhoneMappingRepository.deleteByPhoneDeviceIdAndPhoneId(deviceId, phone.getId());
         log.info("话机{}解绑分机{}成功", deviceId, extensionNumber);
     }
 
@@ -403,9 +403,9 @@ public class PhoneDeviceService {
     }
 
     private void unbindAllPhones(Long deviceId) {
-        List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByDeviceId(deviceId);
+        List<DevicePhoneMapping> mappings = devicePhoneMappingRepository.findByPhoneDeviceId(deviceId);
         if (!mappings.isEmpty()) {
-            devicePhoneMappingRepository.deleteByDeviceId(deviceId);
+            devicePhoneMappingRepository.deleteByPhoneDeviceId(deviceId);
             log.info("话机{}解绑全部{}个号码", deviceId, mappings.size());
         }
     }
@@ -480,7 +480,7 @@ public class PhoneDeviceService {
     private java.util.Map<Long, Integer> batchLoadPhoneCounts(List<Long> deviceIds) {
         java.util.Map<Long, Integer> map = new java.util.HashMap<>();
         if (deviceIds == null || deviceIds.isEmpty()) return map;
-        List<Object[]> results = devicePhoneMappingRepository.countByDeviceIdIn(deviceIds);
+        List<Object[]> results = devicePhoneMappingRepository.countByPhoneDeviceIdIn(deviceIds);
         for (Object[] row : results) {
             map.put((Long) row[0], ((Number) row[1]).intValue());
         }
@@ -490,7 +490,7 @@ public class PhoneDeviceService {
     private PhoneDeviceHistoryDTO toHistoryDTO(PhoneDeviceHistory history) {
         return PhoneDeviceHistoryDTO.builder()
                 .id(history.getId())
-                .deviceId(history.getDeviceId())
+                .phoneDeviceId(history.getPhoneDeviceId())
                 .macAddress(history.getMacAddress())
                 .action(history.getAction())
                 .fromStatus(history.getFromStatus())
@@ -505,7 +505,7 @@ public class PhoneDeviceService {
 
     private void saveHistory(PhoneDevice device, String action, Integer fromStatus, Integer toStatus, String fromAssigned, String toAssigned, String remark) {
         PhoneDeviceHistory history = PhoneDeviceHistory.builder()
-                .deviceId(device.getId())
+                .phoneDeviceId(device.getId())
                 .macAddress(device.getMacAddress())
                 .action(action)
                 .fromStatus(fromStatus)

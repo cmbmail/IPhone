@@ -32,7 +32,7 @@ public class PhoneSnapshot extends BaseEntity {
     @Column(name = "phone_number", length = 20, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "extension", length = 20)
+    @Column(name = "extension", length = 50)
     private String extension;
 
     @Column(name = "status", nullable = false)

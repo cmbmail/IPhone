@@ -24,16 +24,16 @@ public class PhoneNumber extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "phone_number", nullable = false, unique = true, length = 20)
+    @Column(name = "phone_number", nullable = false, unique = true, length = 50)
     private String phoneNumber;
 
-    @Column(name = "user_id", length = 20)
+    @Column(name = "user_id", length = 50)
     private String userId;
 
-    @Column(name = "extension_number", length = 10)
+    @Column(name = "extension_number", length = 20)
     private String extensionNumber;
 
-    @Column(name = "extension_type", length = 20)
+    @Column(name = "extension_type", length = 50)
     private String extensionType;
 
     @Column(name = "is_shared", nullable = false)

@@ -10,11 +10,11 @@ import com.phonebiz.entity.Notification;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    Page<Notification> findByUserId(Long userId, Pageable pageable);
+    Page<Notification> findBySysUserId(Long userId, Pageable pageable);
 
-    Page<Notification> findByUserIdAndStatus(Long userId, Integer status, Pageable pageable);
+    Page<Notification> findBySysUserIdAndStatus(Long userId, Integer status, Pageable pageable);
 
-    List<Notification> findByUserIdAndStatus(Long userId, Integer status);
+    List<Notification> findBySysUserIdAndStatus(Long userId, Integer status);
 
-    long countByUserIdAndStatus(Long userId, Integer status);
+    long countBySysUserIdAndStatus(Long userId, Integer status);
 }
