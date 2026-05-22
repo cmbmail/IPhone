@@ -115,6 +115,10 @@ const ExtensionPoolManagement = () => {
       render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>空</span>,
     },
     {
+      title: '分行', dataIndex: 'branchName', key: 'branchName', width: 120,
+      render: (v: string) => v || '-',
+    },
+    {
       title: '使用部门', dataIndex: 'deptName', key: 'deptName', width: 150,
       render: (v: string) => v || '-',
     },

@@ -34,6 +34,8 @@ public class ExtensionNumber {
 
     @Column(name = "dept_name", length = 100)
     private String deptName;
+    @Column(name = "branch_name", length = 100)
+    private String branchName;
 
     @Column(name = "dept_org_id")
     private Long deptOrgId;

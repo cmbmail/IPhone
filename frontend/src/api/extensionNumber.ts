@@ -5,6 +5,7 @@ export interface ExtensionNumber {
   extensionNumber: string
   status: 'ALLOCATED' | 'IDLE' | 'AVAILABLE'
   userName: string | null
+  branchName: string | null
   deptName: string | null
   deptOrgId: number | null
   phoneNumber: string | null

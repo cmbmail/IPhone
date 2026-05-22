@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.phonebiz.entity.ExtensionNumber;
 import com.phonebiz.entity.ExtensionNumber.ExtStatus;
+import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.entity.WorkOrder;
 import com.phonebiz.entity.WorkOrderItem;
 import com.phonebiz.repository.ExtensionNumberRepository;
+import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.WorkOrderRepository;
 import com.phonebiz.repository.WorkOrderItemRepository;
 
@@ -24,6 +26,7 @@ import com.phonebiz.repository.WorkOrderItemRepository;
 public class ExtensionNumberService {
 
     private final ExtensionNumberRepository extRepo;
+    private final OrgStructureRepository orgRepo;
     private final WorkOrderRepository woRepo;
     private final WorkOrderItemRepository woiRepo;
 
@@ -42,13 +45,13 @@ public class ExtensionNumberService {
         ext.setUserName(userName);
         ext.setDeptOrgId(deptOrgId);
         ext.setDeptName(deptName);
+        ext.setBranchName(resolveBranchName(deptOrgId));
         ext.setPhoneNumber(phoneNumber);
         ext.setStatus(ExtStatus.ALLOCATED);
         ext.setUpdatedBy(operator);
 
         extRepo.save(ext);
 
-        // Create work order
         WorkOrder wo = createWorkOrder("分机号分配 - " + ext.getExtensionNumber(),
                 "将分机号 " + ext.getExtensionNumber() + " 分配给 " + userName + "（" + deptName + "）",
                 WorkOrder.WorkOrderType.PHONE_ALLOCATE, operator, ext.getId(),
@@ -74,6 +77,7 @@ public class ExtensionNumberService {
         ext.setUserName(null);
         ext.setDeptOrgId(null);
         ext.setDeptName(null);
+        ext.setBranchName(null);
         ext.setPhoneNumber(null);
         ext.setStatus(ExtStatus.AVAILABLE);
         ext.setWorkOrderId(null);
@@ -81,7 +85,6 @@ public class ExtensionNumberService {
 
         extRepo.save(ext);
 
-        // Create work order
         createWorkOrder("分机号回收 - " + prevExt,
                 "回收分机号 " + prevExt + "，原使用人: " + prevUser + "（" + prevDept + "）",
                 WorkOrder.WorkOrderType.PHONE_RECLAIM, operator, ext.getId(),
@@ -126,5 +129,22 @@ public class ExtensionNumberService {
         woiRepo.save(item);
 
         return wo;
+    }
+
+    private String resolveBranchName(Long deptOrgId) {
+        if (deptOrgId == null) return null;
+        var deptOpt = orgRepo.findById(deptOrgId);
+        if (deptOpt.isEmpty()) return null;
+        OrgStructure dept = deptOpt.get();
+        if (dept.getPath() == null) return null;
+        String[] segments = dept.getPath().split("/");
+        if (segments.length < 3) return dept.getBranchName();
+        try {
+            Long lvl1Id = Long.parseLong(segments[2]);
+            var branchOpt = orgRepo.findById(lvl1Id);
+            return branchOpt.map(OrgStructure::getBranchName).orElse(null);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
