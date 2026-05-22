@@ -36,10 +36,10 @@ const menuItems = [
   ]},
   { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码管理', children: [
     { key: '/phones', icon: <PhoneOutlined />, label: '号码资源' },
-    { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
     { key: '/extension-pools', icon: <AppstoreOutlined />, label: '分机池' },
     { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理' },
     { key: '/devices', icon: <DesktopOutlined />, label: '设备管理' },
+    { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
   ]},
   { key: 'sub-bills', icon: <AccountBookOutlined />, label: '费用管理', children: [
     { key: '/cost-centers', icon: <WalletOutlined />, label: '成本中心' },
