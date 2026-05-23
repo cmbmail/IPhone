@@ -24,7 +24,11 @@ const PRIORITY_NAMES: Record<number, string> = {
 }
 
 const TYPE_NAMES: Record<number, string> = {
-  1: '号码分配', 2: '号码转移', 3: '号码变更', 4: '组织变更', 5: '号码回收', 6: '号码交回', 7: '号码启用', 8: '号码停用'
+  1: '新增', 2: '变更', 3: '解绑', 4: '座机绑定', 5: '号码拆机'
+}
+
+const TYPE_COLORS: Record<number, string> = {
+  1: 'green', 2: 'blue', 3: 'orange', 4: 'purple', 5: 'red'
 }
 
 const ITEM_TYPE_NAMES: Record<number, string> = {
@@ -41,6 +45,7 @@ const ITEM_STATUS_COLORS: Record<number, string> = {
 
 const WorkOrderManagement = () => {
   const [status, setStatus] = useState<number | ''>('')
+  const [typeSelectOpen, setTypeSelectOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
@@ -59,28 +64,19 @@ const WorkOrderManagement = () => {
 
   const acceptMutation = useMutation({
     mutationFn: (id: number) => workOrderApi.accept(id),
-    onSuccess: () => {
-      message.success('工单已接受')
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-    },
+    onSuccess: () => { message.success('工单已接受'); queryClient.invalidateQueries({ queryKey: ['work-orders'] }) },
     onError: () => message.error('接受失败')
   })
 
   const completeMutation = useMutation({
     mutationFn: (id: number) => workOrderApi.complete(id),
-    onSuccess: () => {
-      message.success('工单已完成')
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-    },
+    onSuccess: () => { message.success('工单已完成'); queryClient.invalidateQueries({ queryKey: ['work-orders'] }) },
     onError: () => message.error('完成失败')
   })
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: number; reason: string }) => workOrderApi.reject(id, reason),
-    onSuccess: () => {
-      message.success('工单已拒绝')
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-    },
+    onSuccess: () => { message.success('工单已拒绝'); queryClient.invalidateQueries({ queryKey: ['work-orders'] }) },
     onError: () => message.error('拒绝失败')
   })
 
@@ -100,9 +96,7 @@ const WorkOrderManagement = () => {
     onSuccess: () => {
       message.success('工单项执行成功')
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-      if (selectedOrder) {
-        handleViewDetail(selectedOrder)
-      }
+      if (selectedOrder) handleViewDetail(selectedOrder)
     },
     onError: () => message.error('执行失败')
   })
@@ -130,11 +124,7 @@ const WorkOrderManagement = () => {
       content: (
         <div>
           <p>拒绝工单 {record.workOrderNo}</p>
-          <TextArea
-            rows={3}
-            placeholder="请输入拒绝原因"
-            onChange={(e) => { rejectReason = e.target.value }}
-          />
+          <TextArea rows={3} placeholder="请输入拒绝原因" onChange={(e) => { rejectReason = e.target.value }} />
         </div>
       ),
       onOk: () => {
@@ -146,73 +136,53 @@ const WorkOrderManagement = () => {
 
   const handleViewDetail = (record: WorkOrder) => {
     workOrderApi.getById(record.id).then(res => {
-      const detail = res.data?.data
-      setSelectedOrder(detail || record)
+      setSelectedOrder(res.data?.data || record)
       setDetailDrawerOpen(true)
-    }).catch(() => {
-      setSelectedOrder(record)
-      setDetailDrawerOpen(true)
-    })
+    }).catch(() => { setSelectedOrder(record); setDetailDrawerOpen(true) })
   }
 
   const handleExecuteItem = (itemId: number) => {
-    Modal.confirm({
-      title: '执行工单项',
-      content: '确认要执行此工单项？',
-      onOk: () => executeItemMutation.mutate(itemId)
-    })
+    Modal.confirm({ title: '执行工单项', content: '确认要执行此工单项？', onOk: () => executeItemMutation.mutate(itemId) })
+  }
+
+  // 选择工单类型后，进入创建表单
+  const handleTypeSelect = (type: number) => {
+    setTypeSelectOpen(false)
+    setFormData({ title: '', description: '', priority: 2, type })
+    setIsCreateModalOpen(true)
   }
 
   const columns = [
     { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 150 },
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
     {
-      title: '类型',
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
-      render: (type: number) => TYPE_NAMES[type] || type
+      title: '类型', dataIndex: 'type', key: 'type', width: 120,
+      render: (type: number) => <Tag color={TYPE_COLORS[type] || 'default'}>{TYPE_NAMES[type] || type}</Tag>
     },
     {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      width: 100,
+      title: '优先级', dataIndex: 'priority', key: 'priority', width: 100,
       render: (priority: number) => <Tag color={PRIORITY_COLORS[priority] || 'default'}>{PRIORITY_NAMES[priority] || priority}</Tag>
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
+      title: '状态', dataIndex: 'status', key: 'status', width: 120,
       render: (s: number) => <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
     },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 120 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 120 },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 150 },
     {
-      title: '操作',
-      key: 'actions',
-      width: 280,
+      title: '操作', key: 'actions', width: 280,
       render: (_: unknown, record: WorkOrder) => (
         <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
-            详情
-          </Button>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
           {record.status === 0 && (
-            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>
-              接受
-            </Button>
+            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>接受</Button>
           )}
           {(record.status === 1 || record.status === 2) && (
-            <Button size="small" type="primary" onClick={() => handleComplete(record)}>
-              完成
-            </Button>
+            <Button size="small" type="primary" onClick={() => handleComplete(record)}>完成</Button>
           )}
           {record.status !== 3 && record.status !== 5 && (
-            <Button size="small" danger onClick={() => handleReject(record)}>
-              拒绝
-            </Button>
+            <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>
           )}
         </Space>
       )
@@ -220,41 +190,35 @@ const WorkOrderManagement = () => {
   ]
 
   const orders: WorkOrder[] = orderData?.data?.data?.content || []
-  const pendingCount = orders.filter((o) => o.status === 0).length
-  const processingCount = orders.filter((o) => o.status === 1 || o.status === 2).length
-  const completedCount = orders.filter((o) => o.status === 3).length
+  const pendingCount = orders.filter(o => o.status === 0).length
+  const processingCount = orders.filter(o => o.status === 1 || o.status === 2).length
+  const completedCount = orders.filter(o => o.status === 3).length
 
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <Card><Statistic title="工单总数" value={orders.length} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="待处理" value={pendingCount} valueStyle={{ color: '#faad14' }} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="处理中" value={processingCount} valueStyle={{ color: '#1890ff' }} /></Card>
-        </Col>
-        <Col span={6}>
-          <Card><Statistic title="已完成" value={completedCount} valueStyle={{ color: '#3f8600' }} /></Card>
-        </Col>
+        <Col span={6}><Card><Statistic title="工单总数" value={orders.length} /></Card></Col>
+        <Col span={6}><Card><Statistic title="待处理" value={pendingCount} valueStyle={{ color: '#faad14' }} /></Card></Col>
+        <Col span={6}><Card><Statistic title="处理中" value={processingCount} valueStyle={{ color: '#1890ff' }} /></Card></Col>
+        <Col span={6}><Card><Statistic title="已完成" value={completedCount} valueStyle={{ color: '#3f8600' }} /></Card></Col>
       </Row>
 
       <Card>
-        <Space style={{ marginBottom: 16 }}>
-          <Select value={status} onChange={setStatus} style={{ width: 150 }} allowClear placeholder="选择状态">
-            <Option value={0}>待处理</Option>
-            <Option value={1}>已接受</Option>
-            <Option value={2}>处理中</Option>
-            <Option value={3}>已完成</Option>
-            <Option value={5}>已取消</Option>
-          </Select>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalOpen(true)}>
-            创建工单
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <Space>
+            <Select value={status} onChange={setStatus} style={{ width: 150 }} allowClear placeholder="选择状态">
+              <Option value={0}>待处理</Option>
+              <Option value={1}>已接受</Option>
+              <Option value={2}>处理中</Option>
+              <Option value={3}>已完成</Option>
+              <Option value={5}>已取消</Option>
+            </Select>
+            <Button onClick={() => refetch()}>刷新</Button>
+          </Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setTypeSelectOpen(true)}>
+            新建
           </Button>
-          <Button onClick={() => refetch()}>刷新</Button>
-        </Space>
+        </div>
 
         <Table
           columns={columns}
@@ -265,6 +229,66 @@ const WorkOrderManagement = () => {
         />
       </Card>
 
+      {/* 工单类型选择弹窗 */}
+      <Modal
+        title="选择工单类型"
+        open={typeSelectOpen}
+        onCancel={() => setTypeSelectOpen(false)}
+        footer={null}
+        width={360}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+          {Object.entries(TYPE_NAMES).map(([value, label]) => (
+            <Button
+              key={value}
+              block
+              size="large"
+              style={{ textAlign: 'left', height: 48, fontSize: 15 }}
+              onClick={() => handleTypeSelect(Number(value))}
+            >
+              <Tag color={TYPE_COLORS[Number(value)]} style={{ marginRight: 8 }}>{label}</Tag>
+              创建{label}工单
+            </Button>
+          ))}
+        </Space>
+      </Modal>
+
+      {/* 创建工单弹窗 */}
+      <Modal
+        title={`创建工单 - ${TYPE_NAMES[formData.type] || ''}`}
+        open={isCreateModalOpen}
+        onCancel={() => setIsCreateModalOpen(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsCreateModalOpen(false)}>取消</Button>,
+          <Button key="submit" type="primary" onClick={() => createMutation.mutate(formData)}>创建</Button>,
+        ]}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Input
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="输入标题"
+          />
+          <TextArea
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="输入描述"
+            rows={4}
+          />
+          <Select
+            value={formData.priority}
+            onChange={(value) => setFormData({ ...formData, priority: value })}
+            style={{ width: '100%' }}
+          >
+            <Option value={1}>低</Option>
+            <Option value={2}>普通</Option>
+            <Option value={3}>高</Option>
+            <Option value={4}>紧急</Option>
+          </Select>
+        </Space>
+      </Modal>
+
+      {/* 工单详情抽屉 */}
       <Drawer
         title={`工单详情 - ${selectedOrder?.workOrderNo || ''}`}
         open={detailDrawerOpen}
@@ -276,7 +300,7 @@ const WorkOrderManagement = () => {
             <Descriptions bordered column={2} size="small" style={{ marginBottom: 24 }}>
               <Descriptions.Item label="工单号">{selectedOrder.workOrderNo}</Descriptions.Item>
               <Descriptions.Item label="标题">{selectedOrder.title}</Descriptions.Item>
-              <Descriptions.Item label="类型">{TYPE_NAMES[selectedOrder.type] || selectedOrder.type}</Descriptions.Item>
+              <Descriptions.Item label="类型"><Tag color={TYPE_COLORS[selectedOrder.type]}>{TYPE_NAMES[selectedOrder.type] || selectedOrder.type}</Tag></Descriptions.Item>
               <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>
@@ -302,27 +326,15 @@ const WorkOrderManagement = () => {
                     <div style={{ paddingBottom: 8 }}>
                       <div>
                         <Tag>{ITEM_TYPE_NAMES[item.itemType] || item.itemType}</Tag>
-                        <Tag color={ITEM_STATUS_COLORS[item.status] || 'default'}>
-                          {ITEM_STATUS_NAMES[item.status] || item.status}
-                        </Tag>
+                        <Tag color={ITEM_STATUS_COLORS[item.status] || 'default'}>{ITEM_STATUS_NAMES[item.status] || item.status}</Tag>
                       </div>
                       {item.description && <div style={{ color: '#666', marginTop: 4 }}>{item.description}</div>}
                       {item.action && !item.description && <div style={{ color: '#666', marginTop: 4 }}>操作: {item.action}</div>}
-                      {item.fromValue && item.toValue && (
-                        <div style={{ color: '#999', marginTop: 2 }}>{item.fromValue} → {item.toValue}</div>
-                      )}
+                      {item.fromValue && item.toValue && <div style={{ color: '#999', marginTop: 2 }}>{item.fromValue} → {item.toValue}</div>}
                       {item.errorMessage && <div style={{ color: '#ff4d4f', marginTop: 4 }}>错误: {item.errorMessage}</div>}
                       {item.executedAt && <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>执行时间: {item.executedAt}</div>}
                       {(item.status === 0 || item.status === 3) && (
-                        <Button
-                          size="small"
-                          type="primary"
-                          style={{ marginTop: 8 }}
-                          loading={executeItemMutation.isPending}
-                          onClick={() => handleExecuteItem(item.id)}
-                        >
-                          执行
-                        </Button>
+                        <Button size="small" type="primary" style={{ marginTop: 8 }} loading={executeItemMutation.isPending} onClick={() => handleExecuteItem(item.id)}>执行</Button>
                       )}
                     </div>
                   </Timeline.Item>
@@ -332,53 +344,6 @@ const WorkOrderManagement = () => {
           </>
         )}
       </Drawer>
-
-      <Modal
-        title="创建工单"
-        open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
-        footer={[
-          <Button key="back" onClick={() => setIsCreateModalOpen(false)}>取消</Button>,
-          <Button key="submit" type="primary" onClick={() => createMutation.mutate(formData)}>
-            创建
-          </Button>
-        ]}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Input
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="输入标题"
-          />
-          <TextArea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="输入描述"
-            rows={4}
-          />
-          <Select
-            value={formData.priority}
-            onChange={(value) => setFormData({ ...formData, priority: value })}
-            style={{ width: '100%' }}
-          >
-            <Option value={1}>低</Option>
-            <Option value={2}>普通</Option>
-            <Option value={3}>高</Option>
-            <Option value={4}>紧急</Option>
-          </Select>
-          <Select
-            value={formData.type}
-            onChange={(value) => setFormData({ ...formData, type: value })}
-            style={{ width: '100%' }}
-          >
-            <Option value={1}>新增</Option>
-            <Option value={3}>解绑</Option>
-            <Option value={2}>变更</Option>
-            <Option value={4}>座机绑定</Option>
-            <Option value={5}>号码拆机</Option>
-          </Select>
-        </Space>
-      </Modal>
     </div>
   )
 }
