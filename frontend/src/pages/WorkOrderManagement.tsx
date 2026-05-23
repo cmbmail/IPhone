@@ -145,7 +145,7 @@ const WorkOrderManagement = () => {
     { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 110, render: (t: number) => <Tag color={TYPE_COLORS[t] || 'default'}>{TYPE_NAMES[t] || t}</Tag> },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 90 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 90 },
-    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 150 },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120, render: (v: string) => v ? v.replace(/^[0-9]{4}-/, '').replace('T', ' ').substring(0, 11) : '-' },
   ]
 
   // 进行中工单列：操作列含状态Tag + 按钮
@@ -302,7 +302,7 @@ const WorkOrderManagement = () => {
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>
               <Descriptions.Item label="处理人">{selectedOrder.handlerName || '-'}</Descriptions.Item>
-              <Descriptions.Item label="创建时间">{selectedOrder.createdAt}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{selectedOrder.createdAt ? selectedOrder.createdAt.replace(/^[0-9]{4}-/, '').replace('T', ' ').substring(0, 11) : '-'}</Descriptions.Item>
               <Descriptions.Item label="描述" span={2}>{selectedOrder.description || '-'}</Descriptions.Item>
               {selectedOrder.remark && <Descriptions.Item label="备注" span={2}>{selectedOrder.remark}</Descriptions.Item>}
             </Descriptions>

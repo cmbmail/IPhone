@@ -128,7 +128,7 @@ const Dashboard = () => {
     { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 90, render: (t: number) => <Tag color={WO_TYPE_COLORS[t] || 'default'}>{WO_TYPE_NAMES[t] || t}</Tag> },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 80 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 80 },
-    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 140, render: (v: string) => v ? v.replace('T', ' ').substring(0, 16) : '-' },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120, render: (v: string) => v ? v.replace(/^[0-9]{4}-/, '').replace('T', ' ').substring(0, 11) : '-' },
     {
       title: '操作', key: 'actions', width: 140,
       render: (_: unknown, record: WorkOrder) => (
@@ -263,7 +263,7 @@ const Dashboard = () => {
             </div>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{selectedWorkOrder.title}</div>
             <div style={{ color: '#999', fontSize: 13 }}>
-              申请人: {selectedWorkOrder.requesterName || '-'} | 处理人: {selectedWorkOrder.handlerName || '-'} | 创建时间: {selectedWorkOrder.createdAt ? selectedWorkOrder.createdAt.replace('T', ' ').substring(0, 16) : '-'}
+              申请人: {selectedWorkOrder.requesterName || '-'} | 处理人: {selectedWorkOrder.handlerName || '-'} | 创建时间: {selectedWorkOrder.createdAt ? selectedWorkOrder.createdAt.replace(/^[0-9]{4}-/, '').replace('T', ' ').substring(0, 11) : '-'}
             </div>
           </div>
         )}
