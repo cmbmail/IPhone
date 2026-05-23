@@ -220,12 +220,12 @@ const WorkOrderManagement = () => {
             <Button type="primary" icon={<PlusOutlined />}>新建</Button>
           </Dropdown>
         </div>
-        <Table columns={activeColumns} dataSource={activeOrders} loading={isLoading} rowKey="id" pagination={false} size="small" />
+        <Table columns={activeColumns} dataSource={activeOrders} loading={isLoading} rowKey="id" pagination={false} size="small" onHeaderRow={() => ({ style: { textAlign: 'center' } })} />
       </Card>
 
       {/* 历史工单 */}
       <Card title="历史工单">
-        <Table columns={historyColumns} dataSource={historyOrders} rowKey="id" pagination={{ pageSize: 10 }} size="small" />
+        <Table columns={historyColumns} dataSource={historyOrders} rowKey="id" pagination={{ pageSize: 10 }} size="small" onHeaderRow={() => ({ style: { textAlign: 'center' } })} />
       </Card>
 
       {/* 创建工单表单 */}

@@ -204,6 +204,7 @@ const Dashboard = () => {
               rowKey="id"
               pagination={false}
               size="small"
+              onHeaderRow={() => ({ style: { textAlign: 'center' } })}
               locale={{ emptyText: '暂无工单' }}
             />
           </Card>
@@ -241,7 +242,7 @@ const Dashboard = () => {
       <Row gutter={16}>
         <Col span={18}>
           <Card title="最近账单">
-            <Table columns={billColumns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} />
+            <Table columns={billColumns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} onHeaderRow={() => ({ style: { textAlign: 'center' } })} />
           </Card>
         </Col>
       </Row>
