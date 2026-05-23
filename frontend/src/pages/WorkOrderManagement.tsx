@@ -11,7 +11,7 @@ const { Option } = Select
 const { TextArea } = Input
 
 const STATUS_COLORS: Record<number, string> = { 0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 4: 'default', 5: 'error' }
-const STATUS_NAMES: Record<number, string> = { 0: '待处理', 1: '已接受', 2: '处理中', 3: '已完成', 4: '已归档', 5: '已取消' }
+const STATUS_NAMES: Record<number, string> = { 0: '待处理', 1: '挂起', 2: '处理中', 3: '已完成', 4: '已归档', 5: '已取消' }
 const PRIORITY_COLORS: Record<number, string> = { 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }
 const PRIORITY_NAMES: Record<number, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
 const TYPE_NAMES: Record<number, string> = { 1: '新增', 2: '变更', 3: '解绑', 4: '座机绑定', 5: '号码拆机' }
@@ -19,6 +19,9 @@ const TYPE_COLORS: Record<number, string> = { 1: 'green', 2: 'blue', 3: 'orange'
 const ITEM_TYPE_NAMES: Record<number, string> = { 1: '号码', 2: '设备', 3: '员工' }
 const ITEM_STATUS_NAMES: Record<number, string> = { 0: '待执行', 1: '执行中', 2: '已完成', 3: '失败', 4: '已跳过' }
 const ITEM_STATUS_COLORS: Record<number, string> = { 0: 'processing', 1: 'processing', 2: 'success', 3: 'error', 4: 'default' }
+
+/** 已完成/已归档/已取消的工单归入历史 */
+const isHistorical = (s: number) => s === 3 || s === 4 || s === 5
 
 const WorkOrderManagement = () => {
   const [status, setStatus] = useState<number | ''>('')
@@ -110,7 +113,7 @@ const WorkOrderManagement = () => {
 
   const handleFormPaste = useCallback((e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text/plain')
-    if (!text || !text.includes('\t')) return // 不是Excel数据则不拦截
+    if (!text || !text.includes('\t')) return
     e.preventDefault()
     const values = text.replace(/\r?\n$/, '').split('\t')
     const patch: Record<string, string> = {}
@@ -121,7 +124,6 @@ const WorkOrderManagement = () => {
     })
     form.setFieldsValue(patch)
     message.success(`已粘贴 ${Object.keys(patch).length} 个字段`)
-    // 粘贴分机号后自动查详情
     if (patch.extensionNumber) {
       handleExtSelect(patch.extensionNumber)
     }
@@ -135,48 +137,75 @@ const WorkOrderManagement = () => {
     setIsCreateModalOpen(true)
   }
 
-  const columns = [
+  // --- 列定义 ---
+  // 后端 order_type → 前端 orderType
+  const commonColumns = [
     { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 150 },
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
-    { title: '类型', dataIndex: 'type', key: 'type', width: 120, render: (type: number) => <Tag color={TYPE_COLORS[type] || 'default'}>{TYPE_NAMES[type] || type}</Tag> },
-    { title: '优先级', dataIndex: 'priority', key: 'priority', width: 100, render: (priority: number) => <Tag color={PRIORITY_COLORS[priority] || 'default'}>{PRIORITY_NAMES[priority] || priority}</Tag> },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 120, render: (s: number) => <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag> },
-    { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 120 },
-    { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 120 },
+    { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 110, render: (t: number) => <Tag color={TYPE_COLORS[t] || 'default'}>{TYPE_NAMES[t] || t}</Tag> },
+    { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80, render: (p: number) => <Tag color={PRIORITY_COLORS[p] || 'default'}>{PRIORITY_NAMES[p] || p}</Tag> },
+    { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 90 },
+    { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 90 },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 150 },
+  ]
+
+  // 进行中工单列：操作列含状态Tag + 按钮
+  const activeColumns = [
+    ...commonColumns,
     {
       title: '操作', key: 'actions', width: 280,
-      render: (_: unknown, record: WorkOrder) => (
-        <Space>
-          <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
-          {record.status === 0 && <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>接受</Button>}
-          {(record.status === 1 || record.status === 2) && <Button size="small" type="primary" onClick={() => handleComplete(record)}>完成</Button>}
-          {record.status !== 3 && record.status !== 5 && <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>}
-        </Space>
-      )
+      render: (_: unknown, record: WorkOrder) => {
+        const s = record.status
+        return (
+          <Space>
+            <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
+            {s === 0 && <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>接受</Button>}
+            {(s === 1 || s === 2) && <Button size="small" type="primary" onClick={() => handleComplete(record)}>完成</Button>}
+            {!isHistorical(s) && <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>}
+          </Space>
+        )
+      }
+    }
+  ]
+
+  // 历史工单列：操作列仅含状态Tag + 详情
+  const historyColumns = [
+    ...commonColumns,
+    {
+      title: '操作', key: 'actions', width: 180,
+      render: (_: unknown, record: WorkOrder) => {
+        const s = record.status
+        return (
+          <Space>
+            <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
+            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
+          </Space>
+        )
+      }
     }
   ]
 
   const orders: WorkOrder[] = orderData?.data?.data?.content || []
-  const pendingCount = orders.filter(o => o.status === 0).length
-  const processingCount = orders.filter(o => o.status === 1 || o.status === 2).length
-  const completedCount = orders.filter(o => o.status === 3).length
+  const activeOrders = orders.filter(o => !isHistorical(o.status))
+  const historyOrders = orders.filter(o => isHistorical(o.status))
+  const pendingCount = activeOrders.filter(o => o.status === 0).length
+  const suspendedCount = activeOrders.filter(o => o.status === 1).length
+  const processingCount = activeOrders.filter(o => o.status === 2).length
 
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}><Card><Statistic title="工单总数" value={orders.length} /></Card></Col>
         <Col span={6}><Card><Statistic title="待处理" value={pendingCount} valueStyle={{ color: '#faad14' }} /></Card></Col>
-        <Col span={6}><Card><Statistic title="处理中" value={processingCount} valueStyle={{ color: '#1890ff' }} /></Card></Col>
-        <Col span={6}><Card><Statistic title="已完成" value={completedCount} valueStyle={{ color: '#3f8600' }} /></Card></Col>
+        <Col span={6}><Card><Statistic title="挂起" value={suspendedCount} valueStyle={{ color: '#1890ff' }} /></Card></Col>
+        <Col span={6}><Card><Statistic title="处理中" value={processingCount} valueStyle={{ color: '#4096ff' }} /></Card></Col>
+        <Col span={6}><Card><Statistic title="历史工单" value={historyOrders.length} valueStyle={{ color: '#52c41a' }} /></Card></Col>
       </Row>
 
-      <Card>
+      {/* 进行中工单 */}
+      <Card title="进行中" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Space>
-            <Select value={status} onChange={setStatus} style={{ width: 150 }} allowClear placeholder="选择状态">
-              <Option value={0}>待处理</Option><Option value={1}>已接受</Option><Option value={2}>处理中</Option><Option value={3}>已完成</Option><Option value={5}>已取消</Option>
-            </Select>
             <Button onClick={() => refetch()}>刷新</Button>
           </Space>
           <Dropdown
@@ -192,7 +221,12 @@ const WorkOrderManagement = () => {
             <Button type="primary" icon={<PlusOutlined />}>新建</Button>
           </Dropdown>
         </div>
-        <Table columns={columns} dataSource={orders} loading={isLoading} rowKey="id" pagination={{ pageSize: 20, total: orderData?.data?.data?.totalElements }} />
+        <Table columns={activeColumns} dataSource={activeOrders} loading={isLoading} rowKey="id" pagination={false} size="small" />
+      </Card>
+
+      {/* 历史工单 */}
+      <Card title="历史工单">
+        <Table columns={historyColumns} dataSource={historyOrders} rowKey="id" pagination={{ pageSize: 10 }} size="small" />
       </Card>
 
       {/* 创建工单表单 */}
@@ -265,7 +299,7 @@ const WorkOrderManagement = () => {
             <Descriptions bordered column={2} size="small" style={{ marginBottom: 24 }}>
               <Descriptions.Item label="工单号">{selectedOrder.workOrderNo}</Descriptions.Item>
               <Descriptions.Item label="标题">{selectedOrder.title}</Descriptions.Item>
-              <Descriptions.Item label="类型"><Tag color={TYPE_COLORS[selectedOrder.type]}>{TYPE_NAMES[selectedOrder.type] || selectedOrder.type}</Tag></Descriptions.Item>
+              <Descriptions.Item label="类型"><Tag color={TYPE_COLORS[selectedOrder.orderType]}>{TYPE_NAMES[selectedOrder.orderType] || selectedOrder.orderType}</Tag></Descriptions.Item>
               <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>
