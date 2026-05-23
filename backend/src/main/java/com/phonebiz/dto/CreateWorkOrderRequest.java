@@ -2,6 +2,8 @@ package com.phonebiz.dto;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +17,8 @@ import lombok.NoArgsConstructor;
 public class CreateWorkOrderRequest {
 
     @NotNull(message = "工单类型不能为空")
+    @Min(value = 1, message = "工单类型无效")
+    @Max(value = 5, message = "工单类型无效")
     private Integer type;
 
     // Frontend form fields
