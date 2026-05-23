@@ -47,6 +47,8 @@ public class PhoneDevice {
 
     @Column(name = "assigned_employee_no", length = 20)
     private String assignedEmployeeNo;
+@Column(name = "extension_number", length = 20)
+    private String extensionNumber;
     @Column(name = "status", nullable = false, length = 20)
     private Integer status;
 

@@ -37,5 +37,6 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     @Query("SELECT d FROM PhoneDevice d WHERE d.macAddress LIKE %:keyword% OR d.assignedEmployeeNo LIKE %:keyword%")
     List<PhoneDevice> searchByKeyword(@Param("keyword") String keyword);
 
+    List<PhoneDevice> findByExtensionNumberIn(List<String> extensionNumbers);
+    List<PhoneDevice> findByExtensionNumber(String extensionNumber);
 }
-

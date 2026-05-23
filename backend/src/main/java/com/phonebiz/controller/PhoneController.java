@@ -29,6 +29,7 @@ import com.phonebiz.entity.PhoneHistory;
 import com.phonebiz.entity.PhoneNumber;
 import com.phonebiz.entity.PhoneSurrenderRecord;
 import com.phonebiz.service.PhoneService;
+import com.phonebiz.dto.PhoneViewDTO;
 
 @RestController
 @RequestMapping("/phones")
@@ -36,6 +37,7 @@ import com.phonebiz.service.PhoneService;
 public class PhoneController {
 
     private final PhoneService phoneService;
+    private final com.phonebiz.service.PhoneViewService phoneViewService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")

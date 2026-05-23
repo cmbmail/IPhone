@@ -44,4 +44,5 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
     @Query("SELECT e FROM ExtensionNumber e WHERE e.extensionNumber LIKE %:keyword% OR e.employeeName LIKE %:keyword%")
     List<ExtensionNumber> searchByKeyword(@Param("keyword") String keyword);
 
+    List<ExtensionNumber> findAllByPhoneIdIn(List<Long> phoneIds);
 }
