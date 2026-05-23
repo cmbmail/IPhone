@@ -44,6 +44,7 @@ const Dashboard = () => {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null)
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,7 +111,9 @@ const Dashboard = () => {
   ]
 
   const woColumns = [
-    { title: '工单号', dataIndex: 'workOrderNo', key: 'no', width: 120 },
+    { title: '工单号', dataIndex: 'workOrderNo', key: 'no', width: 120, render: (v: string, record: WorkOrder) => (
+      <a onClick={() => setSelectedWorkOrder(record)} style={{ fontWeight: 500 }}>{v}</a>
+    )},
     { title: '标题', dataIndex: 'title', key: 'title', ellipsis: true },
     {
       title: '优先级', dataIndex: 'priority', key: 'priority', width: 80,
@@ -231,6 +234,28 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      <Modal
+        title={`工单详情 - ${selectedWorkOrder?.workOrderNo || ''}`}
+        open={!!selectedWorkOrder}
+        onCancel={() => setSelectedWorkOrder(null)}
+        footer={null}
+        width={600}
+      >
+        {selectedWorkOrder && (
+          <div>
+            <div style={{ marginBottom: 12 }}>
+              <Space>
+                <Tag color={WO_STATUS_COLORS[selectedWorkOrder.status]}>{WO_STATUS_NAMES[selectedWorkOrder.status] || selectedWorkOrder.status}</Tag>
+                <Tag color={{ 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }[selectedWorkOrder.priority as keyof typeof WO_STATUS_COLORS]}>
+                  {{ 1: '低', 2: '普通', 3: '高', 4: '紧急' }[selectedWorkOrder.priority as keyof typeof WO_STATUS_NAMES] || selectedWorkOrder.priority}
+                </Tag>
+              </Space>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{selectedWorkOrder.title}</div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         title={selectedAnnouncement?.title || '公告详情'}
