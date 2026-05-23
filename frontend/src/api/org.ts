@@ -20,7 +20,7 @@ export const orgApi = {
     const formData = new FormData()
     formData.append('file', file)
     return request.post('/orgs/import-cost-center', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
-  }
+  },
 }

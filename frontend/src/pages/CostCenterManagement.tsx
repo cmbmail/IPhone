@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { Card, Table, Button, Modal, Input, Select, Form, message, Space, Upload } from 'antd'
-import { UploadOutlined, PlusOutlined, SearchOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons'
+import {
+  UploadOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  FileExcelOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { costCenterApi } from '@/api/costCenter'
 import type { CostCenter } from '@/types/costCenter'
@@ -25,11 +31,13 @@ const CostCenterManagement = () => {
   const departments = (allOrgs || []).filter((o: OrgStructure) => o.type === 3)
 
   const filteredData = searchText
-    ? departments.filter((d: CostCenter) =>
-        (d.name || '').includes(searchText) ||
-        (d.branchName || '').includes(searchText) ||
-        (d.costCenterCode || '').includes(searchText) ||
-        (d.orgCode || '').includes(searchText))
+    ? departments.filter(
+        (d: CostCenter) =>
+          (d.name || '').includes(searchText) ||
+          (d.branchName || '').includes(searchText) ||
+          (d.costCenterCode || '').includes(searchText) ||
+          (d.orgCode || '').includes(searchText)
+      )
     : departments
 
   const importMutation = useMutation({
@@ -46,7 +54,13 @@ const CostCenterManagement = () => {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: { name: string; parent_id?: number; branch_name?: string; org_code?: string; cost_center?: string }) => {
+    mutationFn: (data: {
+      name: string
+      parent_id?: number
+      branch_name?: string
+      org_code?: string
+      cost_center?: string
+    }) => {
       return orgApi.create({ ...data, type: 'dept' })
     },
     onSuccess: () => {
@@ -62,7 +76,7 @@ const CostCenterManagement = () => {
   })
 
   const handleAdd = () => {
-    addForm.validateFields().then(values => {
+    addForm.validateFields().then((values) => {
       createMutation.mutate(values)
     })
   }
@@ -106,8 +120,8 @@ const CostCenterManagement = () => {
     },
     {
       title: '成本中心',
-      dataIndex: "costCenterCode",
-      key: "costCenterCode",
+      dataIndex: 'costCenterCode',
+      key: 'costCenterCode',
       width: 160,
       align: 'center' as const,
       render: (v: string) => v || <span style={{ color: '#ccc' }}>-</span>,
@@ -127,17 +141,10 @@ const CostCenterManagement = () => {
             allowClear
           />
           <Space>
-            <Button
-              icon={<UploadOutlined />}
-              onClick={() => setIsImportModalOpen(true)}
-            >
+            <Button icon={<UploadOutlined />} onClick={() => setIsImportModalOpen(true)}>
               导入
             </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsAddModalOpen(true)}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalOpen(true)}>
               新增
             </Button>
           </Space>
@@ -168,13 +175,29 @@ const CostCenterManagement = () => {
         width={480}
       >
         <Space direction="vertical" style={{ width: '100%', gap: 12 }}>
-          <div style={{ background: '#f6f8fa', padding: 14, borderRadius: 8, fontSize: 13, color: '#555' }}>
+          <div
+            style={{
+              background: '#f6f8fa',
+              padding: 14,
+              borderRadius: 8,
+              fontSize: 13,
+              color: '#555',
+            }}
+          >
             <div style={{ fontWeight: 600, marginBottom: 6, color: '#333' }}>Excel格式说明</div>
             <ul style={{ margin: 0, paddingLeft: 18 }}>
-              <li>第1列：<strong>部门名称</strong>（必须与系统中的部门名称一致）</li>
-              <li>第2列：<strong>分行</strong></li>
-              <li>第3列：<strong>组织机构代码</strong></li>
-              <li>第4列：<strong>成本中心编码</strong></li>
+              <li>
+                第1列：<strong>部门名称</strong>（必须与系统中的部门名称一致）
+              </li>
+              <li>
+                第2列：<strong>分行</strong>
+              </li>
+              <li>
+                第3列：<strong>组织机构代码</strong>
+              </li>
+              <li>
+                第4列：<strong>成本中心编码</strong>
+              </li>
             </ul>
             <div style={{ marginTop: 8 }}>系统根据部门名称自动匹配并更新，已有数据会被覆盖。</div>
           </div>
@@ -200,17 +223,28 @@ const CostCenterManagement = () => {
       <Modal
         title="新增成本中心"
         open={isAddModalOpen}
-        onCancel={() => { setIsAddModalOpen(false); addForm.resetFields() }}
+        onCancel={() => {
+          setIsAddModalOpen(false)
+          addForm.resetFields()
+        }}
         onOk={handleAdd}
         okText="保存"
         confirmLoading={createMutation.isPending}
         width={440}
       >
         <Form form={addForm} layout="vertical">
-          <Form.Item name="name" label="部门名称" rules={[{ required: true, message: '请输入部门名称' }]}>
+          <Form.Item
+            name="name"
+            label="部门名称"
+            rules={[{ required: true, message: '请输入部门名称' }]}
+          >
             <Input placeholder="如：技术部" />
           </Form.Item>
-          <Form.Item name="parent_id" label="上级机构" rules={[{ required: true, message: '请选择上级机构' }]}>
+          <Form.Item
+            name="parent_id"
+            label="上级机构"
+            rules={[{ required: true, message: '请选择上级机构' }]}
+          >
             <Select
               placeholder="选择上级机构"
               showSearch

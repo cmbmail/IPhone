@@ -13,7 +13,7 @@ export const billApi = {
     formData.append('file', file)
     if (operator) formData.append('operator', operator)
     return request.post<BillUploadResponse>('/bills/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
 
@@ -23,9 +23,10 @@ export const billApi = {
     formData.append('file', file)
     if (operator) formData.append('operator', operator)
     return request.post('/bills/import-and-allocate', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
 
-  delete: (billMonth: string, chargeType: string, password: string) => request.delete('/bills', { data: { billMonth, chargeType, password } }),
+  delete: (billMonth: string, chargeType: string, password: string) =>
+    request.delete('/bills', { data: { billMonth, chargeType, password } }),
 }

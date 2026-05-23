@@ -30,24 +30,34 @@ export interface ReconciliationSummary {
 }
 
 export const reconciliationApi = {
-  getReconciliations: (params: { billMonth: string; orgId?: number; page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: SubsidiaryReconciliation[]; total_elements: number } }>('/reconciliations', { params }),
+  getReconciliations: (params: {
+    billMonth: string
+    orgId?: number
+    page?: number
+    size?: number
+  }) =>
+    request.get<{
+      code: number
+      data: { content: SubsidiaryReconciliation[]; total_elements: number }
+    }>('/reconciliations', { params }),
 
   getReconciliation: (id: number) =>
     request.get<{ code: number; data: SubsidiaryReconciliation }>(`/reconciliations/${id}`),
 
   getPending: (orgId: number) =>
-    request.get<{ code: number; data: SubsidiaryReconciliation[] }>('/reconciliations/pending', { params: { orgId } }),
+    request.get<{ code: number; data: SubsidiaryReconciliation[] }>('/reconciliations/pending', {
+      params: { orgId },
+    }),
 
   generateReconciliation: (billMonth: string) =>
     request.post('/reconciliations/generate', null, { params: { billMonth } }),
 
-  subsidiaryConfirm: (id: number) =>
-    request.post(`/reconciliations/${id}/subsidiary-confirm`),
+  subsidiaryConfirm: (id: number) => request.post(`/reconciliations/${id}/subsidiary-confirm`),
 
-  groupConfirm: (id: number) =>
-    request.post(`/reconciliations/${id}/group-confirm`),
+  groupConfirm: (id: number) => request.post(`/reconciliations/${id}/group-confirm`),
 
   getSummary: (billMonth: string) =>
-    request.get<{ code: number; data: ReconciliationSummary }>('/reconciliations/summary', { params: { billMonth } })
+    request.get<{ code: number; data: ReconciliationSummary }>('/reconciliations/summary', {
+      params: { billMonth },
+    }),
 }

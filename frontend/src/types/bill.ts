@@ -1,8 +1,8 @@
 export interface BillRaw {
   id: number
   billMonth: string
-  chargeType: number  // 0=电话 1=录音 2=彩铃 3=闪信
-  importStatus: number  // 0=待处理 1=已处理 2=错误
+  chargeType: number // 0=电话 1=录音 2=彩铃 3=闪信
+  importStatus: number // 0=待处理 1=已处理 2=错误
   phoneNumber: string
   extensionNumber: string | null
   employeeNo: string | null
@@ -50,6 +50,6 @@ export interface BillAllocation {
   totalAmount: number | null
   orgId: number | null
   orgName: string | null
-  anomalyFlag: number  // 0=正常 1=异常
+  anomalyFlag: number // 0=正常 1=异常
   createdAt: string
 }

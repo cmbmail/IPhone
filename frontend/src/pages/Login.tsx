@@ -36,38 +36,35 @@ const Login = () => {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: 'var(--bg-page)'
-    }}>
-      <Card 
-        title="PhoneBiz" 
-        style={{ 
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        background: 'var(--bg-page)',
+      }}
+    >
+      <Card
+        title="PhoneBiz"
+        style={{
           width: 420,
           background: 'var(--bg-card)',
           border: '1px solid var(--border-light)',
           borderRadius: '16px',
-          boxShadow: 'var(--shadow-lg)'
+          boxShadow: 'var(--shadow-lg)',
         }}
         styles={{
-          header: { 
-            color: 'var(--text-primary)', 
-            fontWeight: 600, 
+          header: {
+            color: 'var(--text-primary)',
+            fontWeight: 600,
             fontSize: 24,
             fontFamily: 'Playfair Display, serif',
-            borderBottom: '1px solid var(--border-light)'
-          }
+            borderBottom: '1px solid var(--border-light)',
+          },
         }}
       >
-        <Form
-          name="login"
-          onFinish={onFinish}
-          autoComplete="off"
-          layout="vertical"
-        >
+        <Form name="login" onFinish={onFinish} autoComplete="off" layout="vertical">
           <Form.Item
             label="用户名"
             name="username"

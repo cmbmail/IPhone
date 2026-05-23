@@ -34,22 +34,40 @@ export interface AllocationRequest {
 
 export const billAllocationApi = {
   getAllocations: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations',
+      { params }
+    ),
 
   getAnomalies: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/anomalies', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations/anomalies',
+      { params }
+    ),
 
   getPendingOrgConfirm: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/pending-org-confirm', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations/pending-org-confirm',
+      { params }
+    ),
 
   getPendingAmountConfirm: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/pending-amount-confirm', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations/pending-amount-confirm',
+      { params }
+    ),
 
   getPendingFinanceConfirm: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/pending-finance-confirm', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations/pending-finance-confirm',
+      { params }
+    ),
 
   getPendingSubmit: (params: AllocationRequest) =>
-    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>('/bill-allocations/pending-submit', { params }),
+    request.get<{ code: number; data: { content: BillAllocation[]; total_elements: number } }>(
+      '/bill-allocations/pending-submit',
+      { params }
+    ),
 
   confirmOrg: (id: number, status: number) =>
     request.post(`/bill-allocations/${id}/confirm-org`, null, { params: { status } }),
@@ -60,9 +78,8 @@ export const billAllocationApi = {
   confirmAnomaly: (id: number, status: number) =>
     request.post(`/bill-allocations/${id}/confirm-anomaly`, null, { params: { status } }),
 
-  submit: (id: number) =>
-    request.post(`/bill-allocations/${id}/submit`),
+  submit: (id: number) => request.post(`/bill-allocations/${id}/submit`),
 
   reject: (id: number, reason?: string) =>
-    request.post(`/bill-allocations/${id}/reject`, null, { params: { reason } })
+    request.post(`/bill-allocations/${id}/reject`, null, { params: { reason } }),
 }

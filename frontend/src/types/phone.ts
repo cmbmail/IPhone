@@ -56,7 +56,7 @@ export interface PhoneSurrenderRecord {
   finalEmployeeNo?: string
   finalOrg?: string
   surrenderDate: string
-  surrenderType: number  // 1=拆机 2=注销
+  surrenderType: number // 1=拆机 2=注销
   operator: string
   workOrderNo?: string
   remark?: string
@@ -101,7 +101,7 @@ export interface PhoneStatusChangeRequest {
 
 export interface PhoneSurrenderRequest {
   phoneId: number
-  surrenderType: number  // 1=拆机 2=注销
+  surrenderType: number // 1=拆机 2=注销
   workOrderNo?: string
   remark?: string
 }

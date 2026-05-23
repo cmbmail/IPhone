@@ -1,8 +1,29 @@
 import React, { useState, useEffect } from 'react'
 import { request } from '../api/request'
 
-import { Table, Button, Modal, Form, Input, Checkbox, Tag, Space, message, Popconfirm, Tooltip, Badge } from 'antd'
-import { PlusCircleOutlined, EditOutlined, DeleteOutlined, SafetyCertificateOutlined, ReloadOutlined, UserOutlined, LockOutlined } from '@ant-design/icons'
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Checkbox,
+  Tag,
+  Space,
+  message,
+  Popconfirm,
+  Tooltip,
+  Badge,
+} from 'antd'
+import {
+  PlusCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SafetyCertificateOutlined,
+  ReloadOutlined,
+  UserOutlined,
+  LockOutlined,
+} from '@ant-design/icons'
 import type { SysRole, SysPermission, CreateRoleDTO, UpdateRoleDTO } from '@/types/role'
 import { roleApi } from '@/api/role'
 
@@ -16,7 +37,9 @@ const RoleManagement: React.FC = () => {
   const [editingRole, setEditingRole] = useState<SysRole | null>(null)
   const [allPermissions, setAllPermissions] = useState<Record<string, SysPermission[]>>({})
   const [rolePermissionIds, setRolePermissionIds] = useState<number[]>([])
-  const [roleUsers, setRoleUsers] = useState<{ id: number; username: string; employee_no: string; role: string; status: string }[]>([])
+  const [roleUsers, setRoleUsers] = useState<
+    { id: number; username: string; employee_no: string; role: string; status: string }[]
+  >([])
   const [userLoading, setUserLoading] = useState(false)
   const [form] = Form.useForm()
   const [permForm] = Form.useForm()
@@ -33,7 +56,9 @@ const RoleManagement: React.FC = () => {
     }
   }
 
-  useEffect(() => { fetchRoles() }, [])
+  useEffect(() => {
+    fetchRoles()
+  }, [])
 
   const fetchAllPermissions = async () => {
     try {
@@ -48,7 +73,7 @@ const RoleManagement: React.FC = () => {
     try {
       const res = await roleApi.getPermissions(roleId)
       const perms: SysPermission[] = res.data?.data || []
-      setRolePermissionIds(perms.map(p => p.id))
+      setRolePermissionIds(perms.map((p) => p.id))
     } catch {
       setRolePermissionIds([])
     }
@@ -132,30 +157,30 @@ const RoleManagement: React.FC = () => {
 
   const togglePermission = (permId: number, checked: boolean) => {
     if (checked) {
-      setRolePermissionIds(prev => [...prev, permId])
+      setRolePermissionIds((prev) => [...prev, permId])
     } else {
-      setRolePermissionIds(prev => prev.filter(id => id !== permId))
+      setRolePermissionIds((prev) => prev.filter((id) => id !== permId))
     }
   }
 
   const toggleModule = (module: string, checked: boolean) => {
-    const modulePermIds = (allPermissions[module] || []).map(p => p.id)
+    const modulePermIds = (allPermissions[module] || []).map((p) => p.id)
     if (checked) {
       const newIds = [...new Set([...rolePermissionIds, ...modulePermIds])]
       setRolePermissionIds(newIds)
     } else {
-      setRolePermissionIds(prev => prev.filter(id => !modulePermIds.includes(id)))
+      setRolePermissionIds((prev) => prev.filter((id) => !modulePermIds.includes(id)))
     }
   }
 
   const isModuleAllChecked = (module: string) => {
-    const modulePermIds = (allPermissions[module] || []).map(p => p.id)
-    return modulePermIds.length > 0 && modulePermIds.every(id => rolePermissionIds.includes(id))
+    const modulePermIds = (allPermissions[module] || []).map((p) => p.id)
+    return modulePermIds.length > 0 && modulePermIds.every((id) => rolePermissionIds.includes(id))
   }
 
   const isModulePartialChecked = (module: string) => {
-    const modulePermIds = (allPermissions[module] || []).map(p => p.id)
-    const checkedCount = modulePermIds.filter(id => rolePermissionIds.includes(id)).length
+    const modulePermIds = (allPermissions[module] || []).map((p) => p.id)
+    const checkedCount = modulePermIds.filter((id) => rolePermissionIds.includes(id)).length
     return checkedCount > 0 && checkedCount < modulePermIds.length
   }
 
@@ -174,12 +199,12 @@ const RoleManagement: React.FC = () => {
         // Query users by role_id via /employees endpoint is not available
         // We'll show the count only for now
         // Fetch actual users for this role
-            try {
-              const res = await request.get(`/roles/${record.id}/users`)
-              setRoleUsers(res.data?.data || [])
-            } catch {
-              setRoleUsers([])
-            }
+        try {
+          const res = await request.get(`/roles/${record.id}/users`)
+          setRoleUsers(res.data?.data || [])
+        } catch {
+          setRoleUsers([])
+        }
       } else {
         setRoleUsers([])
       }
@@ -199,32 +224,79 @@ const RoleManagement: React.FC = () => {
       key: 'name',
       render: (name: string, record: SysRole) => (
         <Space>
-          {record.is_system ? <LockOutlined style={{ color: '#faad14' }} /> : <SafetyCertificateOutlined style={{ color: '#1677ff' }} />}
+          {record.is_system ? (
+            <LockOutlined style={{ color: '#faad14' }} />
+          ) : (
+            <SafetyCertificateOutlined style={{ color: '#1677ff' }} />
+          )}
           <span style={{ fontWeight: 500 }}>{name}</span>
           {record.is_system && <Tag color="orange">系统</Tag>}
         </Space>
-      )
-    },
-    { title: '编码', dataIndex: 'code', key: 'code', width: 120, render: (v: string) => <code style={{ background: '#f5f5f5', padding: '1px 6px', borderRadius: 3, fontSize: 12 }}>{v}</code> },
-    { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true, render: (v: string) => v || '-' },
-    {
-      title: '状态', dataIndex: 'status', key: 'status', width: 80,
-      render: (s: string) => s === 1 ? <Badge status="success" text="启用" /> : <Badge status="default" text="停用" />
+      ),
     },
     {
-      title: '操作', key: 'actions', width: 260, fixed: 'right' as const,
+      title: '编码',
+      dataIndex: 'code',
+      key: 'code',
+      width: 120,
+      render: (v: string) => (
+        <code style={{ background: '#f5f5f5', padding: '1px 6px', borderRadius: 3, fontSize: 12 }}>
+          {v}
+        </code>
+      ),
+    },
+    {
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+      render: (v: string) => v || '-',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 80,
+      render: (s: string) =>
+        s === 1 ? <Badge status="success" text="启用" /> : <Badge status="default" text="停用" />,
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 260,
+      fixed: 'right' as const,
       render: (_: any, record: SysRole) => (
         <Space size={4}>
-          <Tooltip title="分配权限"><Button size="small" type="link" icon={<SafetyCertificateOutlined />} onClick={() => openPermModal(record)}>权限</Button></Tooltip>
-          <Button size="small" type="link" icon={<EditOutlined />} onClick={() => openEdit(record)}>编辑</Button>
+          <Tooltip title="分配权限">
+            <Button
+              size="small"
+              type="link"
+              icon={<SafetyCertificateOutlined />}
+              onClick={() => openPermModal(record)}
+            >
+              权限
+            </Button>
+          </Tooltip>
+          <Button size="small" type="link" icon={<EditOutlined />} onClick={() => openEdit(record)}>
+            编辑
+          </Button>
           {!record.is_system && (
-            <Popconfirm title="确认删除该角色？" description="删除后不可恢复" onConfirm={() => handleDelete(record)} okText="删除" cancelText="取消" okButtonProps={{ danger: true }}>
-              <Button size="small" type="link" danger icon={<DeleteOutlined />}>删除</Button>
+            <Popconfirm
+              title="确认删除该角色？"
+              description="删除后不可恢复"
+              onConfirm={() => handleDelete(record)}
+              okText="删除"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" type="link" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
             </Popconfirm>
           )}
         </Space>
-      )
-    }
+      ),
+    },
   ]
 
   const permCountMap: Record<number, number> = {}
@@ -233,11 +305,29 @@ const RoleManagement: React.FC = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <h2 style={{ margin: 0 }}>角色管理</h2>
         <Space>
-          <Button icon={<PlusCircleOutlined />} type="primary" onClick={() => { form.resetFields(); setCreateModalOpen(true) }}>创建角色</Button>
-          <Button icon={<ReloadOutlined />} onClick={fetchRoles} loading={loading}>刷新</Button>
+          <Button
+            icon={<PlusCircleOutlined />}
+            type="primary"
+            onClick={() => {
+              form.resetFields()
+              setCreateModalOpen(true)
+            }}
+          >
+            创建角色
+          </Button>
+          <Button icon={<ReloadOutlined />} onClick={fetchRoles} loading={loading}>
+            刷新
+          </Button>
         </Space>
       </div>
 
@@ -251,15 +341,37 @@ const RoleManagement: React.FC = () => {
       />
 
       {/* Create Role Modal */}
-      <Modal title="创建角色" open={createModalOpen} onOk={handleCreate} onCancel={() => { setCreateModalOpen(false); form.resetFields() }} okText="创建" destroyOnClose width={500}>
+      <Modal
+        title="创建角色"
+        open={createModalOpen}
+        onOk={handleCreate}
+        onCancel={() => {
+          setCreateModalOpen(false)
+          form.resetFields()
+        }}
+        okText="创建"
+        destroyOnClose
+        width={500}
+      >
         <Form form={form} layout="vertical" preserve={false}>
-          <Form.Item name="name" label="角色名称" rules={[{ required: true, message: '请输入角色名称' }]}>
+          <Form.Item
+            name="name"
+            label="角色名称"
+            rules={[{ required: true, message: '请输入角色名称' }]}
+          >
             <Input placeholder="例如：区域经理" maxLength={50} />
           </Form.Item>
-          <Form.Item name="code" label="角色编码" rules={[
-            { required: true, message: '请输入角色编码' },
-            { pattern: /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/, message: '以字母开头，只允许字母数字下划线' }
-          ]}>
+          <Form.Item
+            name="code"
+            label="角色编码"
+            rules={[
+              { required: true, message: '请输入角色编码' },
+              {
+                pattern: /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/,
+                message: '以字母开头，只允许字母数字下划线',
+              },
+            ]}
+          >
             <Input placeholder="例如：region_manager" maxLength={50} />
           </Form.Item>
           <Form.Item name="description" label="描述">
@@ -269,16 +381,39 @@ const RoleManagement: React.FC = () => {
       </Modal>
 
       {/* Edit Role Modal */}
-      <Modal title={editingRole ? `编辑「${editingRole.name}」` : '编辑角色'} open={editModalOpen} onOk={handleEdit} onCancel={() => { setEditModalOpen(false); form.resetFields() }} okText="保存" destroyOnClose width={500}>
+      <Modal
+        title={editingRole ? `编辑「${editingRole.name}」` : '编辑角色'}
+        open={editModalOpen}
+        onOk={handleEdit}
+        onCancel={() => {
+          setEditModalOpen(false)
+          form.resetFields()
+        }}
+        okText="保存"
+        destroyOnClose
+        width={500}
+      >
         <Form form={form} layout="vertical" preserve={false}>
-          <Form.Item name="name" label="角色名称" rules={[{ required: true, message: '请输入角色名称' }]}>
+          <Form.Item
+            name="name"
+            label="角色名称"
+            rules={[{ required: true, message: '请输入角色名称' }]}
+          >
             <Input placeholder="角色名称" maxLength={50} />
           </Form.Item>
           <Form.Item name="description" label="描述">
             <Input.TextArea placeholder="角色描述" rows={3} maxLength={200} />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <select style={{ width: '100%', padding: '4px 11px', border: '1px solid #d9d9d9', borderRadius: 6, height: 32 }}>
+            <select
+              style={{
+                width: '100%',
+                padding: '4px 11px',
+                border: '1px solid #d9d9d9',
+                borderRadius: 6,
+                height: 32,
+              }}
+            >
               <option value={1}>启用</option>
               <option value={0}>停用</option>
             </select>
@@ -296,29 +431,69 @@ const RoleManagement: React.FC = () => {
         width={600}
         destroyOnClose
       >
-        <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            marginBottom: 12,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <span style={{ color: '#666' }}>
-            已选择 <strong style={{ color: '#1677ff' }}>{rolePermissionIds.length}</strong> / {totalPermissions} 项权限
+            已选择 <strong style={{ color: '#1677ff' }}>{rolePermissionIds.length}</strong> /{' '}
+            {totalPermissions} 项权限
           </span>
           <Space>
-            <Button size="small" onClick={() => setRolePermissionIds(Object.values(allPermissions).flat().map(p => p.id))}>全选</Button>
-            <Button size="small" onClick={() => setRolePermissionIds([])}>清空</Button>
+            <Button
+              size="small"
+              onClick={() =>
+                setRolePermissionIds(
+                  Object.values(allPermissions)
+                    .flat()
+                    .map((p) => p.id)
+                )
+              }
+            >
+              全选
+            </Button>
+            <Button size="small" onClick={() => setRolePermissionIds([])}>
+              清空
+            </Button>
           </Space>
         </div>
-        <div style={{ maxHeight: 400, overflow: 'auto', border: '1px solid #f0f0f0', borderRadius: 6, padding: 12 }}>
+        <div
+          style={{
+            maxHeight: 400,
+            overflow: 'auto',
+            border: '1px solid #f0f0f0',
+            borderRadius: 6,
+            padding: 12,
+          }}
+        >
           {Object.entries(allPermissions).map(([module, perms]) => (
             <div key={module} style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f5f5f5' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 8,
+                  paddingBottom: 6,
+                  borderBottom: '1px solid #f5f5f5',
+                }}
+              >
                 <Checkbox
                   checked={isModuleAllChecked(module)}
                   indeterminate={isModulePartialChecked(module)}
                   onChange={(e) => toggleModule(module, e.target.checked)}
                 />
                 <strong style={{ fontSize: 14 }}>{module}</strong>
-                <span style={{ color: '#999', fontSize: 12 }}>({perms.filter(p => rolePermissionIds.includes(p.id)).length}/{perms.length})</span>
+                <span style={{ color: '#999', fontSize: 12 }}>
+                  ({perms.filter((p) => rolePermissionIds.includes(p.id)).length}/{perms.length})
+                </span>
               </div>
               <div style={{ paddingLeft: 24, display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
-                {perms.map(perm => (
+                {perms.map((perm) => (
                   <Checkbox
                     key={perm.id}
                     checked={rolePermissionIds.includes(perm.id)}

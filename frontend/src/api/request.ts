@@ -1,7 +1,7 @@
-import axios from "axios"
-import { message } from "antd"
+import axios from 'axios'
+import { message } from 'antd'
 
-const baseURL = "/api"
+const baseURL = '/api'
 
 // Convert snake_case string to camelCase
 function toCamelCase(str: string): string {
@@ -12,7 +12,7 @@ function toCamelCase(str: string): string {
 function keysToCamelCase(obj: any): any {
   if (obj === null || obj === undefined) return obj
   if (Array.isArray(obj)) return obj.map(keysToCamelCase)
-  if (typeof obj === "object") {
+  if (typeof obj === 'object') {
     const result: any = {}
     for (const key of Object.keys(obj)) {
       result[toCamelCase(key)] = keysToCamelCase(obj[key])
@@ -24,14 +24,14 @@ function keysToCamelCase(obj: any): any {
 
 // Convert camelCase string to snake_case
 function toSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 }
 
 // Recursively convert object keys from camelCase to snake_case
 function keysToSnakeCase(obj: any): any {
   if (obj === null || obj === undefined) return obj
   if (Array.isArray(obj)) return obj.map(keysToSnakeCase)
-  if (typeof obj === "object") {
+  if (typeof obj === 'object') {
     const result: any = {}
     for (const key of Object.keys(obj)) {
       result[toSnakeCase(key)] = keysToSnakeCase(obj[key])
@@ -49,7 +49,7 @@ const request = axios.create({
 // Read token from Zustand persist storage (auth-storage in localStorage)
 function getStoredToken(): string | null {
   try {
-    const raw = localStorage.getItem("auth-storage")
+    const raw = localStorage.getItem('auth-storage')
     if (raw) {
       const parsed = JSON.parse(raw)
       return parsed?.state?.token || null
@@ -63,11 +63,11 @@ function getStoredToken(): string | null {
 // Update token in Zustand persist storage
 function updateStoredToken(newToken: string): void {
   try {
-    const raw = localStorage.getItem("auth-storage")
+    const raw = localStorage.getItem('auth-storage')
     if (raw) {
       const parsed = JSON.parse(raw)
       parsed.state.token = newToken
-      localStorage.setItem("auth-storage", JSON.stringify(parsed))
+      localStorage.setItem('auth-storage', JSON.stringify(parsed))
     }
   } catch {
     // ignore
@@ -81,13 +81,13 @@ request.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     // Convert request body keys from camelCase to snake_case for JSON payloads
-    if (config.data && typeof config.data === "object" && !(config.data instanceof FormData)) {
+    if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
       config.data = keysToSnakeCase(config.data)
     }
 
     return config
   },
-  (error) => Promise.reject(error),
+  (error) => Promise.reject(error)
 )
 
 request.interceptors.response.use(
@@ -107,7 +107,7 @@ request.interceptors.response.use(
         const currentToken = getStoredToken()
         if (currentToken) {
           const refreshRes = await axios.post(`${baseURL}/auth/refresh`, null, {
-            headers: { Authorization: `Bearer ${currentToken}` }
+            headers: { Authorization: `Bearer ${currentToken}` },
           })
           if (refreshRes.data?.data?.token) {
             const newToken = refreshRes.data.data.token
@@ -120,28 +120,30 @@ request.interceptors.response.use(
         // Refresh failed, proceed to logout
       }
       // Clear auth and redirect to login
-      localStorage.removeItem("auth-storage")
-      localStorage.removeItem("expiresIn")
-      localStorage.removeItem("loginTime")
-      window.location.href = "/login"
+      localStorage.removeItem('auth-storage')
+      localStorage.removeItem('expiresIn')
+      localStorage.removeItem('loginTime')
+      window.location.href = '/login'
     }
 
     if (error.response?.status === 403) {
       // Check if it's a force password change response
       const data = error.response.data
       if (data?.code === 1007) {
-        window.location.href = "/login?forceChangePassword=true"
+        window.location.href = '/login?forceChangePassword=true'
       } else {
-        localStorage.removeItem("auth-storage")
-        localStorage.removeItem("expiresIn")
-        localStorage.removeItem("loginTime")
-        window.location.href = "/login"
+        localStorage.removeItem('auth-storage')
+        localStorage.removeItem('expiresIn')
+        localStorage.removeItem('loginTime')
+        window.location.href = '/login'
       }
     }
 
     // Network error / timeout handling
     if (!error.response) {
-      message.error(error.code === 'ECONNABORTED' ? '请求超时，请稍后重试' : '网络连接异常，请检查网络')
+      message.error(
+        error.code === 'ECONNABORTED' ? '请求超时，请稍后重试' : '网络连接异常，请检查网络'
+      )
     } else if (error.response.status >= 500) {
       message.error('服务器错误，请稍后重试')
     } else if (error.response.status === 429) {
@@ -149,7 +151,7 @@ request.interceptors.response.use(
     }
 
     return Promise.reject(error)
-  },
+  }
 )
 
 export { request }

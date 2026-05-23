@@ -26,8 +26,10 @@ export const phoneOwnershipApi = {
   search: (params: { keyword?: string; branchOrgId?: number; page?: number; size?: number }) =>
     request.get('/phone-ownership', { params }),
 
-  update: (id: number, data: { branchOrgId?: number | null; deptOrgId?: number | null; remark?: string }) =>
-    request.put(`/phone-ownership/${id}`, null, { params: data }),
+  update: (
+    id: number,
+    data: { branchOrgId?: number | null; deptOrgId?: number | null; remark?: string }
+  ) => request.put(`/phone-ownership/${id}`, null, { params: data }),
 
   importCompare: (file: File) => {
     const formData = new FormData()

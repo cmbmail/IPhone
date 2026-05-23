@@ -18,30 +18,22 @@ export interface PhoneDeviceDTO {
 }
 
 export const phoneDeviceApi = {
-  getList: (params?: { page?: number; size?: number }) =>
-    request.get('/phone-devices', { params }),
-  getById: (id: number) =>
-    request.get(`/phone-devices/${id}`),
-  getBoundPhones: (id: number) =>
-    request.get(`/phone-devices/${id}/phones`),
-  getHistory: (id: number) =>
-    request.get(`/phone-devices/${id}/history`),
-  create: (data: Record<string, unknown>) =>
-    request.post('/phone-devices', data),
-  update: (id: number, data: Record<string, unknown>) =>
-    request.put(`/phone-devices/${id}`, data),
+  getList: (params?: { page?: number; size?: number }) => request.get('/phone-devices', { params }),
+  getById: (id: number) => request.get(`/phone-devices/${id}`),
+  getBoundPhones: (id: number) => request.get(`/phone-devices/${id}/phones`),
+  getHistory: (id: number) => request.get(`/phone-devices/${id}/history`),
+  create: (data: Record<string, unknown>) => request.post('/phone-devices', data),
+  update: (id: number, data: Record<string, unknown>) => request.put(`/phone-devices/${id}`, data),
   assign: (id: number, data: Record<string, unknown>) =>
     request.post(`/phone-devices/${id}/assign`, data),
   reclaim: (id: number, data?: Record<string, unknown>) =>
     request.post(`/phone-devices/${id}/reclaim`, data),
   deactivate: (id: number, data?: Record<string, unknown>) =>
     request.post(`/phone-devices/${id}/deactivate`, data),
-  reactivate: (id: number) =>
-    request.post(`/phone-devices/${id}/reactivate`),
+  reactivate: (id: number) => request.post(`/phone-devices/${id}/reactivate`),
   repair: (id: number, data?: Record<string, unknown>) =>
     request.post(`/phone-devices/${id}/repair`, data),
-  repairDone: (id: number) =>
-    request.post(`/phone-devices/${id}/repair-done`),
+  repairDone: (id: number) => request.post(`/phone-devices/${id}/repair-done`),
   retire: (id: number, data?: Record<string, unknown>) =>
     request.post(`/phone-devices/${id}/retire`, data),
   bindPhone: (id: number, data: Record<string, unknown>) =>

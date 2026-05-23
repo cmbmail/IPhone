@@ -1,5 +1,20 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Tag, Space, Input, Modal, Form, Statistic, Row, Col, message, Dropdown } from 'antd'
+import {
+  Table,
+  Button,
+  Card,
+  Select,
+  Tag,
+  Space,
+  Input,
+  Modal,
+  Form,
+  Statistic,
+  Row,
+  Col,
+  message,
+  Dropdown,
+} from 'antd'
 import { UserAddOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { extensionNumberApi, type ExtensionNumber } from '@/api/extensionNumber'
@@ -36,7 +51,8 @@ const ExtensionPoolManagement = () => {
         keyword: keyword || undefined,
         status: statusFilter !== undefined ? statusFilter : undefined,
         deptOrgId: deptFilter || undefined,
-        page, size,
+        page,
+        size,
       })
       return res.data
     },
@@ -127,42 +143,60 @@ const ExtensionPoolManagement = () => {
 
   const columns = [
     {
-      title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 120,
-      render: (v: string, record: ExtensionNumber) => (
-        <span style={{ fontWeight: 500 }}>
-          {v}
-        </span>
-      ),
+      title: '分机号',
+      dataIndex: 'extensionNumber',
+      key: 'extensionNumber',
+      width: 120,
+      render: (v: string, record: ExtensionNumber) => <span style={{ fontWeight: 500 }}>{v}</span>,
     },
     {
-      title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
+      title: '电话号码',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      width: 150,
       render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>-</span>,
     },
     {
-      title: '使用人', dataIndex: 'employeeName', key: 'employeeName', width: 120,
+      title: '使用人',
+      dataIndex: 'employeeName',
+      key: 'employeeName',
+      width: 120,
       render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>-</span>,
     },
     {
-      title: '分行', dataIndex: 'branchName', key: 'branchName', width: 120,
+      title: '分行',
+      dataIndex: 'branchName',
+      key: 'branchName',
+      width: 120,
       render: (v: string) => v || '-',
     },
     {
-      title: '使用部门', dataIndex: 'deptName', key: 'deptName', width: 150,
+      title: '使用部门',
+      dataIndex: 'deptName',
+      key: 'deptName',
+      width: 150,
       render: (v: string) => v || '-',
     },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 100,
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
       render: (s: number, record: ExtensionNumber) => {
         const m = STATUS_MAP[s] || { label: '未知', color: 'default' }
-        return <Tag color={m.color} style={{ cursor: "pointer" }} onClick={() => handleExtClick(record)}>{m.label}</Tag>
+        return (
+          <Tag color={m.color} style={{ cursor: 'pointer' }} onClick={() => handleExtClick(record)}>
+            {m.label}
+          </Tag>
+        )
       },
     },
   ]
 
   // 统计
-  const idleCount = content.filter(c => c.status === 0).length
-  const occupiedCount = content.filter(c => c.status === 1).length
-  const allocatingCount = content.filter(c => c.status === 2).length
+  const idleCount = content.filter((c) => c.status === 0).length
+  const occupiedCount = content.filter((c) => c.status === 1).length
+  const allocatingCount = content.filter((c) => c.status === 2).length
 
   // 变更下拉菜单
   const changeMenuItems = [
@@ -175,30 +209,75 @@ const ExtensionPoolManagement = () => {
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card><Statistic title="闲置" value={idleCount} valueStyle={{ color: '#8c8c8c' }} /></Card>
+          <Card>
+            <Statistic title="闲置" value={idleCount} valueStyle={{ color: '#8c8c8c' }} />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="占用" value={occupiedCount} valueStyle={{ color: '#1677ff' }} /></Card>
+          <Card>
+            <Statistic title="占用" value={occupiedCount} valueStyle={{ color: '#1677ff' }} />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="分配中" value={allocatingCount} valueStyle={{ color: '#fa8c16' }} /></Card>
+          <Card>
+            <Statistic title="分配中" value={allocatingCount} valueStyle={{ color: '#fa8c16' }} />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="总数" value={listData?.data?.totalElements || 0} /></Card>
+          <Card>
+            <Statistic title="总数" value={listData?.data?.totalElements || 0} />
+          </Card>
         </Col>
       </Row>
 
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
           <Space>
-            <Input.Search placeholder="搜索分机号/使用人/部门/电话" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(0) }} style={{ width: 260 }} />
-            <Select placeholder="状态筛选" value={statusFilter} onChange={v => { setStatusFilter(v); setPage(0) }} style={{ width: 130 }} allowClear>
+            <Input.Search
+              placeholder="搜索分机号/使用人/部门/电话"
+              value={keyword}
+              onChange={(e) => {
+                setKeyword(e.target.value)
+                setPage(0)
+              }}
+              style={{ width: 260 }}
+            />
+            <Select
+              placeholder="状态筛选"
+              value={statusFilter}
+              onChange={(v) => {
+                setStatusFilter(v)
+                setPage(0)
+              }}
+              style={{ width: 130 }}
+              allowClear
+            >
               <Select.Option value={0}>闲置</Select.Option>
               <Select.Option value={1}>占用</Select.Option>
               <Select.Option value={2}>分配中</Select.Option>
             </Select>
-            <Select placeholder="部门筛选" value={deptFilter} onChange={v => { setDeptFilter(v); setPage(0) }} style={{ width: 150 }} allowClear>
-              {subDepts.map((d: any) => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)}
+            <Select
+              placeholder="部门筛选"
+              value={deptFilter}
+              onChange={(v) => {
+                setDeptFilter(v)
+                setPage(0)
+              }}
+              style={{ width: 150 }}
+              allowClear
+            >
+              {subDepts.map((d: any) => (
+                <Select.Option key={d.id} value={d.id}>
+                  {d.name}
+                </Select.Option>
+              ))}
             </Select>
           </Space>
         </div>
@@ -229,15 +308,37 @@ const ExtensionPoolManagement = () => {
           <div>
             <div style={{ background: '#fafafa', padding: 16, borderRadius: 8, marginBottom: 20 }}>
               <Row gutter={[8, 8]}>
-                <Col span={12}><span style={{ color: '#8c8c8c' }}>分机号：</span>{selectedExt.extensionNumber}</Col>
-                <Col span={12}><span style={{ color: '#8c8c8c' }}>电话号码：</span>{selectedExt.phoneNumber || '-'}</Col>
-                <Col span={12}><span style={{ color: '#8c8c8c' }}>使用人：</span>{selectedExt.employeeName || '-'}</Col>
+                <Col span={12}>
+                  <span style={{ color: '#8c8c8c' }}>分机号：</span>
+                  {selectedExt.extensionNumber}
+                </Col>
+                <Col span={12}>
+                  <span style={{ color: '#8c8c8c' }}>电话号码：</span>
+                  {selectedExt.phoneNumber || '-'}
+                </Col>
+                <Col span={12}>
+                  <span style={{ color: '#8c8c8c' }}>使用人：</span>
+                  {selectedExt.employeeName || '-'}
+                </Col>
                 <Col span={12}>
                   <span style={{ color: '#8c8c8c' }}>状态：</span>
-                  {(() => { const d = STATUS_MAP[selectedExt.status] || { label: '未知', color: 'default' }; return <Tag color={d.color}>{d.label}</Tag> })()}
+                  {(() => {
+                    const d = STATUS_MAP[selectedExt.status] || { label: '未知', color: 'default' }
+                    return <Tag color={d.color}>{d.label}</Tag>
+                  })()}
                 </Col>
-                {selectedExt.branchName && <Col span={12}><span style={{ color: '#8c8c8c' }}>分行：</span>{selectedExt.branchName}</Col>}
-                {selectedExt.deptName && <Col span={12}><span style={{ color: '#8c8c8c' }}>部门：</span>{selectedExt.deptName}</Col>}
+                {selectedExt.branchName && (
+                  <Col span={12}>
+                    <span style={{ color: '#8c8c8c' }}>分行：</span>
+                    {selectedExt.branchName}
+                  </Col>
+                )}
+                {selectedExt.deptName && (
+                  <Col span={12}>
+                    <span style={{ color: '#8c8c8c' }}>部门：</span>
+                    {selectedExt.deptName}
+                  </Col>
+                )}
               </Row>
             </div>
 
@@ -249,8 +350,15 @@ const ExtensionPoolManagement = () => {
               )}
 
               {selectedExt.status === 1 && (
-                <Dropdown menu={{ items: changeMenuItems, onClick: ({ key }) => handleChange(key) }} placement="bottomLeft">
-                  <Button icon={<SwapOutlined />} block style={{ borderColor: '#1677ff', color: '#1677ff' }}>
+                <Dropdown
+                  menu={{ items: changeMenuItems, onClick: ({ key }) => handleChange(key) }}
+                  placement="bottomLeft"
+                >
+                  <Button
+                    icon={<SwapOutlined />}
+                    block
+                    style={{ borderColor: '#1677ff', color: '#1677ff' }}
+                  >
                     变更（生成工单） ▾
                   </Button>
                 </Dropdown>
@@ -276,17 +384,28 @@ const ExtensionPoolManagement = () => {
       <Modal
         title={`分配分机号 - ${selectedExt?.extensionNumber || ''}`}
         open={allocateModalOpen}
-        onCancel={() => { setAllocateModalOpen(false); form.resetFields() }}
+        onCancel={() => {
+          setAllocateModalOpen(false)
+          form.resetFields()
+        }}
         onOk={() => allocateMutation.mutate()}
         confirmLoading={allocateMutation.isPending}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="employeeName" label="使用人" rules={[{ required: true, message: '请输入使用人' }]}>
+          <Form.Item
+            name="employeeName"
+            label="使用人"
+            rules={[{ required: true, message: '请输入使用人' }]}
+          >
             <Input placeholder="输入使用人姓名" />
           </Form.Item>
           <Form.Item name="deptOrgId" label="使用部门">
             <Select placeholder="选择部门" allowClear>
-              {subDepts.map((d: any) => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)}
+              {subDepts.map((d: any) => (
+                <Select.Option key={d.id} value={d.id}>
+                  {d.name}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item name="phoneNumber" label="外线电话号码">

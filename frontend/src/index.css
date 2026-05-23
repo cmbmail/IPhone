@@ -24,11 +24,17 @@
   --sidebar-width: 260px;
   --sidebar-collapsed: 72px;
   --header-height: 68px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
 
-  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Noto Sans SC',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   line-height: 1.7;
   font-weight: 400;
   color: var(--text-primary);
@@ -41,13 +47,16 @@
 }
 
 /* ===== Reset ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   overflow: hidden;
   width: 100%;
   height: 100%;
@@ -99,7 +108,7 @@ a:hover {
   display: flex;
   align-items: center;
   padding: 0 22px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   gap: 14px;
   overflow: hidden;
 }
@@ -155,21 +164,21 @@ a:hover {
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
 
 .sidebar-toggle {
   flex-shrink: 0;
   padding: 16px 14px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .toggle-btn {
   width: 100%;
   padding: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   color: var(--text-sidebar);
   cursor: pointer;
@@ -183,7 +192,7 @@ a:hover {
 }
 
 .toggle-btn:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-sidebar-active);
 }
 
@@ -450,19 +459,39 @@ a:hover {
 }
 
 @media screen and (max-width: 1024px) {
-  .search-box { max-width: 200px; }
-  .header { padding: 0 16px; }
-  .header-left { gap: 16px; }
-  .page-heading h1 { font-size: 18px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .search-box {
+    max-width: 200px;
+  }
+  .header {
+    padding: 0 16px;
+  }
+  .header-left {
+    gap: 16px;
+  }
+  .page-heading h1 {
+    font-size: 18px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media screen and (max-width: 768px) {
-  .search-box { display: none; }
-  .header { padding: 0 12px; }
-  .header-right { gap: 12px; }
-  .content { padding: 16px; }
-  .stats-grid { grid-template-columns: 1fr; }
+  .search-box {
+    display: none;
+  }
+  .header {
+    padding: 0 12px;
+  }
+  .header-right {
+    gap: 12px;
+  }
+  .content {
+    padding: 16px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== Ant Design overrides ===== */
@@ -485,7 +514,7 @@ a:hover {
 }
 
 .ant-menu-dark .ant-menu-submenu-title:hover {
-  background: rgba(255,255,255,0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: var(--text-sidebar-active) !important;
 }
 
@@ -500,7 +529,7 @@ a:hover {
 }
 
 .ant-menu-dark .ant-menu-item:hover {
-  background: rgba(255,255,255,0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: var(--text-sidebar-active) !important;
 }
 

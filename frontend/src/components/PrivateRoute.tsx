@@ -33,7 +33,8 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
     }
 
     // Verify token with backend /auth/me
-    authApi.getCurrentUser()
+    authApi
+      .getCurrentUser()
       .then((res) => {
         const user = res.data.data
         if (user) {

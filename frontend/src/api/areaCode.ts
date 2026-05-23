@@ -6,7 +6,8 @@ export const areaCodeApi = {
 
   getById: (id: number) => request.get<AreaCodeOrgMapping>(`/area-codes/${id}`),
 
-  getByAreaCode: (areaCode: string) => request.get<AreaCodeOrgMapping[]>(`/area-codes/area/${areaCode}`),
+  getByAreaCode: (areaCode: string) =>
+    request.get<AreaCodeOrgMapping[]>(`/area-codes/area/${areaCode}`),
 
   getByOrg: (orgId: number) => request.get<AreaCodeOrgMapping[]>(`/area-codes/org/${orgId}`),
 
@@ -16,6 +17,5 @@ export const areaCodeApi = {
 
   delete: (id: number) => request.delete(`/area-codes/${id}`),
 
-  update: (id: number, data: Record<string, unknown>) =>
-    request.put(`/area-codes/${id}`, data),
+  update: (id: number, data: Record<string, unknown>) => request.put(`/area-codes/${id}`, data),
 }

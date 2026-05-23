@@ -8,7 +8,15 @@ export const extensionPoolApi = {
 
   getByOrg: (orgId: number) => request.get<ExtensionPool[]>(`/extension-pools/org/${orgId}`),
 
-  getUsage: (id: number) => request.get<{ poolId: number; totalCount: number; usedCount: number; idleCount: number; usageRate: number; status: string }>(`/extension-pools/${id}/usage`),
+  getUsage: (id: number) =>
+    request.get<{
+      poolId: number
+      totalCount: number
+      usedCount: number
+      idleCount: number
+      usageRate: number
+      status: string
+    }>(`/extension-pools/${id}/usage`),
 
   create: (data: CreateExtensionPoolDTO) => request.post<ExtensionPool>('/extension-pools', data),
 

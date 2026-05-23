@@ -29,12 +29,18 @@ const BillAllocationManagement = () => {
     return d.toISOString().slice(0, 7)
   })
 
-  const { data: summaryData, isLoading, refetch } = useQuery({
+  const {
+    data: summaryData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['bill-allocation-summary', billMonth],
     queryFn: async () => {
-      const res = await request.get('/bill-allocations/allocation-summary', { params: { billMonth } })
+      const res = await request.get('/bill-allocations/allocation-summary', {
+        params: { billMonth },
+      })
       return (res.data?.data || []) as BillAllocationSummary[]
-    }
+    },
   })
 
   const fmtMoney = (val: number) => `¥${(val || 0).toFixed(2)}`
@@ -142,7 +148,9 @@ const BillAllocationManagement = () => {
       width: 130,
       align: 'right' as const,
       fixed: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span>,
+      render: (v: number) => (
+        <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span>
+      ),
     },
   ]
 
@@ -157,23 +165,54 @@ const BillAllocationManagement = () => {
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card><Statistic title="账单月份" value={billMonth} /></Card>
+          <Card>
+            <Statistic title="账单月份" value={billMonth} />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="费用小计" value={fmtMoney(totalFeeSubtotal)} valueStyle={{ color: '#1890ff' }} /></Card>
+          <Card>
+            <Statistic
+              title="费用小计"
+              value={fmtMoney(totalFeeSubtotal)}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="增值费用" value={`录音¥${totalRecording.toFixed(0)} 彩铃¥${totalRingtone.toFixed(0)} 闪信¥${totalFlash.toFixed(0)}`} valueStyle={{ fontSize: 16 }} /></Card>
+          <Card>
+            <Statistic
+              title="增值费用"
+              value={`录音¥${totalRecording.toFixed(0)} 彩铃¥${totalRingtone.toFixed(0)} 闪信¥${totalFlash.toFixed(0)}`}
+              valueStyle={{ fontSize: 16 }}
+            />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="合计金额" value={fmtMoney(totalAmount)} valueStyle={{ color: '#cf1322', fontWeight: 700 }} /></Card>
+          <Card>
+            <Statistic
+              title="合计金额"
+              value={fmtMoney(totalAmount)}
+              valueStyle={{ color: '#cf1322', fontWeight: 700 }}
+            />
+          </Card>
         </Col>
       </Row>
 
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
           <Select value={billMonth} onChange={setBillMonth} style={{ width: 150 }}>
-            {months.map(m => <Option key={m} value={m}>{m}</Option>)}
+            {months.map((m) => (
+              <Option key={m} value={m}>
+                {m}
+              </Option>
+            ))}
           </Select>
           <Button onClick={() => refetch()}>刷新</Button>
         </div>
@@ -188,8 +227,16 @@ const BillAllocationManagement = () => {
           size="middle"
           bordered
           summary={(pageData) => {
-            let tPlat = 0, tRent = 0, tDom = 0, tIntl = 0, tSub = 0, tRec = 0, tRing = 0, tFlash = 0, tTotal = 0
-            pageData.forEach(r => {
+            let tPlat = 0,
+              tRent = 0,
+              tDom = 0,
+              tIntl = 0,
+              tSub = 0,
+              tRec = 0,
+              tRing = 0,
+              tFlash = 0,
+              tTotal = 0
+            pageData.forEach((r) => {
               tPlat += r.platformUsageFee || 0
               tRent += r.numberMonthlyRent || 0
               tDom += r.domesticCharge || 0
@@ -203,17 +250,41 @@ const BillAllocationManagement = () => {
             return (
               <Table.Summary.Row style={{ background: '#fafafa', fontWeight: 700 }}>
                 <Table.Summary.Cell index={0}>合计</Table.Summary.Cell>
-                <Table.Summary.Cell index={1} align="right">{fmtMoney(tPlat)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={2} align="right">{fmtMoney(tRent)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={3} align="right">-</Table.Summary.Cell>
-                <Table.Summary.Cell index={4} align="right">-</Table.Summary.Cell>
-                <Table.Summary.Cell index={5} align="right">{fmtMoney(tDom)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={6} align="right">{fmtMoney(tIntl)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={7} align="right">{fmtMoney(tSub)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={8} align="right">{fmtMoney(tRec)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={9} align="right">{fmtMoney(tRing)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={10} align="right">{fmtMoney(tFlash)}</Table.Summary.Cell>
-                <Table.Summary.Cell index={11} align="right"><span style={{ color: '#1890ff', fontWeight: 700, fontSize: 14 }}>{fmtMoney(tTotal)}</span></Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">
+                  {fmtMoney(tPlat)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">
+                  {fmtMoney(tRent)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">
+                  -
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={4} align="right">
+                  -
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={5} align="right">
+                  {fmtMoney(tDom)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={6} align="right">
+                  {fmtMoney(tIntl)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={7} align="right">
+                  {fmtMoney(tSub)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={8} align="right">
+                  {fmtMoney(tRec)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={9} align="right">
+                  {fmtMoney(tRing)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={10} align="right">
+                  {fmtMoney(tFlash)}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={11} align="right">
+                  <span style={{ color: '#1890ff', fontWeight: 700, fontSize: 14 }}>
+                    {fmtMoney(tTotal)}
+                  </span>
+                </Table.Summary.Cell>
               </Table.Summary.Row>
             )
           }}

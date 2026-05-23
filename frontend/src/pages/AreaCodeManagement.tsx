@@ -20,7 +20,7 @@ const AreaCodeManagement = () => {
     queryFn: async () => {
       const response = await areaCodeApi.getAll()
       return response.data.data
-    }
+    },
   })
 
   const { data: orgs } = useQuery({
@@ -28,7 +28,7 @@ const AreaCodeManagement = () => {
     queryFn: async () => {
       const response = await orgApi.getAll()
       return response.data.data
-    }
+    },
   })
 
   const createMutation = useMutation({
@@ -37,16 +37,17 @@ const AreaCodeManagement = () => {
       message.success('区号映射创建成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
       closeModal()
-    }
+    },
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => areaCodeApi.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      areaCodeApi.update(id, data),
     onSuccess: () => {
       message.success('区号映射更新成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
       closeModal()
-    }
+    },
   })
 
   const deleteMutation = useMutation({
@@ -54,7 +55,7 @@ const AreaCodeManagement = () => {
     onSuccess: () => {
       message.success('区号映射删除成功')
       queryClient.invalidateQueries({ queryKey: ['areaCodes'] })
-    }
+    },
   })
 
   const closeModal = () => {
@@ -85,7 +86,7 @@ const AreaCodeManagement = () => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除此区号映射吗？',
-      onOk: () => deleteMutation.mutate(id)
+      onOk: () => deleteMutation.mutate(id),
     })
   }
 
@@ -101,20 +102,20 @@ const AreaCodeManagement = () => {
       dataIndex: 'areaCode',
       key: 'areaCode',
       width: 120,
-      render: (code: string) => <Tag color="blue">{code}</Tag>
+      render: (code: string) => <Tag color="blue">{code}</Tag>,
     },
     {
       title: '组织',
       dataIndex: 'orgId',
       key: 'orgId',
-      render: (orgId: number) => getOrgName(orgId)
+      render: (orgId: number) => getOrgName(orgId),
     },
     {
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
-      sorter: (a: AreaCodeOrgMapping, b: AreaCodeOrgMapping) => a.priority - b.priority
+      sorter: (a: AreaCodeOrgMapping, b: AreaCodeOrgMapping) => a.priority - b.priority,
     },
     { title: '创建人', dataIndex: 'createdBy', key: 'createdBy', width: 120 },
     {
@@ -130,8 +131,8 @@ const AreaCodeManagement = () => {
             删除
           </Button>
         </Space>
-      )
-    }
+      ),
+    },
   ]
 
   return (
@@ -148,12 +149,7 @@ const AreaCodeManagement = () => {
         添加区号映射
       </Button>
 
-      <Table
-        columns={columns}
-        dataSource={mappings}
-        loading={isLoading}
-        rowKey="id"
-      />
+      <Table columns={columns} dataSource={mappings} loading={isLoading} rowKey="id" />
 
       <Modal
         title={editRecord ? '编辑区号映射' : '添加区号映射'}

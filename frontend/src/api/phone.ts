@@ -1,9 +1,22 @@
 import { request } from './request'
-import type { PhoneNumber, CreatePhoneDTO, UpdatePhoneDTO, PhoneAllocationRequest, PhoneReclaimRequest, PhoneStatusChangeRequest, PhoneSurrenderRequest, PhoneReserveRequest, PhoneChangeRequest } from '@/types/phone'
+import type {
+  PhoneNumber,
+  CreatePhoneDTO,
+  UpdatePhoneDTO,
+  PhoneAllocationRequest,
+  PhoneReclaimRequest,
+  PhoneStatusChangeRequest,
+  PhoneSurrenderRequest,
+  PhoneReserveRequest,
+  PhoneChangeRequest,
+} from '@/types/phone'
 
 export const phoneApi = {
   getAll: (params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>('/phones', { params }),
+    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>(
+      '/phones',
+      { params }
+    ),
 
   getById: (id: number) => request.get<PhoneNumber>(`/phones/${id}`),
 
@@ -12,10 +25,16 @@ export const phoneApi = {
   getByUser: (employeeNo: number) => request.get<PhoneNumber[]>(`/phones/user/${employeeNo}`),
 
   getByStatus: (status: string, params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>(`/phones/status/${status}`, { params }),
+    request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>(
+      `/phones/status/${status}`,
+      { params }
+    ),
 
   getHistory: (id: number, params?: { page?: number; size?: number }) =>
-    request.get<{ code: number; data: { content: any[]; total_elements: number } }>(`/phones/${id}/history`, { params }),
+    request.get<{ code: number; data: { content: any[]; total_elements: number } }>(
+      `/phones/${id}/history`,
+      { params }
+    ),
 
   getIdle: () => request.get<PhoneNumber[]>('/phones/idle'),
 
@@ -27,7 +46,8 @@ export const phoneApi = {
 
   reclaim: (data: PhoneReclaimRequest) => request.post<PhoneNumber>('/phones/reclaim', data),
 
-  changeStatus: (data: PhoneStatusChangeRequest) => request.post<PhoneNumber>('/phones/status', data),
+  changeStatus: (data: PhoneStatusChangeRequest) =>
+    request.post<PhoneNumber>('/phones/status', data),
 
   surrender: (data: PhoneSurrenderRequest) => request.post<any>('/phones/surrender', data),
 
@@ -39,9 +59,12 @@ export const phoneApi = {
 
   changeOrg: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-org', data),
 
-  changeNumber: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-number', data),
+  changeNumber: (data: PhoneChangeRequest) =>
+    request.post<PhoneNumber>('/phones/change-number', data),
 
-  changeExtension: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/change-extension', data),
+  changeExtension: (data: PhoneChangeRequest) =>
+    request.post<PhoneNumber>('/phones/change-extension', data),
 
-  batchChange: (data: PhoneChangeRequest) => request.post<PhoneNumber>('/phones/batch-change', data)
+  batchChange: (data: PhoneChangeRequest) =>
+    request.post<PhoneNumber>('/phones/batch-change', data),
 }
