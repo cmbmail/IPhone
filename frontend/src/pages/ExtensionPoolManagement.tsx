@@ -129,9 +129,9 @@ const ExtensionPoolManagement = () => {
     {
       title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 120,
       render: (v: string, record: ExtensionNumber) => (
-        <a onClick={() => handleExtClick(record)} style={{ fontWeight: 500, color: '#1677ff', cursor: 'pointer' }}>
+        <span style={{ fontWeight: 500 }}>
           {v}
-        </a>
+        </span>
       ),
     },
     {
@@ -152,9 +152,9 @@ const ExtensionPoolManagement = () => {
     },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 100,
-      render: (s: number) => {
+      render: (s: number, record: ExtensionNumber) => {
         const m = STATUS_MAP[s] || { label: '未知', color: 'default' }
-        return <Tag color={m.color}>{m.label}</Tag>
+        return <Tag color={m.color} style={{ cursor: "pointer" }} onClick={() => handleExtClick(record)}>{m.label}</Tag>
       },
     },
   ]
