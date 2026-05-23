@@ -82,7 +82,7 @@ public class WorkOrderDrivenDeviceService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_RECLAIM)
+                .type(WorkOrder.WO_TYPE_UNBIND)
                 .title("话机回收工单 - MAC: " + device.getMacAddress())
                 .description("回收话机 " + device.getMacAddress())
                 .priority(WorkOrder.WO_NORMAL)

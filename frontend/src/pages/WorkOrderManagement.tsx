@@ -371,10 +371,11 @@ const WorkOrderManagement = () => {
             onChange={(value) => setFormData({ ...formData, type: value })}
             style={{ width: '100%' }}
           >
-            <Option value={1}>号码分配</Option>
-            <Option value={5}>号码回收</Option>
-            <Option value={2}>号码转移</Option>
-            <Option value={4}>组织变更</Option>
+            <Option value={1}>新增</Option>
+            <Option value={3}>解绑</Option>
+            <Option value={2}>变更</Option>
+            <Option value={4}>座机绑定</Option>
+            <Option value={5}>号码拆机</Option>
           </Select>
         </Space>
       </Modal>

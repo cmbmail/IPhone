@@ -30,16 +30,13 @@ public class WorkOrder extends BaseEntity {
     public static final int WO_COMPLETED = 3;
     public static final int WO_ARCHIVED = 4;
     public static final int WO_CANCELLED = 5;
+public static final int WO_TYPE_ADD = 1;          // 新增
+    public static final int WO_TYPE_CHANGE = 2;      // 变更
+    public static final int WO_TYPE_UNBIND = 3;      // 解绑
+    public static final int WO_TYPE_DESK_BIND = 4;   // 座机绑定
+    public static final int WO_TYPE_DECOMMISSION = 5; // 号码拆机
 
 
-    public static final int WO_PHONE_ALLOCATE = 1;
-    public static final int WO_PHONE_TRANSFER = 2;
-    public static final int WO_PHONE_CHANGE_NUMBER = 3;
-    public static final int WO_PHONE_CHANGE_ORG = 4;
-    public static final int WO_PHONE_RECLAIM = 5;
-    public static final int WO_PHONE_SURRENDER = 6;
-    public static final int WO_PHONE_ENABLE = 7;
-    public static final int WO_PHONE_DISABLE = 8;
 
 
     @Column(name = "work_order_no", unique = true, nullable = false, length = 50)

@@ -53,7 +53,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_ALLOCATE)
+                .type(WorkOrder.WO_TYPE_ADD)
                 .title("号码分配工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 分配到组织 " + targetOrgId)
                 .priority(WorkOrder.WO_NORMAL)
@@ -85,7 +85,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_SURRENDER)
+                .type(WorkOrder.WO_TYPE_UNBIND)
                 .title("号码回收工单 - " + phone.getPhoneNumber())
                 .description("回收号码 " + phone.getPhoneNumber())
                 .priority(WorkOrder.WO_NORMAL)
@@ -118,7 +118,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_TRANSFER)
+                .type(WorkOrder.WO_TYPE_CHANGE)
                 .title("号码过户工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 从组织 " + fromOrgId + " 过户到组织 " + toOrgId)
                 .priority(WorkOrder.WO_HIGH)
@@ -151,7 +151,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_CHANGE_NUMBER)
+                .type(WorkOrder.WO_TYPE_CHANGE)
                 .title("号码变更工单 - " + phone.getPhoneNumber() + " -> " + newPhoneNumber)
                 .description("将号码 " + phone.getPhoneNumber() + " 变更为 " + newPhoneNumber)
                 .priority(WorkOrder.WO_NORMAL)
@@ -184,7 +184,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_CHANGE_ORG)
+                .type(WorkOrder.WO_TYPE_CHANGE)
                 .title("号码组织变更工单 - " + phone.getPhoneNumber())
                 .description("将号码 " + phone.getPhoneNumber() + " 变更到组织 " + newOrgId)
                 .priority(WorkOrder.WO_NORMAL)
@@ -216,7 +216,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_RECLAIM)
+                .type(WorkOrder.WO_TYPE_UNBIND)
                 .title("号码回收工单 - " + phone.getPhoneNumber())
                 .description("强制回收号码 " + phone.getPhoneNumber())
                 .priority(WorkOrder.WO_HIGH)
@@ -248,7 +248,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_ENABLE)
+                .type(WorkOrder.WO_TYPE_CHANGE)
                 .title("号码启用工单 - " + phone.getPhoneNumber())
                 .description("启用号码 " + phone.getPhoneNumber())
                 .priority(WorkOrder.WO_NORMAL)
@@ -280,7 +280,7 @@ public class WorkOrderDrivenPhoneService {
                 .build();
 
         CreateWorkOrderRequest request = CreateWorkOrderRequest.builder()
-                .type(WorkOrder.WO_PHONE_DISABLE)
+                .type(WorkOrder.WO_TYPE_DECOMMISSION)
                 .title("号码停机工单 - " + phone.getPhoneNumber())
                 .description("停机号码 " + phone.getPhoneNumber())
                 .priority(WorkOrder.WO_HIGH)

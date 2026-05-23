@@ -119,7 +119,7 @@ public class ExtensionNumberService {
 
         WorkOrder wo = createWorkOrder("分机号分配 - " + ext.getExtensionNumber(),
                 "将分机号 " + ext.getExtensionNumber() + " 分配给 " + userName + "（" + deptName + "）",
-                WorkOrder.WO_PHONE_ALLOCATE, operator, ext.getId(),
+                WorkOrder.WO_TYPE_ADD, operator, ext.getId(),
                 null, ext.getExtensionNumber());
         ext.setWorkOrderId(wo.getId());
         extRepo.save(ext);
@@ -148,7 +148,7 @@ public class ExtensionNumberService {
 
         createWorkOrder("分机号回收 - " + prevExt,
                 "回收分机号 " + prevExt + "，原使用人: " + prevEmployeeName + "（" + prevDept + "）",
-                WorkOrder.WO_PHONE_RECLAIM, operator, ext.getId(),
+                WorkOrder.WO_TYPE_UNBIND, operator, ext.getId(),
                 prevExt, null);
 
         return ext;
