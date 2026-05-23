@@ -49,7 +49,7 @@ public class Notification extends BaseEntity {
     private Integer status;
 
     @Column(name = "notification_type", nullable = false)
-    private Integer type;
+    private Integer notificationType;
 
     @Column(name = "source_id")
     private Long sourceId;

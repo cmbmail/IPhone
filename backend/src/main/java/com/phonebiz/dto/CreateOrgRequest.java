@@ -20,5 +20,5 @@ public class CreateOrgRequest {
 
     private String orgCode;
 
-    private String costCenter;
+    private String costCenterCode;
 }

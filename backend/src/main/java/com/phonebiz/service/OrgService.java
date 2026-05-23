@@ -56,7 +56,7 @@ public class OrgService {
         org.setRemark(request.getRemark());
         org.setBranchName(request.getBranchName());
         org.setOrgCode(request.getOrgCode());
-        org.setCostCenter(request.getCostCenter());
+        org.setCostCenterCode(request.getCostCenterCode());
         
         if (request.getType() != null) {
             org.setType(Integer.valueOf(request.getType()));
@@ -130,8 +130,8 @@ public class OrgService {
         if (request.getOrgCode() != null) {
             org.setOrgCode(request.getOrgCode());
         }
-        if (request.getCostCenter() != null) {
-            org.setCostCenter(request.getCostCenter());
+        if (request.getCostCenterCode() != null) {
+            org.setCostCenterCode(request.getCostCenterCode());
         }
 
         org.setUpdatedBy(operator);
@@ -279,7 +279,7 @@ public class OrgService {
                 OrgStructure org = opt.get();
                 if (branchName != null && !branchName.isBlank()) org.setBranchName(branchName.trim());
                 if (orgCode != null && !orgCode.isBlank()) org.setOrgCode(orgCode.trim());
-                if (costCenter != null && !costCenter.isBlank()) org.setCostCenter(costCenter.trim());
+                if (costCenter != null && !costCenter.isBlank()) org.setCostCenterCode(costCenter.trim());
                 org.setUpdatedBy(operator);
                 orgRepository.save(org);
                 updated++;

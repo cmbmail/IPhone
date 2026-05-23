@@ -25,11 +25,6 @@ public class BillRaw extends BaseEntity {
     public static final int IMPORT_PROCESSED = 1;
     public static final int IMPORT_ERROR = 2;
 
-    public static final int CHARGE_MONTHLY_RENT = 1;
-    public static final int CHARGE_CALL = 2;
-    public static final int CHARGE_SMS = 3;
-    public static final int CHARGE_DATA = 4;
-    public static final int CHARGE_OTHER = 5;
 
     @Column(name = "bill_month", length = 7, nullable = false)
     private String billMonth;

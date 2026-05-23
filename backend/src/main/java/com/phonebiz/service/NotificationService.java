@@ -94,7 +94,7 @@ public class NotificationService {
     public Notification createNotification(Long sysUserId, Integer type, String title, String content, Long sourceId, String sourceType) {
         Notification notification = Notification.builder()
                 .sysUserId(sysUserId)
-                .type(type)
+                .notificationType(type)
                 .title(title)
                 .content(content)
                 .status(Notification.STATUS_UNREAD)

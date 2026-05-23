@@ -98,7 +98,7 @@ const OrgManagement: React.FC = () => {
     const sorted = [...siblings].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
     const idx = sorted.findIndex(s => s.id === org.id)
     if (idx >= 0) position = idx + 1
-    orgForm.setFieldsValue({ name: org.name, sort_order: position, branch_name: org.branchName, org_code: org.orgCode, cost_center: org.costCenter })
+    orgForm.setFieldsValue({ name: org.name, sort_order: position, branch_name: org.branchName, org_code: org.orgCode, cost_center_code: org.costCenterCodeCode })
     setEditModalOpen(true)
   }
 

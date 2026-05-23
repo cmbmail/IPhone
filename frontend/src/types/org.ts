@@ -12,7 +12,7 @@ export interface OrgStructure {
   updatedBy: string
   branchName: string | null
   orgCode: string | null
-  costCenter: string | null
+  costCenterCode: string | null
   children?: OrgStructure[]
 }
 

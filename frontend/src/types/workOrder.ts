@@ -16,7 +16,7 @@ export interface WorkOrderItem {
 export interface WorkOrder {
   id: number
   workOrderNo: string
-  orderType: number
+  type: number
   status: number
   priority: number
   title: string | null

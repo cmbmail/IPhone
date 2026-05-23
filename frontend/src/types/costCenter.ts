@@ -5,6 +5,6 @@ export interface CostCenter {
   type: number
   branchName: string | null
   orgCode: string | null
-  costCenter: string | null
+  costCenterCode: string | null
   level: number
 }

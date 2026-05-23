@@ -168,8 +168,8 @@ const WorkOrderManagement = () => {
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
     {
       title: '类型',
-      dataIndex: 'orderType',
-      key: 'orderType',
+      dataIndex: 'type',
+      key: 'type',
       width: 120,
       render: (type: number) => TYPE_NAMES[type] || type
     },
@@ -276,7 +276,7 @@ const WorkOrderManagement = () => {
             <Descriptions bordered column={2} size="small" style={{ marginBottom: 24 }}>
               <Descriptions.Item label="工单号">{selectedOrder.workOrderNo}</Descriptions.Item>
               <Descriptions.Item label="标题">{selectedOrder.title}</Descriptions.Item>
-              <Descriptions.Item label="类型">{TYPE_NAMES[selectedOrder.orderType] || selectedOrder.orderType}</Descriptions.Item>
+              <Descriptions.Item label="类型">{TYPE_NAMES[selectedOrder.type] || selectedOrder.type}</Descriptions.Item>
               <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>

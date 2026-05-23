@@ -57,8 +57,8 @@ public class OrgStructure extends BaseEntity {
     @Column(name = "org_code", length = 50)
     private String orgCode;
 
-    @Column(name = "cost_center", length = 50)
-    private String costCenter;
+    @Column(name = "cost_center_code", length = 50)
+    private String costCenterCode;
     @Column(nullable = false)
     private Integer status = OrgStructure.ORG_ACTIVE;
 

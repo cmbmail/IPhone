@@ -28,7 +28,7 @@ const CostCenterManagement = () => {
     ? departments.filter((d: CostCenter) =>
         (d.name || '').includes(searchText) ||
         (d.branchName || '').includes(searchText) ||
-        (d.costCenter || '').includes(searchText) ||
+        (d.costCenterCode || '').includes(searchText) ||
         (d.orgCode || '').includes(searchText))
     : departments
 
@@ -106,8 +106,8 @@ const CostCenterManagement = () => {
     },
     {
       title: '成本中心',
-      dataIndex: 'costCenter',
-      key: 'costCenter',
+      dataIndex: "costCenterCode",
+      key: "costCenterCode",
       width: 160,
       align: 'center' as const,
       render: (v: string) => v || <span style={{ color: '#ccc' }}>-</span>,
