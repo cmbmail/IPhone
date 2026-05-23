@@ -67,31 +67,57 @@ const DeviceManagement = () => {
     enabled: !!selectedDevice && detailOpen,
   })
 
-  const mut = (fn: any, msg: string) =>
-    useMutation({
-      mutationFn: fn,
-      onSuccess: () => {
-        message.success(msg)
-        qc.invalidateQueries({ queryKey: ['phone-devices'] })
-        setModalType('')
-        form.resetFields()
-      },
-    })
+  const onSuccess = (msg: string) => {
+    message.success(msg)
+    qc.invalidateQueries({ queryKey: ['phone-devices'] })
+    setModalType('')
+    form.resetFields()
+  }
 
-  const createMut = mut((d: any) => phoneDeviceApi.create(d), '话机录入成功')
-  const assignMut = mut((d: any) => phoneDeviceApi.assign(selectedDevice.id, d), '分配成功')
-  const reclaimMut = mut((d: any) => phoneDeviceApi.reclaim(selectedDevice.id, d), '回收成功')
-  const deactivateMut = mut((d: any) => phoneDeviceApi.deactivate(selectedDevice.id, d), '停用成功')
-  const reactivateMut = mut((d: any) => phoneDeviceApi.reactivate(selectedDevice.id), '恢复成功')
-  const repairMut = mut((d: any) => phoneDeviceApi.repair(selectedDevice.id, d), '送修成功')
-  const repairDoneMut = mut((d: any) => phoneDeviceApi.repairDone(selectedDevice.id), '修复成功')
-  const retireMut = mut((d: any) => phoneDeviceApi.retire(selectedDevice.id, d), '报废成功')
-  const editMut = mut((d: any) => phoneDeviceApi.update(selectedDevice.id, d), '修改成功')
-  const bindMut = mut((d: any) => phoneDeviceApi.bindPhone(selectedDevice.id, d), '绑定成功')
-  const unbindMut = mut(
-    (phoneId: number) => phoneDeviceApi.unbindPhone(selectedDevice.id, phoneId),
-    '解绑成功'
-  )
+  const createMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.create(d),
+    onSuccess: () => onSuccess('话机录入成功'),
+  })
+  const assignMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.assign(selectedDevice.id, d),
+    onSuccess: () => onSuccess('分配成功'),
+  })
+  const reclaimMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.reclaim(selectedDevice.id, d),
+    onSuccess: () => onSuccess('回收成功'),
+  })
+  const deactivateMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.deactivate(selectedDevice.id, d),
+    onSuccess: () => onSuccess('停用成功'),
+  })
+  const reactivateMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.reactivate(selectedDevice.id),
+    onSuccess: () => onSuccess('恢复成功'),
+  })
+  const repairMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.repair(selectedDevice.id, d),
+    onSuccess: () => onSuccess('送修成功'),
+  })
+  const repairDoneMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.repairDone(selectedDevice.id),
+    onSuccess: () => onSuccess('修复成功'),
+  })
+  const retireMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.retire(selectedDevice.id, d),
+    onSuccess: () => onSuccess('报废成功'),
+  })
+  const editMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.update(selectedDevice.id, d),
+    onSuccess: () => onSuccess('修改成功'),
+  })
+  const bindMut = useMutation({
+    mutationFn: (d: any) => phoneDeviceApi.bindPhone(selectedDevice.id, d),
+    onSuccess: () => onSuccess('绑定成功'),
+  })
+  const unbindMut = useMutation({
+    mutationFn: (phoneId: number) => phoneDeviceApi.unbindPhone(selectedDevice.id, phoneId),
+    onSuccess: () => onSuccess('解绑成功'),
+  })
 
   const handleSubmit = (values: any) => {
     switch (modalType) {

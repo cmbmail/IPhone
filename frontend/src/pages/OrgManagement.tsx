@@ -260,7 +260,11 @@ const OrgManagement: React.FC = () => {
     try {
       await userApi.updateRole(editingUser.employeeId, roleId)
       message.success('角色变更成功')
-      selectedOrgId ? fetchUsers(selectedOrgId) : fetchAllUsers()
+      if (selectedOrgId) {
+        fetchUsers(selectedOrgId)
+      } else {
+        fetchAllUsers()
+      }
     } catch (e: any) {
       message.error(e?.response?.data?.message || '角色变更失败')
     }
@@ -278,7 +282,11 @@ const OrgManagement: React.FC = () => {
       const values = await userForm.validateFields(['username'])
       await userApi.updateUsername(editingUser.employeeId, values.username)
       message.success('账号修改成功')
-      selectedOrgId ? fetchUsers(selectedOrgId) : fetchAllUsers()
+      if (selectedOrgId) {
+        fetchUsers(selectedOrgId)
+      } else {
+        fetchAllUsers()
+      }
     } catch (e: any) {
       if (e?.response?.data?.message) message.error(e.response.data.message)
     }
@@ -289,7 +297,11 @@ const OrgManagement: React.FC = () => {
     try {
       await userApi.updateDepartment(editingUser.employeeId, newOrgId)
       message.success('部门变更成功')
-      selectedOrgId ? fetchUsers(selectedOrgId) : fetchAllUsers()
+      if (selectedOrgId) {
+        fetchUsers(selectedOrgId)
+      } else {
+        fetchAllUsers()
+      }
     } catch (e: any) {
       message.error(e?.response?.data?.message || '部门变更失败')
     }
@@ -322,7 +334,11 @@ const OrgManagement: React.FC = () => {
           if (isActive) await userApi.disable(user.employeeId)
           else await userApi.enable(user.employeeId)
           message.success(`账号已${action}`)
-          selectedOrgId ? fetchUsers(selectedOrgId) : fetchAllUsers()
+          if (selectedOrgId) {
+            fetchUsers(selectedOrgId)
+          } else {
+            fetchAllUsers()
+          }
         } catch (e: any) {
           message.error(e?.response?.data?.message || `${action}失败`)
         }
@@ -339,7 +355,11 @@ const OrgManagement: React.FC = () => {
         try {
           await userApi.delete(user.employeeId)
           message.success('账号已删除')
-          selectedOrgId ? fetchUsers(selectedOrgId) : fetchAllUsers()
+          if (selectedOrgId) {
+            fetchUsers(selectedOrgId)
+          } else {
+            fetchAllUsers()
+          }
         } catch (e: any) {
           message.error(e?.response?.data?.message || '删除失败')
         }
