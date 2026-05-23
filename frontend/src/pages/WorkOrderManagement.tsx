@@ -77,6 +77,34 @@ const WorkOrderManagement = () => {
   const handleViewDetail = (record: WorkOrder) => { workOrderApi.getById(record.id).then(res => { setSelectedOrder(res.data?.data || record); setDetailDrawerOpen(true) }).catch(() => { setSelectedOrder(record); setDetailDrawerOpen(true) }) }
   const handleExecuteItem = (itemId: number) => { Modal.confirm({ title: '执行工单项', content: '确认要执行此工单项？', onOk: () => executeItemMutation.mutate(itemId) }) }
 
+  // 搜索分机号
+  const handleExtSearch = useCallback(async (value: string) => {
+    if (!value || value.length < 1) { setExtOptions([]); return }
+    setExtLoading(true)
+    try {
+      const res = await request.get('/extension-numbers', { params: { keyword: value, page: 0, size: 20 } })
+      const content = res.data?.data?.content || []
+      setExtOptions(content.map((e: any) => ({ label: `${e.extensionNumber} ${e.employeeName ? '(' + e.employeeName + ')' : ''}`, value: e.extensionNumber })))
+    } catch { setExtOptions([]) }
+    setExtLoading(false)
+  }, [])
+
+  // 选中分机号后自动填充
+  const handleExtSelect = useCallback(async (value: string) => {
+    try {
+      const res = await request.get(`/extension-numbers/detail/${value}`)
+      const d = res.data?.data
+      if (d) {
+        form.setFieldsValue({
+          employeeName: d.employeeName || '',
+          macAddresses: d.macAddresses?.join(', ') || '',
+          branchName: d.branchName || '',
+          deptName: d.deptName || '',
+        })
+      }
+    } catch { /* ignore */ }
+  }, [form])
+
   // 从Excel粘贴: tab分隔依次填入分机号、使用人、员工ID、MAC、分行、部门、备注
   const PASTE_FIELDS = ['extensionNumber', 'employeeName', 'employeeNo', 'macAddresses', 'branchName', 'deptName', 'remark']
 
@@ -106,34 +134,6 @@ const WorkOrderManagement = () => {
     form.setFieldsValue({ type })
     setIsCreateModalOpen(true)
   }
-
-  // 搜索分机号
-  const handleExtSearch = useCallback(async (value: string) => {
-    if (!value || value.length < 1) { setExtOptions([]); return }
-    setExtLoading(true)
-    try {
-      const res = await request.get('/extension-numbers', { params: { keyword: value, page: 0, size: 20 } })
-      const content = res.data?.data?.content || []
-      setExtOptions(content.map((e: any) => ({ label: `${e.extensionNumber} ${e.employeeName ? '(' + e.employeeName + ')' : ''}`, value: e.extensionNumber })))
-    } catch { setExtOptions([]) }
-    setExtLoading(false)
-  }, [])
-
-  // 选中分机号后自动填充
-  const handleExtSelect = useCallback(async (value: string) => {
-    try {
-      const res = await request.get(`/extension-numbers/detail/${value}`)
-      const d = res.data?.data
-      if (d) {
-        form.setFieldsValue({
-          employeeName: d.employeeName || '',
-          macAddresses: d.macAddresses?.join(', ') || '',
-          branchName: d.branchName || '',
-          deptName: d.deptName || '',
-        })
-      }
-    } catch { /* ignore */ }
-  }, [form])
 
   const columns = [
     { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 150 },
