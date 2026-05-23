@@ -126,7 +126,6 @@ const Dashboard = () => {
     )},
     { title: '标题', dataIndex: 'title', key: 'title', width: 180, ellipsis: true },
     { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 90, render: (t: number) => <Tag color={WO_TYPE_COLORS[t] || 'default'}>{WO_TYPE_NAMES[t] || t}</Tag> },
-    { title: '优先级', dataIndex: 'priority', key: 'priority', width: 70, render: (p: number) => <Tag color={WO_PRIORITY_COLORS[p] || 'default'}>{WO_PRIORITY_NAMES[p] || p}</Tag> },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 80 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 80 },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 140, render: (v: string) => v ? v.replace('T', ' ').substring(0, 16) : '-' },
@@ -260,7 +259,6 @@ const Dashboard = () => {
               <Space>
                 <Tag color={WO_STATUS_COLORS[selectedWorkOrder.status]}>{WO_STATUS_NAMES[selectedWorkOrder.status] || selectedWorkOrder.status}</Tag>
                 <Tag color={WO_TYPE_COLORS[selectedWorkOrder.orderType]}>{WO_TYPE_NAMES[selectedWorkOrder.orderType] || selectedWorkOrder.orderType}</Tag>
-                <Tag color={WO_PRIORITY_COLORS[selectedWorkOrder.priority]}>{WO_PRIORITY_NAMES[selectedWorkOrder.priority] || selectedWorkOrder.priority}</Tag>
               </Space>
             </div>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{selectedWorkOrder.title}</div>

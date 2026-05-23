@@ -143,7 +143,6 @@ const WorkOrderManagement = () => {
     { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 150 },
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
     { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 110, render: (t: number) => <Tag color={TYPE_COLORS[t] || 'default'}>{TYPE_NAMES[t] || t}</Tag> },
-    { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80, render: (p: number) => <Tag color={PRIORITY_COLORS[p] || 'default'}>{PRIORITY_NAMES[p] || p}</Tag> },
     { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 90 },
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 90 },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 150 },
@@ -300,7 +299,6 @@ const WorkOrderManagement = () => {
               <Descriptions.Item label="工单号">{selectedOrder.workOrderNo}</Descriptions.Item>
               <Descriptions.Item label="标题">{selectedOrder.title}</Descriptions.Item>
               <Descriptions.Item label="类型"><Tag color={TYPE_COLORS[selectedOrder.orderType]}>{TYPE_NAMES[selectedOrder.orderType] || selectedOrder.orderType}</Tag></Descriptions.Item>
-              <Descriptions.Item label="优先级"><Tag color={PRIORITY_COLORS[selectedOrder.priority]}>{PRIORITY_NAMES[selectedOrder.priority] || selectedOrder.priority}</Tag></Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedOrder.status]}>{STATUS_NAMES[selectedOrder.status] || selectedOrder.status}</Tag></Descriptions.Item>
               <Descriptions.Item label="申请人">{selectedOrder.requesterName || '-'}</Descriptions.Item>
               <Descriptions.Item label="处理人">{selectedOrder.handlerName || '-'}</Descriptions.Item>
