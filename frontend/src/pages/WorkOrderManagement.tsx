@@ -77,6 +77,28 @@ const WorkOrderManagement = () => {
   const handleViewDetail = (record: WorkOrder) => { workOrderApi.getById(record.id).then(res => { setSelectedOrder(res.data?.data || record); setDetailDrawerOpen(true) }).catch(() => { setSelectedOrder(record); setDetailDrawerOpen(true) }) }
   const handleExecuteItem = (itemId: number) => { Modal.confirm({ title: '执行工单项', content: '确认要执行此工单项？', onOk: () => executeItemMutation.mutate(itemId) }) }
 
+  // 从Excel粘贴: tab分隔依次填入分机号、使用人、员工ID、MAC、分行、部门、备注
+  const PASTE_FIELDS = ['extensionNumber', 'employeeName', 'employeeNo', 'macAddresses', 'branchName', 'deptName', 'remark']
+
+  const handleFormPaste = useCallback((e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text/plain')
+    if (!text || !text.includes('\t')) return // 不是Excel数据则不拦截
+    e.preventDefault()
+    const values = text.replace(/\r?\n$/, '').split('\t')
+    const patch: Record<string, string> = {}
+    PASTE_FIELDS.forEach((field, i) => {
+      if (values[i] !== undefined && values[i] !== '') {
+        patch[field] = values[i].trim()
+      }
+    })
+    form.setFieldsValue(patch)
+    message.success(`已粘贴 ${Object.keys(patch).length} 个字段`)
+    // 粘贴分机号后自动查详情
+    if (patch.extensionNumber) {
+      handleExtSelect(patch.extensionNumber)
+    }
+  }, [form, handleExtSelect])
+
   // 选择工单类型后，进入创建表单
   const handleTypeSelect = (type: number) => {
     setSelectedType(type)
@@ -182,7 +204,7 @@ const WorkOrderManagement = () => {
         confirmLoading={createMutation.isPending}
         width={560}
       >
-        <Form form={form} layout="vertical" initialValues={{ type: selectedType }}>
+        <Form form={form} layout="vertical" initialValues={{ type: selectedType }} onPaste={handleFormPaste}>
           <Form.Item name="type" label="工单类型">
             <Input disabled />
           </Form.Item>
@@ -214,13 +236,13 @@ const WorkOrderManagement = () => {
           </Row>
 
           <Form.Item name="macAddresses" label="MAC">
-            <Input placeholder="MAC地址（自动填充）" disabled />
+            <Input placeholder="MAC地址（可粘贴或自动填充）" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="branchName" label="分行">
-                <Input disabled placeholder="自动填充" />
+                <Input placeholder="自动填充或粘贴" />
               </Form.Item>
             </Col>
             <Col span={12}>
