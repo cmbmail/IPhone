@@ -53,7 +53,7 @@ public interface BillRawRepository extends JpaRepository<BillRaw, Long> {
     // Joins bill_raw.department -> org_structure.name to find the level-1 ancestor branch
     // Uses path like /1/2/5 to extract the level-1 org id (2nd segment)
     @Query(value = """
-        SELECT COALESCE(l1.branch_name, r.department, '未分配') AS branch_name,
+        SELECT COALESCE(l1.branch_name, r.dept_name, '未分配') AS branch_name,
                COALESCE(SUM(CASE WHEN r.charge_type = 'PHONE' THEN r.platform_usage_fee ELSE 0 END), 0),
                COALESCE(SUM(CASE WHEN r.charge_type = 'PHONE' THEN r.number_monthly_rent ELSE 0 END), 0),
                COALESCE(SUM(CASE WHEN r.charge_type = 'PHONE' THEN r.outbound_duration ELSE 0 END), 0),
@@ -65,14 +65,14 @@ public interface BillRawRepository extends JpaRepository<BillRaw, Long> {
                COALESCE(SUM(CASE WHEN r.charge_type = 'FLASH_SMS' THEN r.charge_amount ELSE 0 END), 0),
                COALESCE(SUM(r.charge_amount), 0)
         FROM bill_raw r
-        LEFT JOIN org_structure dept_org ON r.department = dept_org.name
+        LEFT JOIN org_structure dept_org ON r.dept_name = dept_org.name
         LEFT JOIN org_structure l1 ON l1.level = 1
             AND l1.id = CASE
                 WHEN dept_org.path REGEXP '^/[0-9]+/[0-9]+' 
                 THEN CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(dept_org.path, '/', 3), '/', -1) AS UNSIGNED)
                 ELSE NULL END
         WHERE r.bill_month = :billMonth
-        GROUP BY COALESCE(l1.branch_name, r.department, '未分配')
+        GROUP BY COALESCE(l1.branch_name, r.dept_name, '未分配')
         ORDER BY branch_name
         """, nativeQuery = true)
     List<Object[]> sumByBranch(@Param("billMonth") String billMonth);

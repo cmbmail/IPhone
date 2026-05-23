@@ -14,7 +14,7 @@ interface BillRecord {
   fileName: string
   phone_number: string
   user_id: string
-  department: string
+  deptName: string
   extension_number: string
   platform_usage_fee: number
   number_monthly_rent: number
@@ -24,7 +24,7 @@ interface BillRecord {
   international_duration: number
   international_charge: number
   charge_amount: number
-  charge_type: string
+  charge_type: number
   allocation_time: string | null
   activation_time: string | null
   deactivation_time: string | null
@@ -32,7 +32,7 @@ interface BillRecord {
   billing_end_date: string | null
   days: number
   remark: string
-  import_status: string
+  import_status: number
   imported_by: string
   imported_at: string
 }
@@ -45,10 +45,10 @@ interface PageData {
 }
 
 const CHARGE_TABS = [
-  { key: 'PHONE', label: '号码费用', icon: <PhoneOutlined />, color: '#1677ff' },
-  { key: 'RECORDING', label: '录音费用', icon: <AudioOutlined />, color: '#52c41a' },
-  { key: 'RINGTONE', label: '彩铃费用', icon: <NotificationOutlined />, color: '#eb2f96' },
-  { key: 'FLASH_SMS', label: '闪信费用', icon: <ThunderboltOutlined />, color: '#fa8c16' },
+  { key: '0', label: '号码费用', icon: <PhoneOutlined />, color: '#1677ff' },
+  { key: '1', label: '录音费用', icon: <AudioOutlined />, color: '#52c41a' },
+  { key: '2', label: '彩铃费用', icon: <NotificationOutlined />, color: '#eb2f96' },
+  { key: '3', label: '闪信费用', icon: <ThunderboltOutlined />, color: '#fa8c16' },
 ]
 
 const statusMap: Record<string, { text: string; color: string }> = {
@@ -119,10 +119,10 @@ const commonColumns: ColumnsType<BillRecord> = [
 ]
 
 const getColumns = (tabKey: string): ColumnsType<BillRecord> => {
-  if (tabKey === 'PHONE') return [...phoneColumns, ...commonColumns]
-  if (tabKey === 'RECORDING') return [...recordingColumns, ...commonColumns]
-  if (tabKey === 'RINGTONE') return [...ringtoneColumns, ...commonColumns]
-  if (tabKey === 'FLASH_SMS') return [...flashSmsColumns, ...commonColumns]
+  if (tabKey === '0') return [...phoneColumns, ...commonColumns]
+  if (tabKey === '1') return [...recordingColumns, ...commonColumns]
+  if (tabKey === '2') return [...ringtoneColumns, ...commonColumns]
+  if (tabKey === '3') return [...flashSmsColumns, ...commonColumns]
   return [...phoneColumns, ...commonColumns]
 }
 
@@ -132,7 +132,7 @@ const getEmptyText = (tabKey: string) => {
 }
 
 const BillManagement = () => {
-  const [activeTab, setActiveTab] = useState('PHONE')
+  const [activeTab, setActiveTab] = useState('0')
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [uploadMode, setUploadMode] = useState<'import' | 'importAndAllocate'>('import')
@@ -176,7 +176,7 @@ const BillManagement = () => {
   })
 
   const columns = getColumns(activeTab)
-  const scrollXMap: Record<string, number> = { PHONE: 1830, RECORDING: 1120, RINGTONE: 910, FLASH_SMS: 1030 }
+  const scrollXMap: Record<string, number> = { 0: 1830, 1: 1120, 2: 910, 3: 1030 }
   const scrollX = scrollXMap[activeTab] || 2090
 
   const importMutation = useMutation({
@@ -304,11 +304,11 @@ const BillManagement = () => {
               <li>费用类型：<Tag color={tabConfig.color}>{tabConfig.label}</Tag></li>
               <li>账单月份：<Tag>{billMonth}</Tag></li>
               <li>支持格式：Excel (.xlsx)</li>
-              {activeTab === 'PHONE' && <li>Sheet名需含「号码」，列：号码、分配时间、用户ID、部门、平台使用费、码号月租费、外呼时长、转接外呼时长、国内费用、国际时长、国际费用、费用小计、备注</li>}
-              {activeTab === 'RECORDING' && <li>Sheet名需含「录音」，列：分机号、号码、开启时间、关闭时间、开始时间、结束时间、天数、费用小计</li>}
-              {activeTab === 'RINGTONE' && <li>Sheet名需含「彩铃」，列：分机号、号码、开通时间、费用</li>}
-              {activeTab === 'FLASH_SMS' && <li>闪信费用按季度结算，请单独上传闪信费用文件</li>}
-              {activeTab === 'FLASH_SMS' && <li>Sheet名需含「闪信」，列：月份、主号码、子号码、地市、下发量</li>}
+              {activeTab === '0' && <li>Sheet名需含「号码」，列：号码、分配时间、用户ID、部门、平台使用费、码号月租费、外呼时长、转接外呼时长、国内费用、国际时长、国际费用、费用小计、备注</li>}
+              {activeTab === '1' && <li>Sheet名需含「录音」，列：分机号、号码、开启时间、关闭时间、开始时间、结束时间、天数、费用小计</li>}
+              {activeTab === '2' && <li>Sheet名需含「彩铃」，列：分机号、号码、开通时间、费用</li>}
+              {activeTab === '3' && <li>闪信费用按季度结算，请单独上传闪信费用文件</li>}
+              {activeTab === '3' && <li>Sheet名需含「闪信」，列：月份、主号码、子号码、地市、下发量</li>}
             </ul>
           </div>
 

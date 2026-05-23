@@ -148,7 +148,7 @@ public class BillImportService {
         b.setPhoneNumber(s(v, 0));
         b.setAllocationTime(parseDate(s(v, 1)));
         b.setEmployeeNo(s(v, 2));
-        b.setDepartment(s(v, 3));
+        b.setDeptName(s(v, 3));
         b.setPlatformUsageFee(dec(s(v, 4)));
         b.setNumberMonthlyRent(dec(s(v, 5)));
         b.setOutboundDuration(intg(s(v, 6)));
@@ -177,7 +177,7 @@ public class BillImportService {
         b.setExtensionNumber(s(v, 0));
         b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
         b.setActivationTime(parseDate(s(v, 2)));
-        b.setDepartment(s(v, 3));
+        b.setDeptName(s(v, 3));
         b.setChargeAmount(dec(s(v, 4)));
     }
 

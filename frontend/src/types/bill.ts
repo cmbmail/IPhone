@@ -9,7 +9,7 @@ export interface BillRaw {
   employeeName: string | null
   orgId: number | null
   orgName: string | null
-  department: string | null
+  deptName: string | null
   city: string | null
   chargeAmount: number | null
   platformUsageFee: number | null

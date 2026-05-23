@@ -76,8 +76,8 @@ public class BillRaw extends BaseEntity {
     @Column(name = "employee_no", length = 20)
     private String employeeNo;
 
-    @Column(name = "department", length = 100)
-    private String department;
+    @Column(name = "dept_name", length = 100)
+    private String deptName;
 
     @Column(name = "extension_number", length = 20)
     private String extensionNumber;
