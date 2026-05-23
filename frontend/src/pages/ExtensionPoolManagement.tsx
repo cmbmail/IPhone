@@ -1,21 +1,15 @@
 import { useState } from 'react'
 import { Table, Button, Card, Select, Tag, Space, Input, Modal, Form, Statistic, Row, Col, message, Dropdown } from 'antd'
-import { UserAddOutlined, RollbackOutlined, SwapOutlined, LinkOutlined } from '@ant-design/icons'
+import { UserAddOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { extensionNumberApi, type ExtensionNumber } from '@/api/extensionNumber'
 import { request } from '@/api/request'
 
-// 状态定义: 0=可用(电话号码为空时显示闲置) 1=占用 2=分配中
-const getStatusDisplay = (record: ExtensionNumber) => {
-  if (record.status === 0) {
-    // 可用状态：电话号为空显示"闲置"，否则显示"可用"
-    return record.phoneNumber
-      ? { label: '可用', color: 'green' }
-      : { label: '闲置', color: 'default' }
-  }
-  if (record.status === 1) return { label: '占用', color: 'blue' }
-  if (record.status === 2) return { label: '分配中', color: 'orange' }
-  return { label: '未知', color: 'default' }
+// 状态由后端动态计算: 0=闲置(电话号码为空) 1=占用(有电话号码,无未完成工单) 2=分配中(有电话号码,有未完成工单)
+const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: '闲置', color: 'default' },
+  1: { label: '占用', color: 'blue' },
+  2: { label: '分配中', color: 'orange' },
 }
 
 const ExtensionPoolManagement = () => {
@@ -71,7 +65,7 @@ const ExtensionPoolManagement = () => {
       })
     },
     onSuccess: () => {
-      message.success('分配请求已提交，将生成工单')
+      message.success('分配请求已提交，工单处理中')
       setAllocateModalOpen(false)
       setActionModalOpen(false)
       form.resetFields()
@@ -83,7 +77,7 @@ const ExtensionPoolManagement = () => {
   const reclaimMutation = useMutation({
     mutationFn: (id: number) => extensionNumberApi.reclaim(id),
     onSuccess: () => {
-      message.success('回收请求已提交，将生成工单')
+      message.success('回收请求已提交，工单处理中')
       setActionModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['extension-numbers'] })
     },
@@ -158,15 +152,15 @@ const ExtensionPoolManagement = () => {
     },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 100,
-      render: (_: number, record: ExtensionNumber) => {
-        const display = getStatusDisplay(record)
-        return <Tag color={display.color}>{display.label}</Tag>
+      render: (s: number) => {
+        const m = STATUS_MAP[s] || { label: '未知', color: 'default' }
+        return <Tag color={m.color}>{m.label}</Tag>
       },
     },
   ]
 
   // 统计
-  const availableCount = content.filter(c => c.status === 0).length
+  const idleCount = content.filter(c => c.status === 0).length
   const occupiedCount = content.filter(c => c.status === 1).length
   const allocatingCount = content.filter(c => c.status === 2).length
 
@@ -181,7 +175,7 @@ const ExtensionPoolManagement = () => {
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card><Statistic title="可用/闲置" value={availableCount} valueStyle={{ color: '#52c41a' }} /></Card>
+          <Card><Statistic title="闲置" value={idleCount} valueStyle={{ color: '#8c8c8c' }} /></Card>
         </Col>
         <Col span={6}>
           <Card><Statistic title="占用" value={occupiedCount} valueStyle={{ color: '#1677ff' }} /></Card>
@@ -199,7 +193,7 @@ const ExtensionPoolManagement = () => {
           <Space>
             <Input.Search placeholder="搜索分机号/使用人/部门/电话" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(0) }} style={{ width: 260 }} />
             <Select placeholder="状态筛选" value={statusFilter} onChange={v => { setStatusFilter(v); setPage(0) }} style={{ width: 130 }} allowClear>
-              <Select.Option value={0}>可用/闲置</Select.Option>
+              <Select.Option value={0}>闲置</Select.Option>
               <Select.Option value={1}>占用</Select.Option>
               <Select.Option value={2}>分配中</Select.Option>
             </Select>
@@ -233,28 +227,27 @@ const ExtensionPoolManagement = () => {
       >
         {selectedExt && (
           <div>
-            {/* 分机信息展示 */}
             <div style={{ background: '#fafafa', padding: 16, borderRadius: 8, marginBottom: 20 }}>
               <Row gutter={[8, 8]}>
                 <Col span={12}><span style={{ color: '#8c8c8c' }}>分机号：</span>{selectedExt.extensionNumber}</Col>
                 <Col span={12}><span style={{ color: '#8c8c8c' }}>电话号码：</span>{selectedExt.phoneNumber || '-'}</Col>
                 <Col span={12}><span style={{ color: '#8c8c8c' }}>使用人：</span>{selectedExt.employeeName || '-'}</Col>
-                <Col span={12}><span style={{ color: '#8c8c8c' }}>状态：</span>{(() => { const d = getStatusDisplay(selectedExt); return <Tag color={d.color}>{d.label}</Tag> })()}</Col>
+                <Col span={12}>
+                  <span style={{ color: '#8c8c8c' }}>状态：</span>
+                  {(() => { const d = STATUS_MAP[selectedExt.status] || { label: '未知', color: 'default' }; return <Tag color={d.color}>{d.label}</Tag> })()}
+                </Col>
                 {selectedExt.branchName && <Col span={12}><span style={{ color: '#8c8c8c' }}>分行：</span>{selectedExt.branchName}</Col>}
                 {selectedExt.deptName && <Col span={12}><span style={{ color: '#8c8c8c' }}>部门：</span>{selectedExt.deptName}</Col>}
               </Row>
             </div>
 
-            {/* 操作按钮 */}
             <Space direction="vertical" style={{ width: '100%' }} size={12}>
-              {/* 分配：仅可用/闲置状态 */}
               {selectedExt.status === 0 && (
                 <Button type="primary" icon={<UserAddOutlined />} block onClick={handleAllocate}>
                   分配（生成工单）
                 </Button>
               )}
 
-              {/* 变更：仅占用状态 */}
               {selectedExt.status === 1 && (
                 <Dropdown menu={{ items: changeMenuItems, onClick: ({ key }) => handleChange(key) }} placement="bottomLeft">
                   <Button icon={<SwapOutlined />} block style={{ borderColor: '#1677ff', color: '#1677ff' }}>
@@ -263,14 +256,12 @@ const ExtensionPoolManagement = () => {
                 </Dropdown>
               )}
 
-              {/* 回收：占用或分配中状态 */}
               {(selectedExt.status === 1 || selectedExt.status === 2) && (
                 <Button danger icon={<RollbackOutlined />} block onClick={handleReclaim}>
                   回收（生成工单）
                 </Button>
               )}
 
-              {/* 分配中状态提示 */}
               {selectedExt.status === 2 && (
                 <div style={{ color: '#fa8c16', fontSize: 12, textAlign: 'center' }}>
                   该分机号正在分配中，工单处理完成后状态将自动更新
