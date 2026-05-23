@@ -12,11 +12,15 @@ const ANNOUNCEMENT_TYPE_COLORS: Record<number, string> = {
   1: 'blue', 2: 'orange', 3: 'purple', 4: 'cyan', 5: 'default',
 }
 const WO_STATUS_NAMES: Record<number, string> = {
-  0: '待处理', 1: '已接受', 2: '处理中', 3: '已完成', 5: '已取消',
+  0: '待处理', 1: '挂起', 2: '处理中', 3: '已完成', 4: '已归档', 5: '已取消',
 }
 const WO_STATUS_COLORS: Record<number, string> = {
-  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 5: 'default',
+  0: 'warning', 1: 'processing', 2: 'processing', 3: 'success', 4: 'default', 5: 'error',
 }
+const WO_TYPE_NAMES: Record<number, string> = { 1: '新增', 2: '变更', 3: '解绑', 4: '座机绑定', 5: '号码拆机' }
+const WO_TYPE_COLORS: Record<number, string> = { 1: 'green', 2: 'blue', 3: 'orange', 4: 'purple', 5: 'red' }
+const WO_PRIORITY_NAMES: Record<number, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
+const WO_PRIORITY_COLORS: Record<number, string> = { 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }
 
 interface RecentBill {
   id: number
@@ -30,8 +34,12 @@ interface WorkOrder {
   id: number
   workOrderNo: string
   title: string
-  priority: string
-  status: string
+  orderType: number
+  priority: number
+  status: number
+  requesterName: string
+  handlerName: string
+  createdAt: string
 }
 
 const Dashboard = () => {
@@ -80,7 +88,7 @@ const Dashboard = () => {
         if (woRes.status === 'fulfilled') {
           const all = woRes.value.data?.data?.content || []
           // 同步工单管理: 只展示未完工(status 0/1/2)
-          setWorkOrders(all.filter((o: WorkOrder & { status: number | string }) => [0, 1, 2].includes(Number(o.status))))
+          setWorkOrders(all.filter((o: WorkOrder) => [0, 1, 2].includes(Number(o.status))))
         }
       } catch {
         // Silently fail
@@ -113,21 +121,23 @@ const Dashboard = () => {
   ]
 
   const woColumns = [
-    { title: '工单号', dataIndex: 'workOrderNo', key: 'no', width: 120, render: (v: string, record: WorkOrder) => (
+    { title: '工单号', dataIndex: 'workOrderNo', key: 'workOrderNo', width: 130, render: (v: string, record: WorkOrder) => (
       <a onClick={() => setSelectedWorkOrder(record)} style={{ fontWeight: 500 }}>{v}</a>
     )},
-    { title: '标题', dataIndex: 'title', key: 'title', ellipsis: true },
+    { title: '标题', dataIndex: 'title', key: 'title', width: 180, ellipsis: true },
+    { title: '类型', dataIndex: 'orderType', key: 'orderType', width: 90, render: (t: number) => <Tag color={WO_TYPE_COLORS[t] || 'default'}>{WO_TYPE_NAMES[t] || t}</Tag> },
+    { title: '优先级', dataIndex: 'priority', key: 'priority', width: 70, render: (p: number) => <Tag color={WO_PRIORITY_COLORS[p] || 'default'}>{WO_PRIORITY_NAMES[p] || p}</Tag> },
+    { title: '申请人', dataIndex: 'requesterName', key: 'requesterName', width: 80 },
+    { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 80 },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 140, render: (v: string) => v ? v.replace('T', ' ').substring(0, 16) : '-' },
     {
-      title: '优先级', dataIndex: 'priority', key: 'priority', width: 80,
-      render: (p: string) => {
-        const colors: Record<string, string> = { 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }
-        const names: Record<string, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
-        return <Tag color={colors[p]}>{names[p] || p}</Tag>
-      }
-    },
-    {
-      title: '状态', dataIndex: 'status', key: 'status', width: 90,
-      render: (s: string) => <Tag color={WO_STATUS_COLORS[s]}>{WO_STATUS_NAMES[s] || s}</Tag>
+      title: '操作', key: 'actions', width: 140,
+      render: (_: unknown, record: WorkOrder) => (
+        <Space>
+          <Tag color={WO_STATUS_COLORS[record.status] || 'default'}>{WO_STATUS_NAMES[record.status] || record.status}</Tag>
+          <a onClick={() => setSelectedWorkOrder(record)}>详情</a>
+        </Space>
+      )
     },
   ]
 
@@ -249,12 +259,14 @@ const Dashboard = () => {
             <div style={{ marginBottom: 12 }}>
               <Space>
                 <Tag color={WO_STATUS_COLORS[selectedWorkOrder.status]}>{WO_STATUS_NAMES[selectedWorkOrder.status] || selectedWorkOrder.status}</Tag>
-                <Tag color={{ 1: 'success', 2: 'default', 3: 'warning', 4: 'error' }[selectedWorkOrder.priority as keyof typeof WO_STATUS_COLORS]}>
-                  {{ 1: '低', 2: '普通', 3: '高', 4: '紧急' }[selectedWorkOrder.priority as keyof typeof WO_STATUS_NAMES] || selectedWorkOrder.priority}
-                </Tag>
+                <Tag color={WO_TYPE_COLORS[selectedWorkOrder.orderType]}>{WO_TYPE_NAMES[selectedWorkOrder.orderType] || selectedWorkOrder.orderType}</Tag>
+                <Tag color={WO_PRIORITY_COLORS[selectedWorkOrder.priority]}>{WO_PRIORITY_NAMES[selectedWorkOrder.priority] || selectedWorkOrder.priority}</Tag>
               </Space>
             </div>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{selectedWorkOrder.title}</div>
+            <div style={{ color: '#999', fontSize: 13 }}>
+              申请人: {selectedWorkOrder.requesterName || '-'} | 处理人: {selectedWorkOrder.handlerName || '-'} | 创建时间: {selectedWorkOrder.createdAt ? selectedWorkOrder.createdAt.replace('T', ' ').substring(0, 16) : '-'}
+            </div>
           </div>
         )}
       </Modal>
