@@ -23,7 +23,8 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
-import type { OrgStructure } from '@/types/org'
+import type { ColumnsType } from 'antd/es/table'
+import type { OrgStructure, CreateOrgDTO } from '@/types/org'
 import { orgApi } from '@/api/org'
 import { userApi, type UserVO } from '@/api/user'
 import { roleApi } from '@/api/role'
@@ -50,7 +51,7 @@ const OrgManagement: React.FC = () => {
   React.useEffect(() => {
     roleApi
       .getActive()
-      .then((res) => setActiveRoles(res.data?.data || []))
+      .then((res) => setActiveRoles((res.data as any)?.data || []))
       .catch(() => {})
   }, [])
   const [userListLoading, setUserListLoading] = useState(false)
@@ -62,7 +63,7 @@ const OrgManagement: React.FC = () => {
     setLoading(true)
     try {
       const res = await orgApi.getTree()
-      setTreeData(res.data?.data || [])
+      setTreeData((res.data as any)?.data || [])
     } catch {
       message.error('加载组织架构失败')
     } finally {
@@ -152,7 +153,7 @@ const OrgManagement: React.FC = () => {
       sort_order: position,
       branch_name: org.branchName,
       org_code: org.orgCode,
-      cost_center_code: org.costCenterCodeCode,
+      cost_center_code: org.costCenterCode,
     })
     setEditModalOpen(true)
   }
@@ -160,10 +161,7 @@ const OrgManagement: React.FC = () => {
   const handleAdd = async () => {
     try {
       const values = await orgForm.validateFields()
-      await orgApi.create({ parent_id: editingOrg?.id ?? null, name: values.name } as Record<
-        string,
-        unknown
-      >)
+      await orgApi.create({ parentId: editingOrg?.id ?? null, name: values.name, type: 3 } as CreateOrgDTO)
       message.success(`已在「${editingOrg?.name || ''}」下添加「${values.name}」`)
       setAddChildOpen(false)
       setEditModalOpen(false)
@@ -361,7 +359,7 @@ const OrgManagement: React.FC = () => {
     return flat
   }, [treeData])
 
-  const userColumns = [
+  const userColumns: ColumnsType<UserVO> = [
     { title: '姓名', dataIndex: 'name', key: 'name', width: 100, align: 'center' },
     {
       title: '账号',
@@ -405,7 +403,7 @@ const OrgManagement: React.FC = () => {
       width: 70,
       align: 'center',
       render: (s: string) =>
-        s === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>,
+        Number(s) === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>,
     },
     {
       title: '操作',
@@ -575,7 +573,7 @@ const OrgManagement: React.FC = () => {
                 description="请先确认该机构下无人员关联"
                 onConfirm={() => {
                   if (editingOrg) {
-                    handleDelete(editingOrg.id, editingOrg.name)
+                    handleDelete(editingOrg.id)
                     setEditModalOpen(false)
                   }
                 }}

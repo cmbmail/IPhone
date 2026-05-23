@@ -19,7 +19,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.Ordered;
 
 import com.phonebiz.security.JwtAuthenticationFilter;
-import com.phonebiz.security.RateLimitFilter;
 import com.phonebiz.security.SecurityHeaderFilter;
 import com.phonebiz.security.XssFilter;
 
@@ -30,7 +29,6 @@ import com.phonebiz.security.XssFilter;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final RateLimitFilter rateLimitFilter;
     private final XssFilter xssFilter;
 
     @Bean
@@ -48,8 +46,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 // All security headers managed by SecurityHeaderFilter
-                
-                                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                // Login rate limiting handled by LoginRateLimitFilter (auto-registered via @Component + @Order)
                 .addFilterBefore(xssFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

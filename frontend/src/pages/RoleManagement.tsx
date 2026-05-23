@@ -42,7 +42,7 @@ const RoleManagement: React.FC = () => {
     setLoading(true)
     try {
       const res = await roleApi.getAll()
-      setRoles(res.data?.data || [])
+      setRoles((res.data as any)?.data || [])
     } catch {
       message.error('加载角色列表失败')
     } finally {
@@ -57,7 +57,7 @@ const RoleManagement: React.FC = () => {
   const fetchAllPermissions = async () => {
     try {
       const res = await roleApi.getPermissionsByModule()
-      setAllPermissions(res.data?.data || {})
+      setAllPermissions((res.data as any)?.data || {})
     } catch {
       message.error('加载权限列表失败')
     }
@@ -66,7 +66,7 @@ const RoleManagement: React.FC = () => {
   const fetchRolePermissions = async (roleId: number) => {
     try {
       const res = await roleApi.getPermissions(roleId)
-      const perms: SysPermission[] = res.data?.data || []
+      const perms: SysPermission[] = (res.data as any)?.data || []
       setRolePermissionIds(perms.map((p) => p.id))
     } catch {
       setRolePermissionIds([])
@@ -140,7 +140,7 @@ const RoleManagement: React.FC = () => {
   const handlePermSave = async () => {
     if (!editingRole) return
     try {
-      const dto: UpdateRoleDTO = { permission_ids: rolePermissionIds }
+      const dto: UpdateRoleDTO = { permissionIds: rolePermissionIds }
       await roleApi.update(editingRole.id, dto)
       message.success('权限分配已保存')
       setPermModalOpen(false)
@@ -187,13 +187,13 @@ const RoleManagement: React.FC = () => {
       key: 'name',
       render: (name: string, record: SysRole) => (
         <Space>
-          {record.is_system ? (
+          {record.isSystem ? (
             <LockOutlined style={{ color: '#faad14' }} />
           ) : (
             <SafetyCertificateOutlined style={{ color: '#1677ff' }} />
           )}
           <span style={{ fontWeight: 500 }}>{name}</span>
-          {record.is_system && <Tag color="orange">系统</Tag>}
+          {record.isSystem && <Tag color="orange">系统</Tag>}
         </Space>
       ),
     },
@@ -220,7 +220,7 @@ const RoleManagement: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (s: string) =>
+      render: (s: number) =>
         s === 1 ? <Badge status="success" text="启用" /> : <Badge status="default" text="停用" />,
     },
     {
@@ -243,7 +243,7 @@ const RoleManagement: React.FC = () => {
           <Button size="small" type="link" icon={<EditOutlined />} onClick={() => openEdit(record)}>
             编辑
           </Button>
-          {!record.is_system && (
+          {!record.isSystem && (
             <Popconfirm
               title="确认删除该角色？"
               description="删除后不可恢复"

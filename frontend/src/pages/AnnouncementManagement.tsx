@@ -21,7 +21,7 @@ const { Option } = Select
 const { TextArea } = Input
 const { Paragraph } = Typography
 
-const TYPE_NAMES: Record<number, string> = {
+const TYPE_NAMES: Record<string, string> = {
   1: '系统公告',
   2: '维护通知',
   3: '政策变更',
@@ -29,7 +29,7 @@ const TYPE_NAMES: Record<number, string> = {
   5: '其他',
 }
 
-const TYPE_COLORS: Record<number, string> = {
+const TYPE_COLORS: Record<string, string> = {
   1: 'blue',
   2: 'orange',
   3: 'purple',
@@ -37,27 +37,27 @@ const TYPE_COLORS: Record<number, string> = {
   5: 'default',
 }
 
-const PRIORITY_NAMES: Record<number, string> = {
+const PRIORITY_NAMES: Record<string, string> = {
   1: '低',
   2: '普通',
   3: '高',
   4: '紧急',
 }
 
-const PRIORITY_COLORS: Record<number, string> = {
+const PRIORITY_COLORS: Record<string, string> = {
   1: '#8c8c8c',
   2: '#1677ff',
   3: '#fa8c16',
   4: '#ff4d4f',
 }
 
-const STATUS_NAMES: Record<number, string> = {
+const STATUS_NAMES: Record<string, string> = {
   0: '草稿',
   1: '已发布',
   2: '已归档',
 }
 
-const STATUS_COLORS: Record<number, string> = {
+const STATUS_COLORS: Record<string, string> = {
   0: 'default',
   1: 'success',
   2: 'warning',

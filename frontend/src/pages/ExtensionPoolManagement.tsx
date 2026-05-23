@@ -49,7 +49,7 @@ const ExtensionPoolManagement = () => {
     queryFn: async () => {
       const res = await extensionNumberApi.search({
         keyword: keyword || undefined,
-        status: statusFilter !== undefined ? statusFilter : undefined,
+        status: statusFilter !== undefined ? String(statusFilter) : undefined,
         deptOrgId: deptFilter || undefined,
         page,
         size,

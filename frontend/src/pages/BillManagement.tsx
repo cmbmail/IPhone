@@ -56,6 +56,7 @@ interface BillRecord {
   billing_start_date: string | null
   billing_end_date: string | null
   days: number
+  sendCount: number | null
   remark: string
   import_status: number
   imported_by: string
@@ -359,10 +360,10 @@ const BillManagement = () => {
   const { data: billData, isLoading } = useQuery({
     queryKey: ['bills', billMonth, chargeType, page, pageSize],
     queryFn: async () => {
-      const res = await request.get<PageData>('/bills', {
+      const res = await request.get('/bills', {
         params: { billMonth, chargeType, page, size: pageSize },
       })
-      return res.data.data
+      return (res.data as any)?.data as PageData
     },
   })
 

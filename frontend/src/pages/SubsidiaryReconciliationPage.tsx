@@ -133,7 +133,7 @@ const SubsidiaryReconciliationPage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 140,
-      render: (status: string) => (
+      render: (status: number) => (
         <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
       ),
     },
@@ -224,7 +224,7 @@ const SubsidiaryReconciliationPage = () => {
           dataSource={reconciliations}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
+          pagination={{ pageSize: 20, total: allocationData?.data?.data?.total_elements }}
         />
       </Card>
     </div>

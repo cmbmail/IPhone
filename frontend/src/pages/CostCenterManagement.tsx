@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { costCenterApi } from '@/api/costCenter'
 import type { CostCenter } from '@/types/costCenter'
 import { orgApi } from '@/api/org'
-import type { OrgStructure } from '@/types/org'
+import type { OrgStructure, CreateOrgDTO } from '@/types/org'
 
 const CostCenterManagement = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
@@ -24,7 +24,7 @@ const CostCenterManagement = () => {
     queryKey: ['all-orgs'],
     queryFn: async () => {
       const res = await orgApi.getAll()
-      return res.data?.data || []
+      return (res.data as any)?.data || []
     },
   })
 
@@ -61,7 +61,7 @@ const CostCenterManagement = () => {
       org_code?: string
       cost_center?: string
     }) => {
-      return orgApi.create({ ...data, type: 'dept' })
+      return orgApi.create({ parentId: data.parent_id ?? null, name: data.name, type: 3, branch_name: data.branch_name, org_code: data.org_code, cost_center: data.cost_center } as any as CreateOrgDTO)
     },
     onSuccess: () => {
       message.success('新增成功')

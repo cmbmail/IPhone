@@ -73,7 +73,7 @@ const PhoneManagement = () => {
     { key: 'cancel', label: '注销' },
   ]
 
-  const handleStatusMenuClick = (record: PhoneView, { key }: { key: string }) => {
+  const handleStatusMenuClick = (_record: PhoneView, { key }: { key: string }) => {
     const labels: Record<string, string> = {
       allocate: '分配',
       reclaim: '回收',

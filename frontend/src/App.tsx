@@ -373,7 +373,7 @@ const PrivateRouteWithLayout = ({ children }: { children: React.ReactNode }) => 
 
 const App = () => (
   <ConfigProvider locale={zhCN}>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <ErrorBoundary>
         <Suspense
           fallback={

@@ -14,8 +14,20 @@ import {
   Statistic,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { invoiceApi, Invoice } from '@/api/invoice'
+import { invoiceApi } from '@/api/invoice'
+import { request } from '@/api/request'
 import { orgApi } from '@/api/org'
+
+interface Invoice {
+  id: number
+  invoiceNo: string
+  sourceOrgName: string
+  amount: number | null
+  taxAmount: number | null
+  invoiceDate: string
+  billMonth: string
+  status: number
+}
 import { UploadOutlined, FilePdfOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons'
 
 const { Option } = Select
@@ -52,7 +64,7 @@ const InvoiceManagement = () => {
     queryKey: ['orgs'],
     queryFn: async () => {
       const response = await orgApi.getAll()
-      return response.data.data
+      return (response.data as any)?.data || []
     },
   })
 
@@ -65,13 +77,13 @@ const InvoiceManagement = () => {
     queryFn: async () => {
       const params: any = { billMonth, page: 0, size: 100 }
       if (status) params.status = status
-      return invoiceApi.getInvoices(params)
+      return invoiceApi.getList(params)
     },
   })
 
   const { data: statsData } = useQuery({
     queryKey: ['invoice-stats', billMonth],
-    queryFn: () => invoiceApi.getStats(billMonth),
+    queryFn: () => request.get('/invoices/stats', { params: { billMonth } }),
   })
 
   const confirmMutation = useMutation({
@@ -102,7 +114,9 @@ const InvoiceManagement = () => {
 
     setUploading(true)
     try {
-      await invoiceApi.upload(formData)
+      await request.post('/invoices/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       message.success('发票上传成功')
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
@@ -161,8 +175,6 @@ const InvoiceManagement = () => {
     },
     {
       title: '操作',
-      key: 'actions',
-      width: 150,
       key: 'actions',
       width: 150,
       render: (_: any, record: Invoice) => (

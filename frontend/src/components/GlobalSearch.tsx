@@ -33,7 +33,7 @@ const GlobalSearch = () => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [_loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -94,7 +94,6 @@ const GlobalSearch = () => {
           border: '1px solid var(--border-light)',
         }}
         allowClear
-        loading={loading}
       />
       {open && (
         <div

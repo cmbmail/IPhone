@@ -126,7 +126,7 @@ const UserManagement = () => {
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (s: string) =>
+      render: (s: number) =>
         s === 1 ? <Tag color="success">启用</Tag> : <Tag color="default">禁用</Tag>,
     },
     {

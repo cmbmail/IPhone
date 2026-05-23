@@ -81,13 +81,13 @@ const AuditLogManagement = () => {
 
   // Extract unique modules from API data
   useEffect(() => {
-    if (auditData?.content) {
+    if (logs?.length) {
       const uniqueModules = [
-        ...new Set(auditData.content.map((item: any) => item.module).filter(Boolean)),
+        ...new Set(logs.map((item: any) => item.module).filter(Boolean)),
       ]
       if (uniqueModules.length > 0) setModules(uniqueModules as string[])
     }
-  }, [auditData])
+  }, [logs])
 
   const [modules, setModules] = useState<string[]>([
     'org',

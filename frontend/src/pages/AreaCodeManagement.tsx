@@ -19,7 +19,7 @@ const AreaCodeManagement = () => {
     queryKey: ['areaCodes'],
     queryFn: async () => {
       const response = await areaCodeApi.getAll()
-      return response.data.data
+      return response.data
     },
   })
 
@@ -27,7 +27,7 @@ const AreaCodeManagement = () => {
     queryKey: ['orgs'],
     queryFn: async () => {
       const response = await orgApi.getAll()
-      return response.data.data
+      return (response.data as any)?.data
     },
   })
 
@@ -68,7 +68,7 @@ const AreaCodeManagement = () => {
     if (editRecord) {
       updateMutation.mutate({ id: editRecord.id, data: values })
     } else {
-      createMutation.mutate(values as CreateAreaCodeMappingDTO)
+      createMutation.mutate(values as unknown as CreateAreaCodeMappingDTO)
     }
   }
 
