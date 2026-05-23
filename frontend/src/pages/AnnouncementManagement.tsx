@@ -25,17 +25,17 @@ const TYPE_COLORS: Record<number, string> = {
 }
 
 const PRIORITY_NAMES: Record<number, string> = {
-  1: '紧急',
-  2: '重要',
-  3: '普通',
-  4: '低',
+  1: '低',
+  2: '普通',
+  3: '高',
+  4: '紧急',
 }
 
 const PRIORITY_COLORS: Record<number, string> = {
-  1: '#ff4d4f',
-  2: '#fa8c16',
-  3: '#1677ff',
-  4: '#8c8c8c',
+  1: '#8c8c8c',
+  2: '#1677ff',
+  3: '#fa8c16',
+  4: '#ff4d4f',
 }
 
 const STATUS_NAMES: Record<number, string> = {
@@ -264,7 +264,7 @@ const AnnouncementManagement = () => {
         width={640}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ marginTop: 16 }}
-          initialValues={{ announcementType: 1, priority: 3, status: 0 }}>
+          initialValues={{ announcementType: 1, priority: 2, status: 0 }}>
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="输入公告标题" />
           </Form.Item>

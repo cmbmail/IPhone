@@ -23,10 +23,10 @@ public class Announcement extends BaseEntity {
     public static final int STATUS_ARCHIVED = 2;
 
 
-    public static final int PRIORITY_URGENT = 1;
-    public static final int PRIORITY_HIGH = 2;
-    public static final int PRIORITY_NORMAL = 3;
-    public static final int PRIORITY_LOW = 4;
+    public static final int PRIORITY_URGENT = 4;
+    public static final int PRIORITY_HIGH = 3;
+    public static final int PRIORITY_NORMAL = 2;
+    public static final int PRIORITY_LOW = 1;
 
 
     public static final int TYPE_SYSTEM = 1;
