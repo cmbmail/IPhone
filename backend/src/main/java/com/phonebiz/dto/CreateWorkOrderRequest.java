@@ -2,9 +2,7 @@ package com.phonebiz.dto;
 
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,16 +17,19 @@ public class CreateWorkOrderRequest {
     @NotNull(message = "工单类型不能为空")
     private Integer type;
 
-    @NotBlank(message = "工单标题不能为空")
+    // Frontend form fields
+    private String employeeName;
+    private String employeeNo;
+    private String extensionNumber;
+    private String macAddresses;
+    private String branchName;
+    private String deptName;
+    private String remark;
+
+    // Driven service fields (optional - used by programmatic work order creation)
     private String title;
-
     private String description;
-
-    @NotNull(message = "优先级不能为空")
     private Integer priority;
-
-    private Long handlerId;
-
     private List<WorkOrderItemRequest> items;
 
     @Data

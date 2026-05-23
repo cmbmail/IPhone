@@ -83,16 +83,42 @@ public class WorkOrderService {
     public WorkOrderDTO createWorkOrder(CreateWorkOrderRequest request, Long requesterId, String requesterName) {
         String workOrderNo = generateWorkOrderNo();
 
+        // Title: use provided (driven service path) or auto-generate (frontend path)
+        String title = request.getTitle();
+        if (title == null || title.isEmpty()) {
+            String typeName = switch (request.getType()) {
+                case 1 -> "新增"; case 2 -> "变更"; case 3 -> "解绑";
+                case 4 -> "座机绑定"; case 5 -> "号码拆机"; default -> "工单";
+            };
+            title = typeName + (request.getExtensionNumber() != null ? " - " + request.getExtensionNumber() : "");
+        }
+
+        // Description: use provided (driven service path) or auto-generate (frontend path)
+        String description = request.getDescription();
+        if (description == null || description.isEmpty()) {
+            StringBuilder desc = new StringBuilder();
+            if (request.getEmployeeName() != null) desc.append("使用人:").append(request.getEmployeeName());
+            if (request.getEmployeeNo() != null) desc.append(" 员工ID:").append(request.getEmployeeNo());
+            if (request.getExtensionNumber() != null) desc.append(" 分机号:").append(request.getExtensionNumber());
+            if (request.getMacAddresses() != null) desc.append(" MAC:").append(request.getMacAddresses());
+            if (request.getBranchName() != null) desc.append(" 分行:").append(request.getBranchName());
+            if (request.getDeptName() != null) desc.append(" 部门:").append(request.getDeptName());
+            description = desc.toString();
+        }
+
+        // Priority: use provided (driven service path) or default to NORMAL
+        Integer priority = request.getPriority() != null ? request.getPriority() : WorkOrder.WO_NORMAL;
+
         WorkOrder workOrder = WorkOrder.builder()
                 .workOrderNo(workOrderNo)
                 .type(request.getType())
                 .status(WorkOrder.WO_PENDING)
-                .priority(request.getPriority())
+                .priority(priority)
                 .requesterId(requesterId)
                 .requesterName(requesterName)
-                .handlerId(request.getHandlerId())
-                .title(request.getTitle())
-                .description(request.getDescription())
+                .title(title)
+                .description(description)
+                .remark(request.getRemark())
                 .build();
 
         workOrder.setCreatedAt(LocalDateTime.now());
@@ -100,15 +126,16 @@ public class WorkOrderService {
 
         WorkOrder saved = workOrderRepository.save(workOrder);
 
+        // Create items if provided (driven service path)
         if (request.getItems() != null && !request.getItems().isEmpty()) {
-            for (CreateWorkOrderRequest.WorkOrderItemRequest itemRequest : request.getItems()) {
+            for (CreateWorkOrderRequest.WorkOrderItemRequest itemReq : request.getItems()) {
                 WorkOrderItem item = WorkOrderItem.builder()
                         .workOrderId(saved.getId())
-                        .itemType(itemRequest.getItemType())
-                        .targetRefId(itemRequest.getTargetRefId())
-                        .action(itemRequest.getAction())
-                        .fromValue(itemRequest.getFromValue())
-                        .toValue(itemRequest.getToValue())
+                        .itemType(itemReq.getItemType())
+                        .targetRefId(itemReq.getTargetRefId())
+                        .action(itemReq.getAction())
+                        .fromValue(itemReq.getFromValue())
+                        .toValue(itemReq.getToValue())
                         .status(WorkOrderItem.ITEM_PENDING)
                         .build();
                 item.setCreatedAt(LocalDateTime.now());
@@ -183,12 +210,10 @@ public class WorkOrderService {
 
     private synchronized String generateWorkOrderNo() {
         String dateStr = LocalDateTime.now().format(ORDER_NO_FORMATTER);
-        String prefix = "WO" + dateStr;
 
-        long count = workOrderRepository.countByWorkOrderNoStartingWith(prefix);
-        String randomSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        long count = workOrderRepository.countByWorkOrderNoStartingWith(dateStr);
 
-        return String.format("%s%04d%s", prefix, count + 1, randomSuffix);
+        return String.format("%s%04d", dateStr, count + 1);
     }
 
     private boolean isValidStatusTransition(Integer from, Integer to) {
