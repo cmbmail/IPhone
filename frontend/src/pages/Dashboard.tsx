@@ -130,12 +130,9 @@ const Dashboard = () => {
     { title: '处理人', dataIndex: 'handlerName', key: 'handlerName', width: 80 },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120, render: (v: string) => v ? v.replace(/^[0-9]{4}-/, '').replace('T', ' ').substring(0, 11) : '-' },
     {
-      title: '操作', key: 'actions', width: 140,
+      title: '操作', key: 'actions', width: 100,
       render: (_: unknown, record: WorkOrder) => (
-        <Space>
-          <Tag color={WO_STATUS_COLORS[record.status] || 'default'}>{WO_STATUS_NAMES[record.status] || record.status}</Tag>
-          <a onClick={() => setSelectedWorkOrder(record)}>详情</a>
-        </Space>
+        <Tag color={WO_STATUS_COLORS[record.status] || 'default'} style={{ cursor: 'pointer' }} onClick={() => setSelectedWorkOrder(record)}>{WO_STATUS_NAMES[record.status] || record.status}</Tag>
       )
     },
   ]

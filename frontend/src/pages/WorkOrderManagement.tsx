@@ -152,13 +152,12 @@ const WorkOrderManagement = () => {
   const activeColumns = [
     ...commonColumns,
     {
-      title: '操作', key: 'actions', width: 280,
+      title: '操作', key: 'actions', width: 240,
       render: (_: unknown, record: WorkOrder) => {
         const s = record.status
         return (
           <Space>
-            <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
-            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
+            <Tag color={STATUS_COLORS[s] || 'default'} style={{ cursor: 'pointer' }} onClick={() => handleViewDetail(record)}>{STATUS_NAMES[s] || s}</Tag>
             {s === 0 && <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleAccept(record)}>接受</Button>}
             {(s === 1 || s === 2) && <Button size="small" type="primary" onClick={() => handleComplete(record)}>完成</Button>}
             {!isHistorical(s) && <Button size="small" danger onClick={() => handleReject(record)}>拒绝</Button>}
@@ -168,19 +167,14 @@ const WorkOrderManagement = () => {
     }
   ]
 
-  // 历史工单列：操作列仅含状态Tag + 详情
+  // 历史工单列：操作列仅含状态Tag
   const historyColumns = [
     ...commonColumns,
     {
-      title: '操作', key: 'actions', width: 180,
+      title: '操作', key: 'actions', width: 120,
       render: (_: unknown, record: WorkOrder) => {
         const s = record.status
-        return (
-          <Space>
-            <Tag color={STATUS_COLORS[s] || 'default'}>{STATUS_NAMES[s] || s}</Tag>
-            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>详情</Button>
-          </Space>
-        )
+        return <Tag color={STATUS_COLORS[s] || 'default'} style={{ cursor: 'pointer' }} onClick={() => handleViewDetail(record)}>{STATUS_NAMES[s] || s}</Tag>
       }
     }
   ]
