@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExtensionNumber {
 
-    public static final int EXT_AVAILABLE = 0;
-    public static final int EXT_ALLOCATED = 1;
-    public static final int EXT_IDLE = 2;
+    public static final int EXT_AVAILABLE = 0;  // 可用(无外线号码显示闲置)
+    public static final int EXT_OCCUPIED = 1;  // 占用(有外线号码,无工单流转)
+    public static final int EXT_ALLOCATING = 2;  // 分配中(有外线号码,工单未完成)
 
 
     @Id

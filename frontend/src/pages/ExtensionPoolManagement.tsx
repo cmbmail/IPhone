@@ -1,14 +1,21 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Tag, Space, Input, Modal, Form, Statistic, Row, Col, message } from 'antd'
-import { UserAddOutlined, RollbackOutlined } from '@ant-design/icons'
+import { Table, Button, Card, Select, Tag, Space, Input, Modal, Form, Statistic, Row, Col, message, Dropdown } from 'antd'
+import { UserAddOutlined, RollbackOutlined, SwapOutlined, LinkOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { extensionNumberApi, type ExtensionNumber } from '@/api/extensionNumber'
 import { request } from '@/api/request'
 
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '可分配', color: 'green' },
-  2: { label: '闲置(无电话)', color: 'orange' },
-  1: { label: '已占用', color: 'blue' },
+// 状态定义: 0=可用(电话号码为空时显示闲置) 1=占用 2=分配中
+const getStatusDisplay = (record: ExtensionNumber) => {
+  if (record.status === 0) {
+    // 可用状态：电话号为空显示"闲置"，否则显示"可用"
+    return record.phoneNumber
+      ? { label: '可用', color: 'green' }
+      : { label: '闲置', color: 'default' }
+  }
+  if (record.status === 1) return { label: '占用', color: 'blue' }
+  if (record.status === 2) return { label: '分配中', color: 'orange' }
+  return { label: '未知', color: 'default' }
 }
 
 const ExtensionPoolManagement = () => {
@@ -18,18 +25,22 @@ const ExtensionPoolManagement = () => {
   const [page, setPage] = useState(0)
   const [size] = useState(20)
 
-  const [allocateModalOpen, setAllocateModalOpen] = useState(false)
+  // 操作弹窗
+  const [actionModalOpen, setActionModalOpen] = useState(false)
   const [selectedExt, setSelectedExt] = useState<ExtensionNumber | null>(null)
+
+  // 分配弹窗
+  const [allocateModalOpen, setAllocateModalOpen] = useState(false)
   const [form] = Form.useForm()
 
   const queryClient = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
-    queryKey: ['extensionNumber-numbers', keyword, statusFilter, deptFilter, page],
+    queryKey: ['extension-numbers', keyword, statusFilter, deptFilter, page],
     queryFn: async () => {
       const res = await extensionNumberApi.search({
         keyword: keyword || undefined,
-        status: statusFilter || undefined,
+        status: statusFilter !== undefined ? statusFilter : undefined,
         deptOrgId: deptFilter || undefined,
         page, size,
       })
@@ -46,7 +57,7 @@ const ExtensionPoolManagement = () => {
   })
 
   const orgs: any[] = orgsData || []
-  const depts = orgs.filter((o: any) => o.level >= 2)
+  const subDepts = orgs.filter((o: any) => o.level >= 2)
 
   const allocateMutation = useMutation({
     mutationFn: async () => {
@@ -60,10 +71,11 @@ const ExtensionPoolManagement = () => {
       })
     },
     onSuccess: () => {
-      message.success('分配成功，已生成工单')
+      message.success('分配请求已提交，将生成工单')
       setAllocateModalOpen(false)
+      setActionModalOpen(false)
       form.resetFields()
-      queryClient.invalidateQueries({ queryKey: ['extensionNumber-numbers'] })
+      queryClient.invalidateQueries({ queryKey: ['extension-numbers'] })
     },
     onError: () => message.error('分配失败'),
   })
@@ -71,24 +83,49 @@ const ExtensionPoolManagement = () => {
   const reclaimMutation = useMutation({
     mutationFn: (id: number) => extensionNumberApi.reclaim(id),
     onSuccess: () => {
-      message.success('回收成功，已生成工单')
-      queryClient.invalidateQueries({ queryKey: ['extensionNumber-numbers'] })
+      message.success('回收请求已提交，将生成工单')
+      setActionModalOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['extension-numbers'] })
     },
     onError: () => message.error('回收失败'),
   })
 
-  const handleAllocate = (record: ExtensionNumber) => {
+  // 点击分机号 → 打开操作弹窗
+  const handleExtClick = (record: ExtensionNumber) => {
     setSelectedExt(record)
+    setActionModalOpen(true)
+  }
+
+  // 分配
+  const handleAllocate = () => {
+    setActionModalOpen(false)
     form.resetFields()
-    if (record.phoneNumber) form.setFieldsValue({ phoneNumber: record.phoneNumber })
+    if (selectedExt?.phoneNumber) form.setFieldsValue({ phoneNumber: selectedExt.phoneNumber })
     setAllocateModalOpen(true)
   }
 
-  const handleReclaim = (record: ExtensionNumber) => {
+  // 回收
+  const handleReclaim = () => {
+    if (!selectedExt) return
+    setActionModalOpen(false)
     Modal.confirm({
       title: '确认回收',
-      content: `确认回收分机号 ${record.extensionNumber}？此操作将生成回收工单。`,
-      onOk: () => reclaimMutation.mutate(record.id),
+      content: `确认回收分机号 ${selectedExt.extensionNumber}？此操作将生成回收工单。`,
+      onOk: () => reclaimMutation.mutate(selectedExt.id),
+    })
+  }
+
+  // 变更操作（暂只弹窗提示，工单页面未完成）
+  const handleChange = (changeType: string) => {
+    setActionModalOpen(false)
+    const labels: Record<string, string> = {
+      phone: '变更电话号码',
+      user: '变更使用人',
+      dept: '变更使用部门',
+    }
+    Modal.info({
+      title: `${labels[changeType]}`,
+      content: `分机号 ${selectedExt?.extensionNumber} 的${labels[changeType]}操作将生成工单，工单功能开发中，敬请期待。`,
     })
   }
 
@@ -97,15 +134,19 @@ const ExtensionPoolManagement = () => {
   const columns = [
     {
       title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 120,
-      render: (v: string, r: ExtensionNumber) => (
-        <span style={{ fontWeight: r.status === 0 ? 600 : 400, color: r.status === 0 ? '#52c41a' : undefined }}>
+      render: (v: string, record: ExtensionNumber) => (
+        <a onClick={() => handleExtClick(record)} style={{ fontWeight: 500, color: '#1677ff', cursor: 'pointer' }}>
           {v}
-        </span>
+        </a>
       ),
     },
     {
+      title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
+      render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>-</span>,
+    },
+    {
       title: '使用人', dataIndex: 'employeeName', key: 'employeeName', width: 120,
-      render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>空</span>,
+      render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>-</span>,
     },
     {
       title: '分行', dataIndex: 'branchName', key: 'branchName', width: 120,
@@ -116,48 +157,37 @@ const ExtensionPoolManagement = () => {
       render: (v: string) => v || '-',
     },
     {
-      title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150,
-      render: (v: string) => v || '-',
-    },
-    {
       title: '状态', dataIndex: 'status', key: 'status', width: 100,
-      render: (s: string) => {
-        const m = STATUS_MAP[s] || { label: s, color: 'default' }
-        return <Tag color={m.color}>{m.label}</Tag>
+      render: (_: number, record: ExtensionNumber) => {
+        const display = getStatusDisplay(record)
+        return <Tag color={display.color}>{display.label}</Tag>
       },
-    },
-    {
-      title: '操作', key: 'actions', width: 160,
-      render: (_: unknown, record: ExtensionNumber) => (
-        <Space size="small">
-          {record.status !== 1 && (
-            <Button size="small" type="primary" icon={<UserAddOutlined />} onClick={() => handleAllocate(record)}>分配</Button>
-          )}
-          {record.status === 1 && (
-            <Button size="small" danger icon={<RollbackOutlined />} onClick={() => handleReclaim(record)}>回收</Button>
-          )}
-        </Space>
-      ),
     },
   ]
 
+  // 统计
   const availableCount = content.filter(c => c.status === 0).length
-  const idleCount = content.filter(c => c.status === 2).length
-  const allocatedCount = content.filter(c => c.status === 1).length
+  const occupiedCount = content.filter(c => c.status === 1).length
+  const allocatingCount = content.filter(c => c.status === 2).length
 
-  const subDepts = orgs.filter((o: any) => o.level >= 2)
+  // 变更下拉菜单
+  const changeMenuItems = [
+    { key: 'phone', label: '变更电话号码' },
+    { key: 'user', label: '变更使用人' },
+    { key: 'dept', label: '变更使用部门' },
+  ]
 
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card><Statistic title="可分配" value={availableCount} valueStyle={{ color: '#52c41a' }} /></Card>
+          <Card><Statistic title="可用/闲置" value={availableCount} valueStyle={{ color: '#52c41a' }} /></Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="闲置" value={idleCount} valueStyle={{ color: '#faad14' }} /></Card>
+          <Card><Statistic title="占用" value={occupiedCount} valueStyle={{ color: '#1677ff' }} /></Card>
         </Col>
         <Col span={6}>
-          <Card><Statistic title="已占用" value={allocatedCount} valueStyle={{ color: '#1890ff' }} /></Card>
+          <Card><Statistic title="分配中" value={allocatingCount} valueStyle={{ color: '#fa8c16' }} /></Card>
         </Col>
         <Col span={6}>
           <Card><Statistic title="总数" value={listData?.data?.totalElements || 0} /></Card>
@@ -168,10 +198,10 @@ const ExtensionPoolManagement = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Space>
             <Input.Search placeholder="搜索分机号/使用人/部门/电话" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(0) }} style={{ width: 260 }} />
-            <Select placeholder="状态筛选" value={statusFilter} onChange={v => { setStatusFilter(v); setPage(0) }} style={{ width: 120 }} allowClear>
-              <Select.Option value={0}>可分配</Select.Option>
-              <Select.Option value={2}>闲置</Select.Option>
-              <Select.Option value={1}>已占用</Select.Option>
+            <Select placeholder="状态筛选" value={statusFilter} onChange={v => { setStatusFilter(v); setPage(0) }} style={{ width: 130 }} allowClear>
+              <Select.Option value={0}>可用/闲置</Select.Option>
+              <Select.Option value={1}>占用</Select.Option>
+              <Select.Option value={2}>分配中</Select.Option>
             </Select>
             <Select placeholder="部门筛选" value={deptFilter} onChange={v => { setDeptFilter(v); setPage(0) }} style={{ width: 150 }} allowClear>
               {subDepts.map((d: any) => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)}
@@ -193,6 +223,65 @@ const ExtensionPoolManagement = () => {
         />
       </Card>
 
+      {/* 操作弹窗：点击分机号后弹出 */}
+      <Modal
+        title={`分机号 ${selectedExt?.extensionNumber || ''} - 操作`}
+        open={actionModalOpen}
+        onCancel={() => setActionModalOpen(false)}
+        footer={null}
+        width={420}
+      >
+        {selectedExt && (
+          <div>
+            {/* 分机信息展示 */}
+            <div style={{ background: '#fafafa', padding: 16, borderRadius: 8, marginBottom: 20 }}>
+              <Row gutter={[8, 8]}>
+                <Col span={12}><span style={{ color: '#8c8c8c' }}>分机号：</span>{selectedExt.extensionNumber}</Col>
+                <Col span={12}><span style={{ color: '#8c8c8c' }}>电话号码：</span>{selectedExt.phoneNumber || '-'}</Col>
+                <Col span={12}><span style={{ color: '#8c8c8c' }}>使用人：</span>{selectedExt.employeeName || '-'}</Col>
+                <Col span={12}><span style={{ color: '#8c8c8c' }}>状态：</span>{(() => { const d = getStatusDisplay(selectedExt); return <Tag color={d.color}>{d.label}</Tag> })()}</Col>
+                {selectedExt.branchName && <Col span={12}><span style={{ color: '#8c8c8c' }}>分行：</span>{selectedExt.branchName}</Col>}
+                {selectedExt.deptName && <Col span={12}><span style={{ color: '#8c8c8c' }}>部门：</span>{selectedExt.deptName}</Col>}
+              </Row>
+            </div>
+
+            {/* 操作按钮 */}
+            <Space direction="vertical" style={{ width: '100%' }} size={12}>
+              {/* 分配：仅可用/闲置状态 */}
+              {selectedExt.status === 0 && (
+                <Button type="primary" icon={<UserAddOutlined />} block onClick={handleAllocate}>
+                  分配（生成工单）
+                </Button>
+              )}
+
+              {/* 变更：仅占用状态 */}
+              {selectedExt.status === 1 && (
+                <Dropdown menu={{ items: changeMenuItems, onClick: ({ key }) => handleChange(key) }} placement="bottomLeft">
+                  <Button icon={<SwapOutlined />} block style={{ borderColor: '#1677ff', color: '#1677ff' }}>
+                    变更（生成工单） ▾
+                  </Button>
+                </Dropdown>
+              )}
+
+              {/* 回收：占用或分配中状态 */}
+              {(selectedExt.status === 1 || selectedExt.status === 2) && (
+                <Button danger icon={<RollbackOutlined />} block onClick={handleReclaim}>
+                  回收（生成工单）
+                </Button>
+              )}
+
+              {/* 分配中状态提示 */}
+              {selectedExt.status === 2 && (
+                <div style={{ color: '#fa8c16', fontSize: 12, textAlign: 'center' }}>
+                  该分机号正在分配中，工单处理完成后状态将自动更新
+                </div>
+              )}
+            </Space>
+          </div>
+        )}
+      </Modal>
+
+      {/* 分配弹窗 */}
       <Modal
         title={`分配分机号 - ${selectedExt?.extensionNumber || ''}`}
         open={allocateModalOpen}
@@ -209,8 +298,8 @@ const ExtensionPoolManagement = () => {
               {subDepts.map((d: any) => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="phoneNumber" label="电话号码">
-            <Input placeholder="关联电话号码" />
+          <Form.Item name="phoneNumber" label="外线电话号码">
+            <Input placeholder="关联外线电话号码" />
           </Form.Item>
         </Form>
       </Modal>

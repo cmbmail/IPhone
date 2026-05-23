@@ -37,7 +37,7 @@ public class ExtensionNumberService {
     public ExtensionNumber allocate(Long id, String userName, Long deptOrgId, String deptName, String phoneNumber, String operator) {
         ExtensionNumber ext = extRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
-        if (ext.getStatus() == ExtensionNumber.EXT_ALLOCATED) {
+        if (ext.getStatus() == ExtensionNumber.EXT_OCCUPIED) {
             throw new RuntimeException("该分机号已被占用");
         }
 
@@ -46,7 +46,7 @@ public class ExtensionNumberService {
         ext.setDeptName(deptName);
         ext.setBranchName(resolveBranchName(deptOrgId));
         ext.setPhoneNumber(phoneNumber);
-        ext.setStatus(ExtensionNumber.EXT_ALLOCATED);
+        ext.setStatus(ExtensionNumber.EXT_OCCUPIED);
         ext.setUpdatedBy(operator);
 
         extRepo.save(ext);
@@ -65,7 +65,7 @@ public class ExtensionNumberService {
     public ExtensionNumber reclaim(Long id, String operator) {
         ExtensionNumber ext = extRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
-        if (ext.getStatus() != ExtensionNumber.EXT_ALLOCATED) {
+        if (ext.getStatus() != ExtensionNumber.EXT_OCCUPIED) {
             throw new RuntimeException("该分机号未被占用，无法回收");
         }
 
@@ -78,7 +78,7 @@ public class ExtensionNumberService {
         ext.setDeptName(null);
         ext.setBranchName(null);
         ext.setPhoneNumber(null);
-        ext.setStatus(ExtensionNumber.EXT_IDLE);
+        ext.setStatus(ExtensionNumber.EXT_ALLOCATING);
         ext.setWorkOrderId(null);
         ext.setUpdatedBy(operator);
 
