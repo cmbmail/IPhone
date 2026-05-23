@@ -57,7 +57,7 @@ const Dashboard = () => {
           request.get('/users'),
           request.get('/bill-allocations', { params: { billMonth: new Date().toISOString().slice(0, 7), page: 0, size: 5 } }),
           announcementApi.getLatest(),
-          request.get('/work-orders', { params: { status: 0, page: 0, size: 10 } }),
+          request.get('/work-orders', { params: { page: 0, size: 10 } }),
         ])
         if (phoneRes.status === 'fulfilled') setPhoneStats(phoneRes.value.data.data)
         if (deviceRes.status === 'fulfilled') setDeviceStats(deviceRes.value.data.data)
@@ -78,7 +78,9 @@ const Dashboard = () => {
           setAnnouncements(annRes.value.data?.data || [])
         }
         if (woRes.status === 'fulfilled') {
-          setWorkOrders(woRes.value.data?.data?.content || [])
+          const all = woRes.value.data?.data?.content || []
+          // 同步工单管理: 只展示未完工(status 0/1/2)
+          setWorkOrders(all.filter((o: WorkOrder & { status: number | string }) => [0, 1, 2].includes(Number(o.status))))
         }
       } catch {
         // Silently fail
@@ -186,7 +188,7 @@ const Dashboard = () => {
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={18}>
-          <Card title="待处理工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
+          <Card title="进行中工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
             <Table
               columns={woColumns}
               dataSource={workOrders}
