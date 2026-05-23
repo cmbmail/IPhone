@@ -307,7 +307,7 @@ public class WorkOrderDrivenPhoneService {
                 request.setPhoneId(phoneId);
                 request.setOrgId(Long.parseLong(item.getToValue()));
                 if (item.getToValue() != null && !item.getToValue().isEmpty()) {
-                    request.setUserId(item.getToValue());
+                    request.setEmployeeNo(item.getToValue());
                 }
                 phoneService.allocatePhone(request, operator);
             }

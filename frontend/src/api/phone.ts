@@ -9,7 +9,7 @@ export const phoneApi = {
 
   getByNumber: (phoneNumber: string) => request.get<PhoneNumber>(`/phones/number/${phoneNumber}`),
 
-  getByUser: (userId: number) => request.get<PhoneNumber[]>(`/phones/user/${userId}`),
+  getByUser: (employeeNo: number) => request.get<PhoneNumber[]>(`/phones/user/${employeeNo}`),
 
   getByStatus: (status: string, params?: { page?: number; size?: number }) =>
     request.get<{ code: number; data: { content: PhoneNumber[]; total_elements: number } }>(`/phones/status/${status}`, { params }),

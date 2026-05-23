@@ -45,8 +45,8 @@ public class PhoneDevice {
     @Column(name = "org_id", nullable = false)
     private Long orgId;
 
-    @Column(name = "assigned_to", length = 20)
-    private String assignedTo;
+    @Column(name = "assigned_employee_no", length = 20)
+    private String assignedEmployeeNo;
     @Column(name = "status", nullable = false, length = 20)
     private Integer status;
 

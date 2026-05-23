@@ -12,7 +12,7 @@ public class CreatePhoneRequest {
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "Invalid phone number format")
     private String phoneNumber;
 
-    private String userId;
+    private String employeeNo;
 
     @Pattern(regexp = "^\\d{3,8}$", message = "Invalid extension number format")
     private String extensionNumber;

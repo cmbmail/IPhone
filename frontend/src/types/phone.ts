@@ -1,7 +1,7 @@
 export interface PhoneNumber {
   id: number
   phoneNumber: string
-  userId?: string
+  employeeNo?: string
   extensionNumber?: string
   extensionType?: 'auto' | 'manual'
   isShared: boolean
@@ -26,8 +26,8 @@ export interface PhoneHistory {
   action: PhoneAction
   fromStatus?: number
   toStatus?: number
-  fromUser?: string
-  toUser?: string
+  fromEmployeeNo?: string
+  toEmployeeNo?: string
   fromOrg?: string
   toOrg?: string
   workOrderNo?: string
@@ -53,7 +53,7 @@ export interface PhoneSurrenderRecord {
   id: number
   phoneId: number
   phoneNumber: string
-  finalUser?: string
+  finalEmployeeNo?: string
   finalOrg?: string
   surrenderDate: string
   surrenderType: number  // 1=拆机 2=注销
@@ -65,7 +65,7 @@ export interface PhoneSurrenderRecord {
 
 export interface CreatePhoneDTO {
   phoneNumber: string
-  userId?: string
+  employeeNo?: string
   extensionNumber?: string
   extensionType?: 'auto' | 'manual'
   orgId?: number
@@ -78,7 +78,7 @@ export interface UpdatePhoneDTO {
 
 export interface PhoneAllocationRequest {
   phoneId: number
-  userId: string
+  employeeNo: string
   orgId: number
   extensionNumber?: string
   workOrderNo?: string
@@ -114,7 +114,7 @@ export interface PhoneReserveRequest {
 
 export interface PhoneChangeRequest {
   phoneId: number
-  userId?: string
+  employeeNo?: string
   orgId?: number
   phoneNumber?: string
   extensionNumber?: string
@@ -124,7 +124,7 @@ export interface PhoneChangeRequest {
 
 export interface PhoneQueryDTO {
   phoneNumber?: string
-  userId?: string
+  employeeNo?: string
   status?: number
   orgId?: number
   page?: number

@@ -170,14 +170,14 @@ public class SnapshotService {
         String orgName = orgId != null ? orgNameMap.get(orgId) : null;
         String costCenterCode = orgId != null ? costCenterMap.get(orgId) : null;
 
-        String employeeNo = phone.getUserId();
+        String employeeNo = phone.getEmployeeNo();
         Employee employee = employeeNo != null ? employeeMap.get(employeeNo) : null;
 
         return PhoneSnapshot.builder()
                 .snapshotMonth(snapshotMonth)
                 .phoneId(phone.getId())
                 .phoneNumber(phone.getPhoneNumber())
-                .extension(phone.getExtensionNumber())
+                .extensionNumber(phone.getExtensionNumber())
                 .status(phone.getStatus())
                 .orgId(orgId)
                 .orgName(orgName)

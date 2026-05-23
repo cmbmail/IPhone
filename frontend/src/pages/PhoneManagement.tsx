@@ -150,7 +150,7 @@ const PhoneManagement = () => {
 
   const columns = [
     { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140, render: (t: string, r: PhoneNumber) => <a onClick={() => openDetail(r)}>{t}</a> },
-    { title: '使用人', dataIndex: 'userId', key: 'userId', width: 100 },
+    { title: '使用人', dataIndex: 'employeeNo', key: 'employeeNo', width: 100 },
     { title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100 },
     { title: '组织ID', dataIndex: 'orgId', key: 'orgId', width: 80 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: number) => <Tag color={STATUS_COLORS[s]}>{STATUS_NAMES[s]}</Tag> },
@@ -174,7 +174,7 @@ const PhoneManagement = () => {
       case 'allocate':
         return (
           <>
-            <Form.Item name="userId" label="使用人工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
+            <Form.Item name="employeeNo" label="使用人工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
             <Form.Item name="orgId" label="归属组织" rules={[{ required: true }]}>
               <Select placeholder="选择组织">{orgsData?.map((o: any) => <Option key={o.id} value={o.id}>{o.name}</Option>)}</Select>
             </Form.Item>
@@ -205,7 +205,7 @@ const PhoneManagement = () => {
       case 'changeUser':
         return (
           <>
-            <Form.Item name="userId" label="新使用人工号" rules={[{ required: true }]}><Input placeholder="输入新使用人员工号" /></Form.Item>
+            <Form.Item name="employeeNo" label="新使用人工号" rules={[{ required: true }]}><Input placeholder="输入新使用人员工号" /></Form.Item>
             <Form.Item name="extensionNumber" label="新分机号"><Input placeholder="留空自动判定" /></Form.Item>
             <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
           </>
@@ -276,7 +276,7 @@ const PhoneManagement = () => {
             <Descriptions bordered size="small" column={2} style={{ marginBottom: 24 }}>
               <Descriptions.Item label="号码">{selectedPhone.phoneNumber}</Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={STATUS_COLORS[selectedPhone.status]}>{STATUS_NAMES[selectedPhone.status]}</Tag></Descriptions.Item>
-              <Descriptions.Item label="使用人">{selectedPhone.userId || '-'}</Descriptions.Item>
+              <Descriptions.Item label="使用人">{selectedPhone.employeeNo || '-'}</Descriptions.Item>
               <Descriptions.Item label="分机号">{selectedPhone.extensionNumber || '-'}</Descriptions.Item>
               <Descriptions.Item label="分机号类型">{selectedPhone.extensionType === 'auto' ? '自动(跟人)' : selectedPhone.extensionType === 'manual' ? '手动(跟号)' : '-'}</Descriptions.Item>
               <Descriptions.Item label="组织ID">{selectedPhone.orgId || '-'}</Descriptions.Item>
@@ -293,7 +293,7 @@ const PhoneManagement = () => {
                   <div><strong>{ACTION_NAMES[h.action] || h.action}</strong> <span style={{ color: '#999', fontSize: 12 }}>{h.operatedAt}</span></div>
                   <div style={{ fontSize: 12, color: '#666' }}>
                     {h.fromStatus != null && h.toStatus != null && <span>{STATUS_NAMES[h.fromStatus] || h.fromStatus} → {STATUS_NAMES[h.toStatus] || h.toStatus} | </span>}
-                    {h.fromUser && h.toUser && <span>{h.fromUser} → {h.toUser} | </span>}
+                    {h.fromEmployeeNo && h.toEmployeeNo && <span>{h.fromEmployeeNo} → {h.toEmployeeNo} | </span>}
                     操作人: {h.operator} {h.remark && `| ${h.remark}`}
                   </div>
                 </div>

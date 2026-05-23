@@ -5,8 +5,8 @@ export interface BillRaw {
   importStatus: number  // 0=待处理 1=已处理 2=错误
   phoneNumber: string
   extensionNumber: string | null
-  userId: string | null
-  userName: string | null
+  employeeNo: string | null
+  employeeName: string | null
   orgId: number | null
   orgName: string | null
   department: string | null

@@ -60,7 +60,7 @@ public class PhoneService {
 
     @Transactional(readOnly = true)
     public List<PhoneNumber> getPhonesByUser(String userId) {
-        return phoneRepository.findByUserId(userId);
+        return phoneRepository.findByEmployeeNo(userId);
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +85,7 @@ public class PhoneService {
 
         PhoneNumber phone = new PhoneNumber();
         phone.setPhoneNumber(request.getPhoneNumber());
-        phone.setUserId(request.getUserId());
+        phone.setEmployeeNo(request.getEmployeeNo());
         phone.setExtensionNumber(request.getExtensionNumber());
         phone.setExtensionType(request.getExtensionType());
         phone.setOrgId(request.getOrgId());
@@ -120,7 +120,7 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.PHONE_003);
         }
 
-        if (!employeeRepository.existsByEmployeeNo(request.getUserId())) {
+        if (!employeeRepository.existsByEmployeeNo(request.getEmployeeNo())) {
             throw new BusinessException(ErrorCode.EMP_002);
         }
 
@@ -128,11 +128,11 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.ORG_001);
         }
 
-        String fromUser = phone.getUserId();
+        String fromEmployeeNo = phone.getEmployeeNo();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
         Integer fromStatus = phone.getStatus();
 
-        phone.setUserId(request.getUserId());
+        phone.setEmployeeNo(request.getEmployeeNo());
         phone.setOrgId(request.getOrgId());
         phone.setStatus(PhoneNumber.PS_ACTIVE);
         phone.setUpdatedBy(operator);
@@ -152,8 +152,8 @@ public class PhoneService {
             "allocate",
             fromStatus,
             PhoneNumber.PS_ACTIVE,
-            fromUser,
-            request.getUserId(),
+            fromEmployeeNo,
+            request.getEmployeeNo(),
             fromOrg,
             String.valueOf(request.getOrgId()),
             operator,
@@ -161,7 +161,7 @@ public class PhoneService {
             request.getRemark()
         );
 
-        log.info("Phone {} allocated to user {} by {}", phone.getPhoneNumber(), request.getUserId(), operator);
+        log.info("Phone {} allocated to user {} by {}", phone.getPhoneNumber(), request.getEmployeeNo(), operator);
         return saved;
     }
 
@@ -176,11 +176,11 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.PHONE_004);
         }
 
-        String fromUser = phone.getUserId();
+        String fromEmployeeNo = phone.getEmployeeNo();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
         Integer fromStatus = phone.getStatus();
 
-        phone.setUserId(null);
+        phone.setEmployeeNo(null);
         phone.setOrgId(null);
         phone.setExtensionNumber(null);
         phone.setExtensionType(null);
@@ -194,7 +194,7 @@ public class PhoneService {
             "reclaim",
             fromStatus,
             PhoneNumber.PS_IDLE,
-            fromUser,
+            fromEmployeeNo,
             null,
             fromOrg,
             null,
@@ -203,13 +203,13 @@ public class PhoneService {
             request.getReason() != null ? "Reason: " + request.getReason() : request.getRemark()
         );
 
-        log.info("Phone {} reclaimed from user {} by {}", phone.getPhoneNumber(), fromUser, operator);
+        log.info("Phone {} reclaimed from user {} by {}", phone.getPhoneNumber(), fromEmployeeNo, operator);
         return saved;
     }
 
     @Transactional
     public void recordHistory(Long phoneId, String action, Integer fromStatus, Integer toStatus,
-                              String fromUser, String toUser, String fromOrg, String toOrg,
+                              String fromEmployeeNo, String toEmployeeNo, String fromOrg, String toOrg,
                               String operator, String workOrderNo, String remark) {
         PhoneNumber phone = getPhoneById(phoneId);
 
@@ -219,8 +219,8 @@ public class PhoneService {
         history.setAction(action);
         history.setFromStatus(fromStatus);
         history.setToStatus(toStatus);
-        history.setFromUser(fromUser);
-        history.setToUser(toUser);
+        history.setFromEmployeeNo(fromEmployeeNo);
+        history.setToEmployeeNo(toEmployeeNo);
         history.setFromOrg(fromOrg);
         history.setToOrg(toOrg);
         history.setOperator(operator);
@@ -262,8 +262,8 @@ public class PhoneService {
             "change_status",
             fromStatus,
             newStatus,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -287,7 +287,7 @@ public class PhoneService {
         PhoneSurrenderRecord record = new PhoneSurrenderRecord();
         record.setPhoneId(phoneId);
         record.setPhoneNumber(phone.getPhoneNumber());
-        record.setFinalUser(phone.getUserId());
+        record.setFinalEmployeeNo(phone.getEmployeeNo());
         record.setFinalOrg(phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null);
         record.setSurrenderDate(LocalDate.now());
         record.setSurrenderType(surrenderType);
@@ -300,7 +300,7 @@ public class PhoneService {
 
         Integer fromStatus = phone.getStatus();
         phone.setStatus(PhoneNumber.PS_CANCELLED);
-        phone.setUserId(null);
+        phone.setEmployeeNo(null);
         phone.setOrgId(null);
         phone.setExtensionNumber(null);
         phone.setExtensionType(null);
@@ -313,7 +313,7 @@ public class PhoneService {
             "surrender",
             fromStatus,
             PhoneNumber.PS_CANCELLED,
-            record.getFinalUser(),
+            record.getFinalEmployeeNo(),
             null,
             record.getFinalOrg(),
             null,
@@ -346,8 +346,8 @@ public class PhoneService {
             "reserve",
             fromStatus,
             PhoneNumber.PS_RESERVED,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -379,8 +379,8 @@ public class PhoneService {
             "release",
             fromStatus,
             PhoneNumber.PS_IDLE,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -409,7 +409,7 @@ public class PhoneService {
     }
 
     @Transactional
-    public PhoneNumber changeUser(Long phoneId, String newUserId, String operator, String workOrderNo, String remark) {
+    public PhoneNumber changeUser(Long phoneId, String newEmployeeNo, String operator, String workOrderNo, String remark) {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
@@ -417,14 +417,14 @@ public class PhoneService {
             throw new BusinessException(ErrorCode.PHONE_003);
         }
 
-        if (!employeeRepository.existsByEmployeeNo(newUserId)) {
+        if (!employeeRepository.existsByEmployeeNo(newEmployeeNo)) {
             throw new BusinessException(ErrorCode.EMP_002);
         }
 
-        String fromUser = phone.getUserId();
+        String fromEmployeeNo = phone.getEmployeeNo();
         Integer fromStatus = phone.getStatus();
 
-        phone.setUserId(newUserId);
+        phone.setEmployeeNo(newEmployeeNo);
         phone.setUpdatedBy(operator);
 
         PhoneNumber saved = phoneRepository.save(phone);
@@ -434,8 +434,8 @@ public class PhoneService {
             "change_user",
             fromStatus,
             fromStatus,
-            fromUser,
-            newUserId,
+            fromEmployeeNo,
+            newEmployeeNo,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -443,7 +443,7 @@ public class PhoneService {
             remark
         );
 
-        log.info("Phone {} user changed from {} to {} by {}", phone.getPhoneNumber(), fromUser, newUserId, operator);
+        log.info("Phone {} user changed from {} to {} by {}", phone.getPhoneNumber(), fromEmployeeNo, newEmployeeNo, operator);
         return saved;
     }
 
@@ -473,8 +473,8 @@ public class PhoneService {
             "change_org",
             fromStatus,
             fromStatus,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             fromOrg,
             String.valueOf(newOrgId),
             operator,
@@ -516,8 +516,8 @@ public class PhoneService {
             "change_number",
             fromStatus,
             fromStatus,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -559,8 +559,8 @@ public class PhoneService {
             "swap_number",
             phone1.getStatus(),
             phone1.getStatus(),
-            phone1.getUserId(),
-            phone1.getUserId(),
+            phone1.getEmployeeNo(),
+            phone1.getEmployeeNo(),
             phone1.getOrgId() != null ? String.valueOf(phone1.getOrgId()) : null,
             phone1.getOrgId() != null ? String.valueOf(phone1.getOrgId()) : null,
             operator,
@@ -573,8 +573,8 @@ public class PhoneService {
             "swap_number",
             phone2.getStatus(),
             phone2.getStatus(),
-            phone2.getUserId(),
-            phone2.getUserId(),
+            phone2.getEmployeeNo(),
+            phone2.getEmployeeNo(),
             phone2.getOrgId() != null ? String.valueOf(phone2.getOrgId()) : null,
             phone2.getOrgId() != null ? String.valueOf(phone2.getOrgId()) : null,
             operator,
@@ -609,8 +609,8 @@ public class PhoneService {
             "change_extension",
             phone.getStatus(),
             phone.getStatus(),
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -627,19 +627,19 @@ public class PhoneService {
         PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
-        String fromUser = phone.getUserId();
+        String fromEmployeeNo = phone.getEmployeeNo();
         String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
         String fromNumber = phone.getPhoneNumber();
         Integer fromStatus = phone.getStatus();
         boolean hasChanges = false;
         StringBuilder changeDetails = new StringBuilder();
 
-        if (request.getUserId() != null && !request.getUserId().equals(phone.getUserId())) {
-            if (!employeeRepository.existsByEmployeeNo(request.getUserId())) {
+        if (request.getEmployeeNo() != null && !request.getEmployeeNo().equals(phone.getEmployeeNo())) {
+            if (!employeeRepository.existsByEmployeeNo(request.getEmployeeNo())) {
                 throw new BusinessException(ErrorCode.EMP_002);
             }
-            changeDetails.append("user: ").append(fromUser).append("->").append(request.getUserId()).append("; ");
-            phone.setUserId(request.getUserId());
+            changeDetails.append("user: ").append(fromEmployeeNo).append("->").append(request.getEmployeeNo()).append("; ");
+            phone.setEmployeeNo(request.getEmployeeNo());
             hasChanges = true;
         }
 
@@ -683,8 +683,8 @@ public class PhoneService {
             "batch_change",
             fromStatus,
             fromStatus,
-            fromUser,
-            phone.getUserId(),
+            fromEmployeeNo,
+            phone.getEmployeeNo(),
             fromOrg,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,
@@ -738,8 +738,8 @@ public class PhoneService {
             "status_change",
             fromStatus,
             newStatus,
-            phone.getUserId(),
-            phone.getUserId(),
+            phone.getEmployeeNo(),
+            phone.getEmployeeNo(),
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null,
             operator,

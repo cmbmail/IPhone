@@ -110,7 +110,7 @@ const DeviceManagement = () => {
     { title: 'MAC地址', dataIndex: 'macAddress', key: 'macAddress', width: 140, render: (t: string, r: any) => <a onClick={() => { setSelectedDevice(r); setDetailOpen(true) }}>{t}</a> },
     { title: '型号', dataIndex: 'model', key: 'model', width: 100 },
     { title: '品牌', dataIndex: 'brand', key: 'brand', width: 80 },
-    { title: '使用人', dataIndex: 'assignedTo', key: 'assignedTo', width: 100 },
+    { title: '使用人', dataIndex: 'assignedEmployeeNo', key: 'assignedEmployeeNo', width: 100 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: number) => <Tag color={DEV_STATUS_COLORS[s]}>{DEV_STATUS_NAMES[s]}</Tag> },
     { title: '绑定号码数', dataIndex: 'boundPhoneCount', key: 'boundPhoneCount', width: 100 },
     {
@@ -142,7 +142,7 @@ const DeviceManagement = () => {
       case 'assign':
         return (
           <>
-            <Form.Item name="assignedTo" label="员工工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
+            <Form.Item name="assignedEmployeeNo" label="员工工号" rules={[{ required: true }]}><Input placeholder="输入员工工号" /></Form.Item>
             <Form.Item name="remark" label="备注"><Input.TextArea /></Form.Item>
           </>
         )
@@ -197,7 +197,7 @@ const DeviceManagement = () => {
               <Descriptions.Item label="状态"><Tag color={DEV_STATUS_COLORS[selectedDevice.status]}>{DEV_STATUS_NAMES[selectedDevice.status]}</Tag></Descriptions.Item>
               <Descriptions.Item label="型号">{selectedDevice.model || '-'}</Descriptions.Item>
               <Descriptions.Item label="品牌">{selectedDevice.brand || '-'}</Descriptions.Item>
-              <Descriptions.Item label="使用人">{selectedDevice.assignedTo || '-'}</Descriptions.Item>
+              <Descriptions.Item label="使用人">{selectedDevice.assignedEmployeeNo || '-'}</Descriptions.Item>
               <Descriptions.Item label="组织">{selectedDevice.orgName || selectedDevice.orgId || '-'}</Descriptions.Item>
               <Descriptions.Item label="备注" span={2}>{selectedDevice.remark || '-'}</Descriptions.Item>
             </Descriptions>

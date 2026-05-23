@@ -6,7 +6,7 @@ export interface PhoneDevice {
   purchaseDate: string | null
   orgId: number | null
   orgName: string | null
-  assignedTo: string | null
+  assignedEmployeeNo: string | null
   assignedEmployeeName: string | null
   status: number  // 0=库存 1=在用 2=停用 3=维修中 4=报废
   remark: string | null
@@ -20,8 +20,8 @@ export interface BoundPhoneDTO {
   phoneNumber: string
   extensionNumber: string | null
   status: number
-  userId: string | null
-  userName: string | null
+  employeeNo: string | null
+  employeeName: string | null
   orgId: number | null
   orgName: string | null
   lineOrder: number

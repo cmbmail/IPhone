@@ -11,7 +11,7 @@ public class PhoneAllocationRequest {
     private Long phoneId;
 
     @NotNull(message = "User ID is required")
-    private String userId;
+    private String employeeNo;
 
     @NotNull(message = "Organization ID is required")
     private Long orgId;

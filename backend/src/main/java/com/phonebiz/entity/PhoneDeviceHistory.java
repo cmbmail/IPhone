@@ -34,11 +34,11 @@ public class PhoneDeviceHistory extends BaseEntity {
     @Column(name = "to_status")
     private Integer toStatus;
 
-    @Column(name = "from_assigned", length = 20)
-    private String fromAssigned;
+    @Column(name = "from_assigned_employee_no", length = 20)
+    private String fromAssignedEmployeeNo;
 
-    @Column(name = "to_assigned", length = 20)
-    private String toAssigned;
+    @Column(name = "to_assigned_employee_no", length = 20)
+    private String toAssignedEmployeeNo;
 
     @Column(name = "operator", nullable = false, length = 100)
     private String operator;

@@ -32,7 +32,7 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
 
     List<PhoneNumber> findByOrgId(Long orgId);
 
-    List<PhoneNumber> findByUserId(String userId);
+    List<PhoneNumber> findByEmployeeNo(String userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PhoneNumber p WHERE p.id = :id")

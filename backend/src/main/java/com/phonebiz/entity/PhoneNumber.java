@@ -27,8 +27,8 @@ public class PhoneNumber extends BaseEntity {
     @Column(name = "phone_number", nullable = false, unique = true, length = 50)
     private String phoneNumber;
 
-    @Column(name = "user_id", length = 50)
-    private String userId;
+    @Column(name = "employee_no", length = 50)
+    private String employeeNo;
 
     @Column(name = "extension_number", length = 20)
     private String extensionNumber;

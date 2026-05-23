@@ -17,7 +17,7 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     Optional<PhoneDevice> findByMacAddress(String macAddress);
     boolean existsByMacAddress(String macAddress);
     List<PhoneDevice> findByOrgId(Long orgId);
-    List<PhoneDevice> findByAssignedTo(String employeeNo);
+    List<PhoneDevice> findByAssignedEmployeeNo(String employeeNo);
     Page<PhoneDevice> findByStatus(Integer status, Pageable pageable);
 
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds)")
@@ -26,7 +26,7 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
     @Query("SELECT d.orgId FROM PhoneDevice d WHERE d.id IN :ids")
     List<Long> findOrgIdsByIds(@Param("ids") List<Long> ids);
 
-    @Query("SELECT d.assignedTo FROM PhoneDevice d WHERE d.id IN :ids AND d.assignedTo IS NOT NULL")
+    @Query("SELECT d.assignedEmployeeNo FROM PhoneDevice d WHERE d.id IN :ids AND d.assignedEmployeeNo IS NOT NULL")
     List<String> findAssignedTosByIds(@Param("ids") List<Long> ids);
 
     @Query("SELECT d FROM PhoneDevice d WHERE d.orgId IN (:orgIds) AND d.status = :status")
@@ -34,7 +34,7 @@ public interface PhoneDeviceRepository extends JpaRepository<PhoneDevice, Long> 
                                             @Param("status") Integer status,
                                             Pageable pageable);
 
-    @Query("SELECT d FROM PhoneDevice d WHERE d.macAddress LIKE %:keyword% OR d.assignedTo LIKE %:keyword%")
+    @Query("SELECT d FROM PhoneDevice d WHERE d.macAddress LIKE %:keyword% OR d.assignedEmployeeNo LIKE %:keyword%")
     List<PhoneDevice> searchByKeyword(@Param("keyword") String keyword);
 
 }

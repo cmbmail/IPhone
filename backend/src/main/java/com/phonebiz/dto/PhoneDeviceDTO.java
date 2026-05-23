@@ -20,7 +20,7 @@ public class PhoneDeviceDTO {
     private LocalDate purchaseDate;
     private Long orgId;
     private String orgName;
-    private String assignedTo;
+    private String assignedEmployeeNo;
     private String assignedEmployeeName;
     private Integer status;
     private String remark;

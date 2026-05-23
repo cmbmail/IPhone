@@ -65,7 +65,7 @@ public class SearchController {
                 item.put("type", "extension");
                 item.put("id", e.getId());
                 item.put("label", e.getExtensionNumber());
-                item.put("subLabel", "分机 - " + (e.getUserName() != null ? e.getUserName() : "未分配"));
+                item.put("subLabel", "分机 - " + (e.getEmployeeName() != null ? e.getEmployeeName() : "未分配"));
                 item.put("route", "/extension-pools");
                 results.add(item);
             }

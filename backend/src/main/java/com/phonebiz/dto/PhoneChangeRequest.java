@@ -10,7 +10,7 @@ public class PhoneChangeRequest {
     @NotNull(message = "Phone ID is required")
     private Long phoneId;
 
-    private String userId;
+    private String employeeNo;
 
     private Long orgId;
 

@@ -16,8 +16,8 @@ public class BoundPhoneDTO {
     private String phoneNumber;
     private String extensionNumber;
     private Integer status;
-    private String userId;
-    private String userName;
+    private String employeeNo;
+    private String employeeName;
     private Long orgId;
     private String orgName;
     private Integer lineOrder;

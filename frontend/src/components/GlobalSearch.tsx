@@ -8,7 +8,7 @@ const { Text } = Typography
 
 const TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
   'phone': { icon: <PhoneOutlined />, color: 'blue', label: '号码' },
-  'extension': { icon: <AppstoreOutlined />, color: 'cyan', label: '分机' },
+  'extensionNumber': { icon: <AppstoreOutlined />, color: 'cyan', label: '分机' },
   'work-order': { icon: <CarryOutOutlined />, color: 'orange', label: '工单' },
   'employee': { icon: <TeamOutlined />, color: 'green', label: '员工' },
   'device': { icon: <DesktopOutlined />, color: 'purple', label: '设备' },

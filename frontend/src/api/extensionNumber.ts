@@ -4,7 +4,7 @@ export interface ExtensionNumber {
   id: number
   extensionNumber: string
   status: 0 | 1 | 2
-  userName: string | null
+  employeeName: string | null
   branchName: string | null
   deptName: string | null
   deptOrgId: number | null
@@ -16,7 +16,7 @@ export const extensionNumberApi = {
   search: (params: { keyword?: string; status?: string; deptOrgId?: number; page?: number; size?: number }) =>
     request.get('/extension-numbers', { params }),
 
-  allocate: (id: number, data: { userName: string; deptOrgId?: number; deptName?: string; phoneNumber?: string }) =>
+  allocate: (id: number, data: { employeeName: string; deptOrgId?: number; deptName?: string; phoneNumber?: string }) =>
     request.post(`/extension-numbers/${id}/allocate`, null, { params: data }),
 
   reclaim: (id: number) =>

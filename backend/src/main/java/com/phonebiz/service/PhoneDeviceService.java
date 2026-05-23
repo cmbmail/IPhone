@@ -50,7 +50,7 @@ public class PhoneDeviceService {
         List<Long> deviceIds = page.getContent().stream().map(PhoneDevice::getId).collect(Collectors.toList());
         java.util.Map<Long, String> orgNameMap = batchLoadOrgNames(page.getContent().stream().map(PhoneDevice::getOrgId).filter(id -> id != null).distinct().collect(Collectors.toList()));
         java.util.Map<String, String> empNameMap = batchLoadEmployeeNames(
-                page.getContent().stream().map(PhoneDevice::getAssignedTo).filter(a -> a != null).distinct().collect(Collectors.toList()));
+                page.getContent().stream().map(PhoneDevice::getAssignedEmployeeNo).filter(a -> a != null).distinct().collect(Collectors.toList()));
         java.util.Map<Long, Integer> phoneCountMap = batchLoadPhoneCounts(deviceIds);
         return page.map(d -> toDTOEnriched(d, orgNameMap, empNameMap, phoneCountMap));
     }
@@ -73,7 +73,7 @@ public class PhoneDeviceService {
         phoneNumberRepository.findAllById(phoneIds).forEach(p -> phoneMap.put(p.getId(), p));
 
         List<String> userIds = phoneMap.values().stream()
-                .map(PhoneNumber::getUserId).filter(u -> u != null).distinct().collect(Collectors.toList());
+                .map(PhoneNumber::getEmployeeNo).filter(u -> u != null).distinct().collect(Collectors.toList());
         java.util.Map<String, String> empNameMap = batchLoadEmployeeNames(userIds);
 
         List<Long> orgIds = phoneMap.values().stream()
@@ -89,11 +89,11 @@ public class PhoneDeviceService {
                     dto.setPhoneNumber(phone.getPhoneNumber());
                     dto.setExtensionNumber(phone.getExtensionNumber());
                     dto.setStatus(phone.getStatus());
-                    dto.setUserId(phone.getUserId());
+                    dto.setEmployeeNo(phone.getEmployeeNo());
                     dto.setLineOrder(mapping.getLineOrder());
                     dto.setCreatedAt(mapping.getCreatedAt());
-                    if (phone.getUserId() != null) {
-                        dto.setUserName(empNameMap.getOrDefault(phone.getUserId(), null));
+                    if (phone.getEmployeeNo() != null) {
+                        dto.setEmployeeName(empNameMap.getOrDefault(phone.getEmployeeNo(), null));
                     }
                     if (phone.getAllocationOrgId() != null) {
                         dto.setOrgId(phone.getAllocationOrgId());
@@ -193,14 +193,14 @@ public class PhoneDeviceService {
 
         String currentUser = getCurrentUsername();
         int fromStatus = device.getStatus();
-        String fromAssigned = device.getAssignedTo();
+        String fromAssigned = device.getAssignedEmployeeNo();
 
         device.setStatus(PhoneDevice.PD_ACTIVE);
-        device.setAssignedTo(request.getEmployeeNo());
+        device.setAssignedEmployeeNo(request.getEmployeeNo());
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "分配", fromStatus, saved.getStatus(), fromAssigned, saved.getAssignedTo(), request.getRemark());
+        saveHistory(saved, "分配", fromStatus, saved.getStatus(), fromAssigned, saved.getAssignedEmployeeNo(), request.getRemark());
         return toDTO(saved);
     }
 
@@ -217,10 +217,10 @@ public class PhoneDeviceService {
 
         String currentUser = getCurrentUsername();
         int fromStatus = device.getStatus();
-        String fromAssigned = device.getAssignedTo();
+        String fromAssigned = device.getAssignedEmployeeNo();
 
         device.setStatus(PhoneDevice.PD_STOCK);
-        device.setAssignedTo(null);
+        device.setAssignedEmployeeNo(null);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
@@ -246,7 +246,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "停用", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "停用", fromStatus, saved.getStatus(), device.getAssignedEmployeeNo(), device.getAssignedEmployeeNo(), remark);
         return toDTO(saved);
     }
 
@@ -268,7 +268,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "恢复", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "恢复", fromStatus, saved.getStatus(), device.getAssignedEmployeeNo(), device.getAssignedEmployeeNo(), remark);
         return toDTO(saved);
     }
 
@@ -290,7 +290,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "送修", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "送修", fromStatus, saved.getStatus(), device.getAssignedEmployeeNo(), device.getAssignedEmployeeNo(), remark);
         unbindAllPhones(device.getId());
         return toDTO(saved);
     }
@@ -313,7 +313,7 @@ public class PhoneDeviceService {
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
-        saveHistory(saved, "修复完成", fromStatus, saved.getStatus(), device.getAssignedTo(), device.getAssignedTo(), remark);
+        saveHistory(saved, "修复完成", fromStatus, saved.getStatus(), device.getAssignedEmployeeNo(), device.getAssignedEmployeeNo(), remark);
         return toDTO(saved);
     }
 
@@ -327,10 +327,10 @@ public class PhoneDeviceService {
 
         String currentUser = getCurrentUsername();
         int fromStatus = device.getStatus();
-        String fromAssigned = device.getAssignedTo();
+        String fromAssigned = device.getAssignedEmployeeNo();
 
         device.setStatus(PhoneDevice.PD_RETIRED);
-        device.setAssignedTo(null);
+        device.setAssignedEmployeeNo(null);
         device.setUpdatedBy(currentUser);
 
         PhoneDevice saved = phoneDeviceRepository.save(device);
@@ -434,7 +434,7 @@ public class PhoneDeviceService {
         dto.setBrand(device.getBrand());
         dto.setPurchaseDate(device.getPurchaseDate());
         dto.setOrgId(device.getOrgId());
-        dto.setAssignedTo(device.getAssignedTo());
+        dto.setAssignedEmployeeNo(device.getAssignedEmployeeNo());
         dto.setStatus(device.getStatus());
         dto.setRemark(device.getRemark());
         dto.setCreatedAt(device.getCreatedAt());
@@ -444,8 +444,8 @@ public class PhoneDeviceService {
             dto.setOrgName(orgNameMap.getOrDefault(device.getOrgId(), null));
         }
 
-        if (device.getAssignedTo() != null) {
-            dto.setAssignedEmployeeName(empNameMap.getOrDefault(device.getAssignedTo(), null));
+        if (device.getAssignedEmployeeNo() != null) {
+            dto.setAssignedEmployeeName(empNameMap.getOrDefault(device.getAssignedEmployeeNo(), null));
         }
 
         dto.setBoundPhoneCount(phoneCountMap.getOrDefault(device.getId(), 0));
@@ -457,7 +457,7 @@ public class PhoneDeviceService {
         // Used for single device operations (detail, create, update) - N+1 not an issue
         return toDTOEnriched(device,
                 batchLoadOrgNames(List.of(device.getOrgId())),
-                batchLoadEmployeeNames(device.getAssignedTo() != null ? List.of(device.getAssignedTo()) : List.of()),
+                batchLoadEmployeeNames(device.getAssignedEmployeeNo() != null ? List.of(device.getAssignedEmployeeNo()) : List.of()),
                 batchLoadPhoneCounts(List.of(device.getId())));
     }
 
@@ -495,8 +495,8 @@ public class PhoneDeviceService {
                 .action(history.getAction())
                 .fromStatus(history.getFromStatus())
                 .toStatus(history.getToStatus())
-                .fromAssigned(history.getFromAssigned())
-                .toAssigned(history.getToAssigned())
+                .fromAssignedEmployeeNo(history.getFromAssignedEmployeeNo())
+                .toAssignedEmployeeNo(history.getToAssignedEmployeeNo())
                 .operator(history.getOperator())
                 .operatedAt(history.getOperatedAt())
                 .remark(history.getRemark())
@@ -510,8 +510,8 @@ public class PhoneDeviceService {
                 .action(action)
                 .fromStatus(fromStatus)
                 .toStatus(toStatus)
-                .fromAssigned(fromAssigned)
-                .toAssigned(toAssigned)
+                .fromAssignedEmployeeNo(fromAssigned)
+                .toAssignedEmployeeNo(toAssigned)
                 .operator(getCurrentUsername())
                 .remark(remark)
                 .build();

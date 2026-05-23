@@ -18,8 +18,8 @@ public class PhoneDeviceHistoryDTO {
     private String action;
     private Integer fromStatus;
     private Integer toStatus;
-    private String fromAssigned;
-    private String toAssigned;
+    private String fromAssignedEmployeeNo;
+    private String toAssignedEmployeeNo;
     private String operator;
     private LocalDateTime operatedAt;
     private String remark;

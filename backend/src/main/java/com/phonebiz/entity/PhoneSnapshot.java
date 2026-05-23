@@ -33,7 +33,7 @@ public class PhoneSnapshot extends BaseEntity {
     private String phoneNumber;
 
     @Column(name = "extension", length = 50)
-    private String extension;
+    private String extensionNumber;
 
     @Column(name = "status", nullable = false)
     @Builder.Default

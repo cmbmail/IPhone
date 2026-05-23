@@ -178,7 +178,7 @@ public class PhoneController {
             @Valid @RequestBody PhoneChangeRequest request,
             Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
-        return ApiResponse.success(phoneService.changeUser(request.getPhoneId(), request.getUserId(), operator, request.getWorkOrderNo(), request.getRemark()));
+        return ApiResponse.success(phoneService.changeUser(request.getPhoneId(), request.getEmployeeNo(), operator, request.getWorkOrderNo(), request.getRemark()));
     }
 
     @PostMapping("/change-org")

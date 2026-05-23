@@ -42,7 +42,7 @@ const menuItems = [
   ]},
   { key: 'sub-phones', icon: <PhoneOutlined />, label: '号码管理', children: [
     { key: '/phones', icon: <PhoneOutlined />, label: '号码资源' },
-    { key: '/extension-pools', icon: <AppstoreOutlined />, label: '分机池' },
+    { key: '/extensionNumber-pools', icon: <AppstoreOutlined />, label: '分机池' },
     { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理' },
     { key: '/devices', icon: <DesktopOutlined />, label: '设备管理' },
     { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
@@ -68,7 +68,7 @@ const pageTitleMap: Record<string, string> = {
   '/work-orders': '工单管理',
   '/phones': '号码资源',
   '/phone-ownership': '号码归属',
-  '/extension-pools': '分机池',
+  '/extensionNumber-pools': '分机池',
   '/area-codes': '区号管理',
   '/devices': '设备管理',
   '/cost-centers': '成本中心',
@@ -282,7 +282,7 @@ const App = () => (
         <Route path="/work-orders" element={<PrivateRouteWithLayout><WorkOrderManagement /></PrivateRouteWithLayout>} />
         <Route path="/phones" element={<PrivateRouteWithLayout><PhoneManagement /></PrivateRouteWithLayout>} />
         <Route path="/phone-ownership" element={<PrivateRouteWithLayout><PhoneOwnershipPage /></PrivateRouteWithLayout>} />
-        <Route path="/extension-pools" element={<PrivateRouteWithLayout><ExtensionPoolManagement /></PrivateRouteWithLayout>} />
+        <Route path="/extensionNumber-pools" element={<PrivateRouteWithLayout><ExtensionPoolManagement /></PrivateRouteWithLayout>} />
         <Route path="/area-codes" element={<PrivateRouteWithLayout><AreaCodeManagement /></PrivateRouteWithLayout>} />
         <Route path="/devices" element={<PrivateRouteWithLayout><DeviceManagement /></PrivateRouteWithLayout>} />
         <Route path="/cost-centers" element={<PrivateRouteWithLayout><CostCenterManagement /></PrivateRouteWithLayout>} />

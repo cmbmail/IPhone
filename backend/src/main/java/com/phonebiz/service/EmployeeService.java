@@ -164,16 +164,16 @@ public class EmployeeService {
 
         String employeeNo = employee.getEmployeeNo();
         
-        phoneDeviceRepository.findByAssignedTo(employeeNo).forEach(device -> {
+        phoneDeviceRepository.findByAssignedEmployeeNo(employeeNo).forEach(device -> {
             device.setStatus(PhoneDevice.PD_STOCK);
-            device.setAssignedTo(null);
+            device.setAssignedEmployeeNo(null);
             device.setUpdatedBy(operator);
             phoneDeviceRepository.save(device);
             log.info("Device {} reclaimed from employee {} on termination", device.getId(), employeeNo);
         });
 
-        phoneNumberRepository.findByUserId(employeeNo).forEach(phone -> {
-            phone.setUserId(null);
+        phoneNumberRepository.findByEmployeeNo(employeeNo).forEach(phone -> {
+            phone.setEmployeeNo(null);
             phone.setStatus(PhoneNumber.PS_IDLE);
             phone.setUpdatedBy(operator);
             phoneNumberRepository.save(phone);

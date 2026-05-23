@@ -41,7 +41,7 @@ public class ExtensionNumberService {
             throw new RuntimeException("该分机号已被占用");
         }
 
-        ext.setUserName(userName);
+        ext.setEmployeeName(userName);
         ext.setDeptOrgId(deptOrgId);
         ext.setDeptName(deptName);
         ext.setBranchName(resolveBranchName(deptOrgId));
@@ -69,11 +69,11 @@ public class ExtensionNumberService {
             throw new RuntimeException("该分机号未被占用，无法回收");
         }
 
-        String prevUser = ext.getUserName();
+        String prevEmployeeNo = ext.getEmployeeName();
         String prevDept = ext.getDeptName();
         String prevExt = ext.getExtensionNumber();
 
-        ext.setUserName(null);
+        ext.setEmployeeName(null);
         ext.setDeptOrgId(null);
         ext.setDeptName(null);
         ext.setBranchName(null);
@@ -85,7 +85,7 @@ public class ExtensionNumberService {
         extRepo.save(ext);
 
         createWorkOrder("分机号回收 - " + prevExt,
-                "回收分机号 " + prevExt + "，原使用人: " + prevUser + "（" + prevDept + "）",
+                "回收分机号 " + prevExt + "，原使用人: " + prevEmployeeNo + "（" + prevDept + "）",
                 WorkOrder.WO_PHONE_RECLAIM, operator, ext.getId(),
                 prevExt, null);
 

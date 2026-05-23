@@ -20,7 +20,7 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
     Page<ExtensionNumber> findByDeptOrgId(Long deptOrgId, Pageable pageable);
 
     @Query("SELECT e FROM ExtensionNumber e WHERE " +
-           "(:keyword IS NULL OR e.extensionNumber LIKE %:keyword% OR e.userName LIKE %:keyword% OR e.deptName LIKE %:keyword% OR e.phoneNumber LIKE %:keyword%) " +
+           "(:keyword IS NULL OR e.extensionNumber LIKE %:keyword% OR e.employeeName LIKE %:keyword% OR e.deptName LIKE %:keyword% OR e.phoneNumber LIKE %:keyword%) " +
            "AND (:status IS NULL OR e.status = :status) " +
            "AND (:deptOrgId IS NULL OR e.deptOrgId = :deptOrgId)")
     Page<ExtensionNumber> search(@Param("keyword") String keyword,
@@ -32,7 +32,7 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
 
     // Order: AVAILABLE first, then IDLE, then ALLOCATED
     @Query("SELECT e FROM ExtensionNumber e WHERE " +
-           "(:keyword IS NULL OR e.extensionNumber LIKE %:keyword% OR e.userName LIKE %:keyword% OR e.deptName LIKE %:keyword% OR e.phoneNumber LIKE %:keyword%) " +
+           "(:keyword IS NULL OR e.extensionNumber LIKE %:keyword% OR e.employeeName LIKE %:keyword% OR e.deptName LIKE %:keyword% OR e.phoneNumber LIKE %:keyword%) " +
            "AND (:status IS NULL OR e.status = :status) " +
            "AND (:deptOrgId IS NULL OR e.deptOrgId = :deptOrgId) " +
            "ORDER BY CASE e.status WHEN 'AVAILABLE' THEN 0 WHEN 'IDLE' THEN 1 WHEN 'ALLOCATED' THEN 2 ELSE 3 END, e.extensionNumber ASC")
@@ -41,7 +41,7 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
                                          @Param("deptOrgId") Long deptOrgId,
                                          Pageable pageable);
 
-    @Query("SELECT e FROM ExtensionNumber e WHERE e.extensionNumber LIKE %:keyword% OR e.userName LIKE %:keyword%")
+    @Query("SELECT e FROM ExtensionNumber e WHERE e.extensionNumber LIKE %:keyword% OR e.employeeName LIKE %:keyword%")
     List<ExtensionNumber> searchByKeyword(@Param("keyword") String keyword);
 
 }

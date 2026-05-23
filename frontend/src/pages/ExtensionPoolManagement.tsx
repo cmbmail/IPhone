@@ -25,7 +25,7 @@ const ExtensionPoolManagement = () => {
   const queryClient = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
-    queryKey: ['extension-numbers', keyword, statusFilter, deptFilter, page],
+    queryKey: ['extensionNumber-numbers', keyword, statusFilter, deptFilter, page],
     queryFn: async () => {
       const res = await extensionNumberApi.search({
         keyword: keyword || undefined,
@@ -53,7 +53,7 @@ const ExtensionPoolManagement = () => {
       if (!selectedExt) return
       const values = await form.validateFields()
       return extensionNumberApi.allocate(selectedExt.id, {
-        userName: values.userName,
+        employeeName: values.employeeName,
         deptOrgId: values.deptOrgId,
         deptName: orgs.find((o: any) => o.id === values.deptOrgId)?.name,
         phoneNumber: values.phoneNumber,
@@ -63,7 +63,7 @@ const ExtensionPoolManagement = () => {
       message.success('分配成功，已生成工单')
       setAllocateModalOpen(false)
       form.resetFields()
-      queryClient.invalidateQueries({ queryKey: ['extension-numbers'] })
+      queryClient.invalidateQueries({ queryKey: ['extensionNumber-numbers'] })
     },
     onError: () => message.error('分配失败'),
   })
@@ -72,7 +72,7 @@ const ExtensionPoolManagement = () => {
     mutationFn: (id: number) => extensionNumberApi.reclaim(id),
     onSuccess: () => {
       message.success('回收成功，已生成工单')
-      queryClient.invalidateQueries({ queryKey: ['extension-numbers'] })
+      queryClient.invalidateQueries({ queryKey: ['extensionNumber-numbers'] })
     },
     onError: () => message.error('回收失败'),
   })
@@ -104,7 +104,7 @@ const ExtensionPoolManagement = () => {
       ),
     },
     {
-      title: '使用人', dataIndex: 'userName', key: 'userName', width: 120,
+      title: '使用人', dataIndex: 'employeeName', key: 'employeeName', width: 120,
       render: (v: string) => v || <span style={{ color: '#bfbfbf' }}>空</span>,
     },
     {
@@ -201,7 +201,7 @@ const ExtensionPoolManagement = () => {
         confirmLoading={allocateMutation.isPending}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="userName" label="使用人" rules={[{ required: true, message: '请输入使用人' }]}>
+          <Form.Item name="employeeName" label="使用人" rules={[{ required: true, message: '请输入使用人' }]}>
             <Input placeholder="输入使用人姓名" />
           </Form.Item>
           <Form.Item name="deptOrgId" label="使用部门">

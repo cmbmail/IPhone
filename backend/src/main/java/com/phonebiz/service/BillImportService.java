@@ -147,7 +147,7 @@ public class BillImportService {
         //            外呼时长(6) 转接外呼时长(7) 国内费用(8) 国际时长(9) 国际费用(10) 费用小计(11) 备注(12)
         b.setPhoneNumber(s(v, 0));
         b.setAllocationTime(parseDate(s(v, 1)));
-        b.setUserId(s(v, 2));
+        b.setEmployeeNo(s(v, 2));
         b.setDepartment(s(v, 3));
         b.setPlatformUsageFee(dec(s(v, 4)));
         b.setNumberMonthlyRent(dec(s(v, 5)));

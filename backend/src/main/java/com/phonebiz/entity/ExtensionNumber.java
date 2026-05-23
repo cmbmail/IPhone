@@ -33,8 +33,8 @@ public class ExtensionNumber {
     @Builder.Default
     private Integer status = ExtensionNumber.EXT_AVAILABLE;
 
-    @Column(name = "user_name", length = 100)
-    private String userName;
+    @Column(name = "employee_name", length = 100)
+    private String employeeName;
 
     @Column(name = "dept_name", length = 100)
     private String deptName;

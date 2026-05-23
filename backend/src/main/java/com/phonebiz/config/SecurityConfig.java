@@ -20,6 +20,7 @@ import org.springframework.core.Ordered;
 
 import com.phonebiz.security.JwtAuthenticationFilter;
 import com.phonebiz.security.RateLimitFilter;
+import com.phonebiz.security.SecurityHeaderFilter;
 import com.phonebiz.security.XssFilter;
 
 @Configuration

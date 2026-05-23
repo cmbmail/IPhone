@@ -73,8 +73,8 @@ public class BillRaw extends BaseEntity {
     @Column(name = "imported_at")
     private LocalDateTime importedAt;
 
-    @Column(name = "user_id", length = 20)
-    private String userId;
+    @Column(name = "employee_no", length = 20)
+    private String employeeNo;
 
     @Column(name = "department", length = 100)
     private String department;

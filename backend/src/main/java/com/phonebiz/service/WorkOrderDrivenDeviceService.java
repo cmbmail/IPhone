@@ -45,7 +45,7 @@ public class WorkOrderDrivenDeviceService {
                 .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetRefId(deviceId)
                 .action("assign")
-                .fromValue(device.getAssignedTo())
+                .fromValue(device.getAssignedEmployeeNo())
                 .toValue(employeeNo)
                 .build();
 
@@ -77,7 +77,7 @@ public class WorkOrderDrivenDeviceService {
                 .itemType(WorkOrderItem.ITEM_DEVICE)
                 .targetRefId(deviceId)
                 .action("reclaim")
-                .fromValue(device.getAssignedTo())
+                .fromValue(device.getAssignedEmployeeNo())
                 .toValue(null)
                 .build();
 

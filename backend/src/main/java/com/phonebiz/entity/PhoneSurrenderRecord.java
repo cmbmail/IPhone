@@ -29,8 +29,8 @@ public class PhoneSurrenderRecord extends BaseEntity {
     @Column(name = "phone_number", nullable = false, length = 50)
     private String phoneNumber;
 
-    @Column(name = "final_user", length = 50)
-    private String finalUser;
+    @Column(name = "final_employee_no", length = 50)
+    private String finalEmployeeNo;
 
     @Column(name = "final_org", length = 200)
     private String finalOrg;

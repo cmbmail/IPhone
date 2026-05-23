@@ -8,7 +8,7 @@ export interface PhoneDeviceDTO {
   purchaseDate: string
   orgId: number
   orgName?: string
-  assignedTo: string
+  assignedEmployeeNo: string
   assignedEmployeeName?: string
   status: number
   boundPhoneCount: number
