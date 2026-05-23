@@ -161,12 +161,7 @@ const WorkOrderManagement = () => {
             menu={{
               items: Object.entries(TYPE_NAMES).map(([value, label]) => ({
                 key: value,
-                label: (
-                  <span>
-                    <Tag color={TYPE_COLORS[Number(value)]} style={{ marginRight: 6 }}>{label}</Tag>
-                    创建{label}工单
-                  </span>
-                ),
+                label: <Tag color={TYPE_COLORS[Number(value)]}>{label}</Tag>,
               })),
               onClick: ({ key }) => handleTypeSelect(Number(key)),
             }}
