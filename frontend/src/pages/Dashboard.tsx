@@ -183,8 +183,15 @@ const Dashboard = () => {
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={18}>
-          <Card title="最近账单">
-            <Table columns={billColumns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} />
+          <Card title="最近工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
+            <Table
+              columns={woColumns}
+              dataSource={workOrders}
+              rowKey="id"
+              pagination={false}
+              size="small"
+              locale={{ emptyText: '暂无工单' }}
+            />
           </Card>
         </Col>
         <Col span={6}>
@@ -218,16 +225,9 @@ const Dashboard = () => {
       </Row>
 
       <Row gutter={16}>
-        <Col span={24}>
-          <Card title="最近工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
-            <Table
-              columns={woColumns}
-              dataSource={workOrders}
-              rowKey="id"
-              pagination={false}
-              size="small"
-              locale={{ emptyText: '暂无工单' }}
-            />
+        <Col span={18}>
+          <Card title="最近账单">
+            <Table columns={billColumns} dataSource={recentBills} rowKey="id" pagination={false} locale={{ emptyText: '暂无账单数据' }} />
           </Card>
         </Col>
       </Row>
