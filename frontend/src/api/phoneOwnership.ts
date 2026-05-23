@@ -1,4 +1,4 @@
-import { request } from './request'
+import { request, ApiGet, ApiPut, ApiPost, type PagedData } from './request'
 
 export interface PhoneOwnership {
   id: number
@@ -24,12 +24,12 @@ export interface ImportCompareItem {
 
 export const phoneOwnershipApi = {
   search: (params: { keyword?: string; branchOrgId?: number; page?: number; size?: number }) =>
-    request.get('/phone-ownership', { params }),
+    ApiGet<PagedData<PhoneOwnership>>('/phone-ownership', { params }),
 
   update: (
     id: number,
     data: { branchOrgId?: number | null; deptOrgId?: number | null; remark?: string }
-  ) => request.put(`/phone-ownership/${id}`, null, { params: data }),
+  ) => ApiPut(`/phone-ownership/${id}`, null, { params: data }),
 
   importCompare: (file: File) => {
     const formData = new FormData()
@@ -40,7 +40,7 @@ export const phoneOwnershipApi = {
   },
 
   importConfirm: (items: ImportCompareItem[]) =>
-    request.post('/phone-ownership/import-confirm', items),
+    ApiPost<number>('/phone-ownership/import-confirm', items),
 
   exportUrl: () => '/api/phone-ownership/export',
 }

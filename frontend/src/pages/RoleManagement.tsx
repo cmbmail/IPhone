@@ -42,7 +42,7 @@ const RoleManagement: React.FC = () => {
     setLoading(true)
     try {
       const res = await roleApi.getAll()
-      setRoles((res.data as any)?.data || [])
+      setRoles(res || [])
     } catch {
       message.error('加载角色列表失败')
     } finally {
@@ -57,7 +57,7 @@ const RoleManagement: React.FC = () => {
   const fetchAllPermissions = async () => {
     try {
       const res = await roleApi.getPermissionsByModule()
-      setAllPermissions((res.data as any)?.data || {})
+      setAllPermissions(res || {})
     } catch {
       message.error('加载权限列表失败')
     }
@@ -66,7 +66,7 @@ const RoleManagement: React.FC = () => {
   const fetchRolePermissions = async (roleId: number) => {
     try {
       const res = await roleApi.getPermissions(roleId)
-      const perms: SysPermission[] = (res.data as any)?.data || []
+      const perms: SysPermission[] = res || []
       setRolePermissionIds(perms.map((p) => p.id))
     } catch {
       setRolePermissionIds([])
@@ -88,8 +88,9 @@ const RoleManagement: React.FC = () => {
       setCreateModalOpen(false)
       form.resetFields()
       fetchRoles()
-    } catch (e: any) {
-      if (e?.response?.data?.message) message.error(e.response.data.message)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '操作失败'
+      message.error(msg)
     }
   }
 
@@ -113,8 +114,9 @@ const RoleManagement: React.FC = () => {
       setEditModalOpen(false)
       form.resetFields()
       fetchRoles()
-    } catch (e: any) {
-      if (e?.response?.data?.message) message.error(e.response.data.message)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '操作失败'
+      message.error(msg)
     }
   }
 
@@ -123,8 +125,9 @@ const RoleManagement: React.FC = () => {
       await roleApi.delete(role.id)
       message.success('角色已删除')
       fetchRoles()
-    } catch (e: any) {
-      message.error(e?.response?.data?.message || '删除失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '删除失败'
+      message.error(msg)
     }
   }
 
@@ -228,7 +231,7 @@ const RoleManagement: React.FC = () => {
       key: 'actions',
       width: 260,
       fixed: 'right' as const,
-      render: (_: any, record: SysRole) => (
+      render: (_: unknown, record: SysRole) => (
         <Space size={4}>
           <Tooltip title="分配权限">
             <Button

@@ -1,5 +1,13 @@
-import { request } from './request'
+import { ApiGet } from './request'
+
+export interface SearchResult {
+  type: string
+  id: number
+  label: string
+  subLabel: string
+  route: string
+}
 
 export const searchApi = {
-  globalSearch: (q: string) => request.get('/search', { params: { q } }),
+  globalSearch: (q: string) => ApiGet<SearchResult[]>('/search', { params: { q } }),
 }

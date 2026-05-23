@@ -1,7 +1,24 @@
-import axios from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import { message } from 'antd'
 
 const baseURL = '/api'
+
+/** Unified API response wrapper from backend: { code, message, data, timestamp } */
+export interface ApiResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
+  timestamp?: number
+}
+
+/** Paged data wrapper from backend */
+export interface PagedData<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+}
 
 // Convert snake_case string to camelCase
 function toCamelCase(str: string): string {
@@ -9,13 +26,13 @@ function toCamelCase(str: string): string {
 }
 
 // Recursively convert object keys from snake_case to camelCase
-function keysToCamelCase(obj: any): any {
+function keysToCamelCase(obj: unknown): unknown {
   if (obj === null || obj === undefined) return obj
   if (Array.isArray(obj)) return obj.map(keysToCamelCase)
   if (typeof obj === 'object') {
-    const result: any = {}
-    for (const key of Object.keys(obj)) {
-      result[toCamelCase(key)] = keysToCamelCase(obj[key])
+    const result: Record<string, unknown> = {}
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
+      result[toCamelCase(key)] = keysToCamelCase((obj as Record<string, unknown>)[key])
     }
     return result
   }
@@ -28,13 +45,13 @@ function toSnakeCase(str: string): string {
 }
 
 // Recursively convert object keys from camelCase to snake_case
-function keysToSnakeCase(obj: any): any {
+function keysToSnakeCase(obj: unknown): unknown {
   if (obj === null || obj === undefined) return obj
   if (Array.isArray(obj)) return obj.map(keysToSnakeCase)
   if (typeof obj === 'object') {
-    const result: any = {}
-    for (const key of Object.keys(obj)) {
-      result[toSnakeCase(key)] = keysToSnakeCase(obj[key])
+    const result: Record<string, unknown> = {}
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
+      result[toSnakeCase(key)] = keysToSnakeCase((obj as Record<string, unknown>)[key])
     }
     return result
   }
@@ -155,3 +172,38 @@ request.interceptors.response.use(
 )
 
 export { request }
+
+// ---- Type-safe API helpers ----
+// These automatically unwrap ApiResponse<T>.data so callers get T directly.
+
+/** GET request, returns inner data directly */
+export async function ApiGet<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  const res = await request.get<ApiResponse<T>>(url, config)
+  return (res.data as ApiResponse<T>).data
+}
+
+/** POST request, returns inner data directly */
+export async function ApiPost<T>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const res = await request.post<ApiResponse<T>>(url, data, config)
+  return (res.data as ApiResponse<T>).data
+}
+
+/** PUT request, returns inner data directly */
+export async function ApiPut<T>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const res = await request.put<ApiResponse<T>>(url, data, config)
+  return (res.data as ApiResponse<T>).data
+}
+
+/** DELETE request, returns inner data directly */
+export async function ApiDelete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  const res = await request.delete<ApiResponse<T>>(url, config)
+  return (res.data as ApiResponse<T>).data
+}

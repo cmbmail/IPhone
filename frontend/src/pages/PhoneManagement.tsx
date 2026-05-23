@@ -14,6 +14,7 @@ import {
 } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { request } from '@/api/request'
+import type { OrgStructure } from '@/types/org'
 
 // 后端动态计算状态: 0=闲置 1=占用 2=分配中
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
@@ -62,7 +63,7 @@ const PhoneManagement = () => {
     },
   })
 
-  const orgs: any[] = orgsData || []
+  const orgs: OrgStructure[] = orgsData || []
   const content: PhoneView[] = listData?.data?.content || []
 
   // 状态点击菜单
@@ -249,8 +250,8 @@ const PhoneManagement = () => {
               allowClear
             >
               {orgs
-                .filter((o: any) => o.level >= 2)
-                .map((o: any) => (
+                .filter((o: OrgStructure) => o.level >= 2)
+                .map((o: OrgStructure) => (
                   <Select.Option key={o.id} value={o.id}>
                     {o.name}
                   </Select.Option>

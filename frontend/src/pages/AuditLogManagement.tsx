@@ -22,7 +22,7 @@ const AuditLogManagement = () => {
         page: p,
         size: 20,
       })
-      const data = res.data.data
+      const data = res
       setLogs(data.content || [])
       setTotal(data.totalElements || 0)
       setPage(p)
@@ -35,6 +35,7 @@ const AuditLogManagement = () => {
 
   useEffect(() => {
     fetchLogs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const columns = [
@@ -83,7 +84,7 @@ const AuditLogManagement = () => {
   useEffect(() => {
     if (logs?.length) {
       const uniqueModules = [
-        ...new Set(logs.map((item: any) => item.module).filter(Boolean)),
+        ...new Set(logs.map((item: AuditLogEntry) => item.module).filter(Boolean)),
       ]
       if (uniqueModules.length > 0) setModules(uniqueModules as string[])
     }

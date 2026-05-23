@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet, ApiPost, ApiPut, ApiDelete, type PagedData } from './request'
 
 export interface PhoneDeviceDTO {
   id: number
@@ -18,26 +18,27 @@ export interface PhoneDeviceDTO {
 }
 
 export const phoneDeviceApi = {
-  getList: (params?: { page?: number; size?: number }) => request.get('/phone-devices', { params }),
-  getById: (id: number) => request.get(`/phone-devices/${id}`),
-  getBoundPhones: (id: number) => request.get(`/phone-devices/${id}/phones`),
-  getHistory: (id: number) => request.get(`/phone-devices/${id}/history`),
-  create: (data: Record<string, unknown>) => request.post('/phone-devices', data),
-  update: (id: number, data: Record<string, unknown>) => request.put(`/phone-devices/${id}`, data),
+  getList: (params?: { page?: number; size?: number }) =>
+    ApiGet<PagedData<PhoneDeviceDTO>>('/phone-devices', { params }),
+  getById: (id: number) => ApiGet<PhoneDeviceDTO>(`/phone-devices/${id}`),
+  getBoundPhones: (id: number) => ApiGet(`/phone-devices/${id}/phones`),
+  getHistory: (id: number) => ApiGet(`/phone-devices/${id}/history`),
+  create: (data: Record<string, unknown>) => ApiPost('/phone-devices', data),
+  update: (id: number, data: Record<string, unknown>) => ApiPut(`/phone-devices/${id}`, data),
   assign: (id: number, data: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/assign`, data),
+    ApiPost(`/phone-devices/${id}/assign`, data),
   reclaim: (id: number, data?: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/reclaim`, data),
+    ApiPost(`/phone-devices/${id}/reclaim`, data),
   deactivate: (id: number, data?: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/deactivate`, data),
-  reactivate: (id: number) => request.post(`/phone-devices/${id}/reactivate`),
+    ApiPost(`/phone-devices/${id}/deactivate`, data),
+  reactivate: (id: number) => ApiPost(`/phone-devices/${id}/reactivate`),
   repair: (id: number, data?: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/repair`, data),
-  repairDone: (id: number) => request.post(`/phone-devices/${id}/repair-done`),
+    ApiPost(`/phone-devices/${id}/repair`, data),
+  repairDone: (id: number) => ApiPost(`/phone-devices/${id}/repair-done`),
   retire: (id: number, data?: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/retire`, data),
+    ApiPost(`/phone-devices/${id}/retire`, data),
   bindPhone: (id: number, data: Record<string, unknown>) =>
-    request.post(`/phone-devices/${id}/bind-phone`, data),
+    ApiPost(`/phone-devices/${id}/bind-phone`, data),
   unbindPhone: (id: number, phoneId: number) =>
-    request.delete(`/phone-devices/${id}/unbind-phone/${phoneId}`),
+    ApiDelete(`/phone-devices/${id}/unbind-phone/${phoneId}`),
 }

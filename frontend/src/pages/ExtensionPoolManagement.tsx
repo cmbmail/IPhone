@@ -18,7 +18,8 @@ import {
 import { UserAddOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { extensionNumberApi, type ExtensionNumber } from '@/api/extensionNumber'
-import { request } from '@/api/request'
+import { ApiGet } from '@/api/request'
+import type { OrgStructure } from '@/types/org'
 
 // 状态由后端动态计算: 0=闲置(电话号码为空) 1=占用(有电话号码,无未完成工单) 2=分配中(有电话号码,有未完成工单)
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
@@ -54,20 +55,20 @@ const ExtensionPoolManagement = () => {
         page,
         size,
       })
-      return res.data
+      return res
     },
   })
 
   const { data: orgsData } = useQuery({
     queryKey: ['orgs'],
     queryFn: async () => {
-      const res = await request.get('/orgs')
-      return res.data?.data || []
+      const res = await ApiGet<OrgStructure[]>('/orgs')
+      return res || []
     },
   })
 
-  const orgs: any[] = orgsData || []
-  const subDepts = orgs.filter((o: any) => o.level >= 2)
+  const orgs: OrgStructure[] = orgsData || []
+  const subDepts = orgs.filter((o: OrgStructure) => o.level >= 2)
 
   const allocateMutation = useMutation({
     mutationFn: async () => {
@@ -76,7 +77,7 @@ const ExtensionPoolManagement = () => {
       return extensionNumberApi.allocate(selectedExt.id, {
         employeeName: values.employeeName,
         deptOrgId: values.deptOrgId,
-        deptName: orgs.find((o: any) => o.id === values.deptOrgId)?.name,
+        deptName: orgs.find((o: OrgStructure) => o.id === values.deptOrgId)?.name,
         phoneNumber: values.phoneNumber,
       })
     },
@@ -139,7 +140,7 @@ const ExtensionPoolManagement = () => {
     })
   }
 
-  const content: ExtensionNumber[] = listData?.data?.content || []
+  const content: ExtensionNumber[] = listData?.content || []
 
   const columns = [
     {
@@ -225,7 +226,7 @@ const ExtensionPoolManagement = () => {
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="总数" value={listData?.data?.totalElements || 0} />
+            <Statistic title="总数" value={listData?.totalElements || 0} />
           </Card>
         </Col>
       </Row>
@@ -273,7 +274,7 @@ const ExtensionPoolManagement = () => {
               style={{ width: 150 }}
               allowClear
             >
-              {subDepts.map((d: any) => (
+              {subDepts.map((d: OrgStructure) => (
                 <Select.Option key={d.id} value={d.id}>
                   {d.name}
                 </Select.Option>
@@ -290,7 +291,7 @@ const ExtensionPoolManagement = () => {
           pagination={{
             current: page + 1,
             pageSize: size,
-            total: listData?.data?.totalElements || 0,
+            total: listData?.totalElements || 0,
             onChange: (p) => setPage(p - 1),
           }}
         />
@@ -401,7 +402,7 @@ const ExtensionPoolManagement = () => {
           </Form.Item>
           <Form.Item name="deptOrgId" label="使用部门">
             <Select placeholder="选择部门" allowClear>
-              {subDepts.map((d: any) => (
+              {subDepts.map((d: OrgStructure) => (
                 <Select.Option key={d.id} value={d.id}>
                   {d.name}
                 </Select.Option>

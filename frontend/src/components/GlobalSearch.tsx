@@ -33,7 +33,7 @@ const GlobalSearch = () => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
-  const [_loading, setLoading] = useState(false)
+  const [, setLoading] = useState(false)
   const navigate = useNavigate()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,10 +59,10 @@ const GlobalSearch = () => {
     timerRef.current = setTimeout(async () => {
       setLoading(true)
       try {
-        const res = await searchApi.globalSearch(value.trim())
-        const data = res.data?.data || []
-        setResults(data)
-        setOpen(data.length > 0)
+        const data = await searchApi.globalSearch(value.trim())
+        const results = data || []
+        setResults(results)
+        setOpen(results.length > 0)
       } catch {
         setResults([])
       } finally {

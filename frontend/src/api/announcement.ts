@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet, ApiPost, ApiPut, ApiDelete, type PagedData } from './request'
 
 export interface Announcement {
   id: number
@@ -13,19 +13,20 @@ export interface Announcement {
 }
 
 export const announcementApi = {
-  getAll: (params?: Record<string, unknown>) => request.get('/announcements', { params }),
+  getAll: (params?: Record<string, unknown>) =>
+    ApiGet<PagedData<Announcement>>('/announcements', { params }),
 
-  getLatest: () => request.get('/announcements/latest'),
+  getLatest: () => ApiGet<Announcement[]>('/announcements/latest'),
 
-  getById: (id: number) => request.get(`/announcements/${id}`),
+  getById: (id: number) => ApiGet<Announcement>(`/announcements/${id}`),
 
-  create: (data: Record<string, unknown>) => request.post('/announcements', data),
+  create: (data: Record<string, unknown>) => ApiPost('/announcements', data),
 
-  update: (id: number, data: Record<string, unknown>) => request.put(`/announcements/${id}`, data),
+  update: (id: number, data: Record<string, unknown>) => ApiPut(`/announcements/${id}`, data),
 
-  delete: (id: number) => request.delete(`/announcements/${id}`),
+  delete: (id: number) => ApiDelete(`/announcements/${id}`),
 
-  publish: (id: number) => request.post(`/announcements/${id}/publish`),
+  publish: (id: number) => ApiPost(`/announcements/${id}/publish`),
 
-  archive: (id: number) => request.post(`/announcements/${id}/archive`),
+  archive: (id: number) => ApiPost(`/announcements/${id}/archive`),
 }

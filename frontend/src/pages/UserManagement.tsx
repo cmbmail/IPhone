@@ -9,7 +9,7 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons'
 import { userApi, type UserVO } from '@/api/user'
-import { request } from '@/api/request'
+import { roleApi } from '@/api/role'
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserVO[]>([])
@@ -25,9 +25,10 @@ const UserManagement = () => {
     setLoading(true)
     try {
       const res = await userApi.getAll()
-      setUsers(res.data.data || [])
-    } catch (e: any) {
-      message.error(e.response?.data?.message || '加载用户列表失败')
+      setUsers(res || [])
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '加载用户列表失败'
+      message.error(msg)
     } finally {
       setLoading(false)
     }
@@ -35,8 +36,8 @@ const UserManagement = () => {
 
   const fetchRoles = async () => {
     try {
-      const res = await request.get('/roles/active')
-      setRoles(res.data.data || [])
+      const res = await roleApi.getActive()
+      setRoles(res || [])
     } catch {
       // ignore
     }
@@ -50,8 +51,9 @@ const UserManagement = () => {
     try {
       await userApi.resetPassword(id)
       message.success('密码已重置为默认密码')
-    } catch (e: any) {
-      message.error(e.response?.data?.message || '重置失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '重置失败'
+      message.error(msg)
     }
   }
 
@@ -65,8 +67,9 @@ const UserManagement = () => {
         message.success('用户已启用')
       }
       fetchUsers()
-    } catch (e: any) {
-      message.error(e.response?.data?.message || '操作失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '操作失败'
+      message.error(msg)
     }
   }
 
@@ -75,8 +78,9 @@ const UserManagement = () => {
       await userApi.delete(id)
       message.success('用户已删除')
       fetchUsers()
-    } catch (e: any) {
-      message.error(e.response?.data?.message || '删除失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '删除失败'
+      message.error(msg)
     }
   }
 
@@ -95,8 +99,9 @@ const UserManagement = () => {
       message.success('角色已更新')
       setRoleModalOpen(false)
       fetchUsers()
-    } catch (e: any) {
-      message.error(e.response?.data?.message || '角色更新失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '角色更新失败'
+      message.error(msg)
     } finally {
       setRoleLoading(false)
     }
@@ -133,7 +138,7 @@ const UserManagement = () => {
       title: '操作',
       key: 'action',
       width: 320,
-      render: (_: any, record: UserVO) => (
+      render: (_: unknown, record: UserVO) => (
         <Space size="small">
           <Button
             size="small"

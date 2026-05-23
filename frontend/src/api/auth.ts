@@ -1,12 +1,19 @@
-import { request } from './request'
+import { ApiGet, ApiPost } from './request'
+import type { UserInfo } from '@/types/auth'
+
+export interface LoginData {
+  token: string
+  user: UserInfo & { needsPasswordChange?: boolean; name?: string }
+  expiresIn: number
+}
 
 export const authApi = {
-  login: (data: { username: string; password: string }) => request.post('/auth/login', data),
+  login: (data: { username: string; password: string }) => ApiPost<LoginData>('/auth/login', data),
 
-  getCurrentUser: () => request.get('/auth/me'),
+  getCurrentUser: () => ApiGet<UserInfo>('/auth/me'),
 
   changePassword: (data: { oldPassword: string; newPassword: string }) =>
-    request.post('/auth/change-password', data),
+    ApiPost('/auth/change-password', data),
 
-  health: () => request.get('/auth/health'),
+  health: () => ApiGet('/auth/health'),
 }

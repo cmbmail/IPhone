@@ -21,10 +21,20 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workOrderApi } from '@/api/workOrder'
 import { PlusOutlined } from '@ant-design/icons'
-import { request } from '@/api/request'
+import { ApiGet, type PagedData } from '@/api/request'
 import type { WorkOrder, WorkOrderItem } from '@/types/workOrder'
 
 const { TextArea } = Input
+
+const PASTE_FIELDS = [
+  'extensionNumber',
+  'employeeName',
+  'employeeNo',
+  'macAddresses',
+  'branchName',
+  'deptName',
+  'remark',
+]
 
 const STATUS_COLORS: Record<number, string> = {
   0: 'warning',
@@ -81,7 +91,7 @@ const WorkOrderManagement = () => {
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
   const [selectedType, setSelectedType] = useState(1)
-  const [extOptions, setExtOptions] = useState<any[]>([])
+  const [extOptions, setExtOptions] = useState<{ label: string; value: string }[]>([])
   const [extLoading, setExtLoading] = useState(false)
   const [form] = Form.useForm()
   const queryClient = useQueryClient()
@@ -140,7 +150,7 @@ const WorkOrderManagement = () => {
     workOrderApi
       .getById(record.id)
       .then((res) => {
-        setSelectedOrder(res.data?.data || record)
+        setSelectedOrder(res || record)
         setDetailDrawerOpen(true)
       })
       .catch(() => {
@@ -164,12 +174,15 @@ const WorkOrderManagement = () => {
     }
     setExtLoading(true)
     try {
-      const res = await request.get('/extension-numbers', {
-        params: { keyword: value, page: 0, size: 20 },
-      })
-      const content = res.data?.data?.content || []
+      const res = await ApiGet<PagedData<{ extensionNumber: string; employeeName: string | null }>>(
+        '/extension-numbers',
+        {
+          params: { keyword: value, page: 0, size: 20 },
+        }
+      )
+      const content = res?.content || []
       setExtOptions(
-        content.map((e: any) => ({
+        content.map((e: { extensionNumber: string; employeeName: string | null }) => ({
           label: `${e.extensionNumber} ${e.employeeName ? '(' + e.employeeName + ')' : ''}`,
           value: e.extensionNumber,
         }))
@@ -184,14 +197,15 @@ const WorkOrderManagement = () => {
   const handleExtSelect = useCallback(
     async (value: string) => {
       try {
-        const res = await request.get(`/extension-numbers/detail/${value}`)
-        const d = res.data?.data
+        const res = await ApiGet<Record<string, unknown>>(`/extension-numbers/detail/${value}`)
+        const d = res
         if (d) {
+          const macs = Array.isArray(d.macAddresses) ? (d.macAddresses as string[]).join(', ') : ''
           form.setFieldsValue({
-            employeeName: d.employeeName || '',
-            macAddresses: d.macAddresses?.join(', ') || '',
-            branchName: d.branchName || '',
-            deptName: d.deptName || '',
+            employeeName: (d.employeeName as string) || '',
+            macAddresses: macs,
+            branchName: (d.branchName as string) || '',
+            deptName: (d.deptName as string) || '',
           })
         }
       } catch {
@@ -202,16 +216,6 @@ const WorkOrderManagement = () => {
   )
 
   // 从Excel粘贴: tab分隔依次填入分机号、使用人、员工ID、MAC、分行、部门、备注
-  const PASTE_FIELDS = [
-    'extensionNumber',
-    'employeeName',
-    'employeeNo',
-    'macAddresses',
-    'branchName',
-    'deptName',
-    'remark',
-  ]
-
   const handleFormPaste = useCallback(
     (e: React.ClipboardEvent) => {
       const text = e.clipboardData.getData('text/plain')
@@ -321,7 +325,7 @@ const WorkOrderManagement = () => {
     },
   ]
 
-  const orders: WorkOrder[] = orderData?.data?.data?.content || []
+  const orders: WorkOrder[] = orderData?.content || []
   const activeOrders = orders.filter((o) => !isHistorical(o.status))
   const historyOrders = orders.filter((o) => isHistorical(o.status))
   const pendingCount = activeOrders.filter((o) => o.status === 0).length

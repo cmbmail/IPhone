@@ -1,20 +1,20 @@
-import { request } from './request'
+import { request, ApiGet, ApiPost, ApiPut, ApiDelete } from './request'
 import type { OrgStructure, CreateOrgDTO, UpdateOrgDTO } from '@/types/org'
 
 export const orgApi = {
-  getTree: () => request.get<OrgStructure[]>('/orgs/tree'),
+  getTree: () => ApiGet<OrgStructure[]>('/orgs/tree'),
 
-  getAll: () => request.get<OrgStructure[]>('/orgs'),
+  getAll: () => ApiGet<OrgStructure[]>('/orgs'),
 
-  getById: (id: number) => request.get<OrgStructure>(`/orgs/${id}`),
+  getById: (id: number) => ApiGet<OrgStructure>(`/orgs/${id}`),
 
-  getChildren: (id: number) => request.get<OrgStructure[]>(`/orgs/${id}/children`),
+  getChildren: (id: number) => ApiGet<OrgStructure[]>(`/orgs/${id}/children`),
 
-  create: (data: CreateOrgDTO) => request.post<OrgStructure>('/orgs', data),
+  create: (data: CreateOrgDTO) => ApiPost<OrgStructure>('/orgs', data),
 
-  update: (id: number, data: UpdateOrgDTO) => request.put<OrgStructure>(`/orgs/${id}`, data),
+  update: (id: number, data: UpdateOrgDTO) => ApiPut<OrgStructure>(`/orgs/${id}`, data),
 
-  delete: (id: number) => request.delete(`/orgs/${id}`),
+  delete: (id: number) => ApiDelete(`/orgs/${id}`),
 
   importCostCenter: (file: File) => {
     const formData = new FormData()

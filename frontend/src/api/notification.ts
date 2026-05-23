@@ -1,9 +1,20 @@
-import { request } from './request'
+import { ApiGet, ApiPost, type PagedData } from './request'
+
+export interface AppNotification {
+  id: number
+  title: string
+  content: string
+  message: string
+  type: string
+  status: number
+  isRead: boolean
+  createdAt: string
+}
 
 export const notificationApi = {
-  // H-08: employeeNo removed - server now resolves from JWT token to prevent IDOR
-  getList: (page = 0, size = 20) => request.get('/notifications', { params: { page, size } }),
-  getUnreadCount: () => request.get('/notifications/unread-count'),
-  markAsRead: (id: number) => request.post(`/notifications/${id}/read`),
-  markAllAsRead: () => request.post('/notifications/read-all'),
+  getList: (page = 0, size = 20) =>
+    ApiGet<PagedData<AppNotification>>('/notifications', { params: { page, size } }),
+  getUnreadCount: () => ApiGet<number>('/notifications/unread-count'),
+  markAsRead: (id: number) => ApiPost(`/notifications/${id}/read`),
+  markAllAsRead: () => ApiPost('/notifications/read-all'),
 }

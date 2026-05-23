@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet, ApiPut, ApiDelete } from './request'
 
 export interface UserVO {
   id: number
@@ -15,16 +15,16 @@ export interface UserVO {
 }
 
 export const userApi = {
-  getByOrg: (orgId: number) => request.get<{ data: UserVO[] }>(`/users/by-org/${orgId}`),
-  getAll: () => request.get<{ data: UserVO[] }>('/users'),
+  getByOrg: (orgId: number) => ApiGet<UserVO[]>(`/users/by-org/${orgId}`),
+  getAll: () => ApiGet<UserVO[]>('/users'),
   updateUsername: (employeeId: number, username: string) =>
-    request.put(`/users/${employeeId}/username`, { username }),
+    ApiPut(`/users/${employeeId}/username`, { username }),
   updateDepartment: (employeeId: number, orgId: number) =>
-    request.put(`/users/${employeeId}/department`, { orgId }),
-  resetPassword: (employeeId: number) => request.put(`/users/${employeeId}/reset-password`),
-  disable: (employeeId: number) => request.put(`/users/${employeeId}/disable`),
-  enable: (employeeId: number) => request.put(`/users/${employeeId}/enable`),
-  delete: (employeeId: number) => request.delete(`/users/${employeeId}`),
+    ApiPut(`/users/${employeeId}/department`, { orgId }),
+  resetPassword: (employeeId: number) => ApiPut(`/users/${employeeId}/reset-password`),
+  disable: (employeeId: number) => ApiPut(`/users/${employeeId}/disable`),
+  enable: (employeeId: number) => ApiPut(`/users/${employeeId}/enable`),
+  delete: (employeeId: number) => ApiDelete(`/users/${employeeId}`),
   updateRole: (employeeId: number, roleId: number) =>
-    request.put(`/users/${employeeId}/role`, { roleId }),
+    ApiPut(`/users/${employeeId}/role`, { roleId }),
 }

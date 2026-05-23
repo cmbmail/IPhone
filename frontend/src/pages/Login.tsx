@@ -13,7 +13,7 @@ const Login = () => {
     setLoading(true)
     try {
       const response = await authApi.login(values)
-      const { token, user, expiresIn } = response.data.data
+      const { token, user, expiresIn } = response
 
       localStorage.setItem('expiresIn', String(expiresIn))
       localStorage.setItem('loginTime', String(Date.now()))
@@ -27,8 +27,8 @@ const Login = () => {
         message.success('登录成功')
         navigate('/')
       }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || '登录失败'
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : '登录失败'
       message.error(errorMsg)
     } finally {
       setLoading(false)

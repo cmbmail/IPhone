@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet, ApiPost, type PagedData } from './request'
 
 export interface ExtensionNumber {
   id: number
@@ -19,12 +19,12 @@ export const extensionNumberApi = {
     deptOrgId?: number
     page?: number
     size?: number
-  }) => request.get('/extension-numbers', { params }),
+  }) => ApiGet<PagedData<ExtensionNumber>>('/extension-numbers', { params }),
 
   allocate: (
     id: number,
     data: { employeeName: string; deptOrgId?: number; deptName?: string; phoneNumber?: string }
-  ) => request.post(`/extension-numbers/${id}/allocate`, null, { params: data }),
+  ) => ApiPost(`/extension-numbers/${id}/allocate`, null, { params: data }),
 
-  reclaim: (id: number) => request.post(`/extension-numbers/${id}/reclaim`),
+  reclaim: (id: number) => ApiPost(`/extension-numbers/${id}/reclaim`),
 }

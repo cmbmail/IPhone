@@ -363,7 +363,7 @@ const BillManagement = () => {
       const res = await request.get('/bills', {
         params: { billMonth, chargeType, page, size: pageSize },
       })
-      return (res.data as any)?.data as PageData
+      return res.data as PageData
     },
   })
 
@@ -392,8 +392,9 @@ const BillManagement = () => {
       setIsUploadModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '导入失败')
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : '导入失败'
+      message.error(msg)
     },
   })
 
@@ -405,8 +406,9 @@ const BillManagement = () => {
       setIsUploadModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '导入分摊失败')
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : '导入分摊失败'
+      message.error(msg)
     },
   })
   const handleUpload = (file: File) => {
@@ -455,7 +457,7 @@ const BillManagement = () => {
             <Statistic
               title="总金额"
               value={(billData?.content || []).reduce(
-                (s: any, r: any) => s + (r.chargeAmount || 0),
+                (s: number, r: BillRecord) => s + (r.charge_amount || 0),
                 0
               )}
               prefix="¥"

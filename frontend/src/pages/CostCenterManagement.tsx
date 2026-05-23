@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { costCenterApi } from '@/api/costCenter'
 import type { CostCenter } from '@/types/costCenter'
 import { orgApi } from '@/api/org'
-import type { OrgStructure, CreateOrgDTO } from '@/types/org'
+import type { OrgStructure } from '@/types/org'
 
 const CostCenterManagement = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
@@ -24,7 +24,7 @@ const CostCenterManagement = () => {
     queryKey: ['all-orgs'],
     queryFn: async () => {
       const res = await orgApi.getAll()
-      return (res.data as any)?.data || []
+      return res || []
     },
   })
 
@@ -47,9 +47,9 @@ const CostCenterManagement = () => {
       setIsImportModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['all-orgs'] })
     },
-    onError: (e: any) => {
-      const msg = e?.response?.data?.message || e?.response?.data?.errors || '导入失败'
-      message.error(typeof msg === 'string' ? msg : '导入失败')
+    onError: (e: unknown) => {
+      const raw = e instanceof Error ? e.message : String(e)
+      message.error(raw || '导入失败')
     },
   })
 
@@ -61,7 +61,14 @@ const CostCenterManagement = () => {
       org_code?: string
       cost_center?: string
     }) => {
-      return orgApi.create({ parentId: data.parent_id ?? null, name: data.name, type: 3, branch_name: data.branch_name, org_code: data.org_code, cost_center: data.cost_center } as any as CreateOrgDTO)
+      return orgApi.create({
+        parentId: data.parent_id ?? null,
+        name: data.name,
+        type: 3,
+        branchName: data.branch_name,
+        orgCode: data.org_code,
+        costCenterCode: data.cost_center,
+      })
     },
     onSuccess: () => {
       message.success('新增成功')
@@ -69,9 +76,9 @@ const CostCenterManagement = () => {
       addForm.resetFields()
       queryClient.invalidateQueries({ queryKey: ['all-orgs'] })
     },
-    onError: (e: any) => {
-      const msg = e?.response?.data?.message || e?.response?.data?.errors || '新增失败'
-      message.error(typeof msg === 'string' ? msg : '新增失败')
+    onError: (e: unknown) => {
+      const raw = e instanceof Error ? e.message : String(e)
+      message.error(raw || '新增失败')
     },
   })
 

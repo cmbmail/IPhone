@@ -1,7 +1,9 @@
-import { request } from './request'
+import { ApiGet, type PagedData } from './request'
+import type { AuditLogEntry } from '@/types/auditLog'
 
 export const auditLogApi = {
   search: (params: { module?: string; operator?: string; page?: number; size?: number }) =>
-    request.get('/audit-logs', { params }),
-  getRecent: (page = 0, size = 20) => request.get('/audit-logs/recent', { params: { page, size } }),
+    ApiGet<PagedData<AuditLogEntry>>('/audit-logs', { params }),
+  getRecent: (page = 0, size = 20) =>
+    ApiGet<PagedData<AuditLogEntry>>('/audit-logs/recent', { params: { page, size } }),
 }

@@ -141,7 +141,7 @@ const SubsidiaryReconciliationPage = () => {
       title: '操作',
       key: 'actions',
       width: 200,
-      render: (_: any, record: SubsidiaryReconciliation) => (
+      render: (_: unknown, record: SubsidiaryReconciliation) => (
         <Space>
           {record.subsidiaryConfirm === 0 && (
             <Button
@@ -163,8 +163,8 @@ const SubsidiaryReconciliationPage = () => {
     },
   ]
 
-  const reconciliations = allocationData?.data?.data?.content || []
-  const summary = summaryData?.data?.data as ReconciliationSummary
+  const reconciliations = allocationData?.content || []
+  const summary = summaryData as ReconciliationSummary | undefined
   const totalAmount = reconciliations.reduce(
     (sum: number, r: SubsidiaryReconciliation) => sum + (r.totalBillAmount || 0),
     0
@@ -224,7 +224,7 @@ const SubsidiaryReconciliationPage = () => {
           dataSource={reconciliations}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.total_elements }}
+          pagination={{ pageSize: 20, total: allocationData?.totalElements }}
         />
       </Card>
     </div>

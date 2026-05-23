@@ -168,8 +168,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       setPwdModalOpen(false)
       clearAuth()
       navigate('/login')
-    } catch (error: any) {
-      message.error(error.response?.data?.message || '密码修改失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } }
+      message.error(err.response?.data?.message || '密码修改失败')
     } finally {
       setPwdLoading(false)
     }

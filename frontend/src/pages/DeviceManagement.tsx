@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Table, Button, Modal, Form, Input, Tag, message, Space, Drawer, Descriptions } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { phoneDeviceApi } from '@/api/phoneDevice'
+import { phoneDeviceApi, type PhoneDeviceDTO } from '@/api/phoneDevice'
 
 const DEV_STATUS_COLORS: Record<number, string> = {
   0: 'default',
@@ -18,9 +18,17 @@ const DEV_STATUS_NAMES: Record<number, string> = {
   4: '已报废',
 }
 
+interface BoundPhone {
+  phoneId: number
+  phoneNumber: string
+  extensionNumber: string
+  status: string
+  lineOrder: number
+}
+
 const DeviceManagement = () => {
   const [page, setPage] = useState(0)
-  const [selectedDevice, setSelectedDevice] = useState<any>(null)
+  const [selectedDevice, setSelectedDevice] = useState<PhoneDeviceDTO | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [modalType, setModalType] = useState('')
   const [form] = Form.useForm()
@@ -30,7 +38,7 @@ const DeviceManagement = () => {
     queryKey: ['phone-devices', page],
     queryFn: async () => {
       const r = await phoneDeviceApi.getList({ page, size: 20 })
-      return r.data.data
+      return r
     },
   })
 
@@ -39,7 +47,7 @@ const DeviceManagement = () => {
     queryFn: async () => {
       if (!selectedDevice) return []
       const r = await phoneDeviceApi.getBoundPhones(selectedDevice.id)
-      return r.data.data || []
+      return (r as unknown as BoundPhone[]) || []
     },
     enabled: !!selectedDevice && detailOpen,
   })
@@ -52,51 +60,51 @@ const DeviceManagement = () => {
   }
 
   const createMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.create(d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.create(d),
     onSuccess: () => onSuccess('话机录入成功'),
   })
   const assignMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.assign(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.assign(selectedDevice!.id, d),
     onSuccess: () => onSuccess('分配成功'),
   })
   const reclaimMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.reclaim(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.reclaim(selectedDevice!.id, d),
     onSuccess: () => onSuccess('回收成功'),
   })
   const deactivateMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.deactivate(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.deactivate(selectedDevice!.id, d),
     onSuccess: () => onSuccess('停用成功'),
   })
   const reactivateMut = useMutation({
-    mutationFn: (_d: any) => phoneDeviceApi.reactivate(selectedDevice.id),
+    mutationFn: (_d: unknown) => phoneDeviceApi.reactivate(selectedDevice!.id),
     onSuccess: () => onSuccess('恢复成功'),
   })
   const repairMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.repair(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.repair(selectedDevice!.id, d),
     onSuccess: () => onSuccess('送修成功'),
   })
   const repairDoneMut = useMutation({
-    mutationFn: (_d: any) => phoneDeviceApi.repairDone(selectedDevice.id),
+    mutationFn: (_d: unknown) => phoneDeviceApi.repairDone(selectedDevice!.id),
     onSuccess: () => onSuccess('修复成功'),
   })
   const retireMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.retire(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.retire(selectedDevice!.id, d),
     onSuccess: () => onSuccess('报废成功'),
   })
   const editMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.update(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.update(selectedDevice!.id, d),
     onSuccess: () => onSuccess('修改成功'),
   })
   const bindMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.bindPhone(selectedDevice.id, d),
+    mutationFn: (d: Record<string, unknown>) => phoneDeviceApi.bindPhone(selectedDevice!.id, d),
     onSuccess: () => onSuccess('绑定成功'),
   })
   const unbindMut = useMutation({
-    mutationFn: (phoneId: number) => phoneDeviceApi.unbindPhone(selectedDevice.id, phoneId),
+    mutationFn: (phoneId: number) => phoneDeviceApi.unbindPhone(selectedDevice!.id, phoneId),
     onSuccess: () => onSuccess('解绑成功'),
   })
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: Record<string, unknown>) => {
     switch (modalType) {
       case 'create':
         createMut.mutate(values)
@@ -125,14 +133,14 @@ const DeviceManagement = () => {
     }
   }
 
-  const openModal = (type: string, device: any = null) => {
+  const openModal = (type: string, device: PhoneDeviceDTO | null = null) => {
     setSelectedDevice(device)
     form.resetFields()
     if (device) form.setFieldsValue(device)
     setModalType(type)
   }
 
-  const getActionButtons = (r: any) => {
+  const getActionButtons = (r: PhoneDeviceDTO) => {
     const btns: React.ReactNode[] = []
     switch (r.status) {
       case 0:
@@ -204,7 +212,7 @@ const DeviceManagement = () => {
       dataIndex: 'macAddress',
       key: 'macAddress',
       width: 140,
-      render: (t: string, r: any) => (
+      render: (t: string, r: PhoneDeviceDTO) => (
         <a
           onClick={() => {
             setSelectedDevice(r)
@@ -230,7 +238,7 @@ const DeviceManagement = () => {
       title: '操作',
       key: 'actions',
       width: 280,
-      render: (_: any, r: any) => (
+      render: (_: unknown, r: PhoneDeviceDTO) => (
         <Space size={4} wrap>
           {getActionButtons(r)}
         </Space>
@@ -370,7 +378,7 @@ const DeviceManagement = () => {
         width={640}
         destroyOnClose
         extra={
-          selectedDevice?.status !== 'retired' && (
+          selectedDevice?.status !== 4 && (
             <Button
               onClick={() => {
                 setDetailOpen(false)
@@ -442,7 +450,7 @@ const DeviceManagement = () => {
                 {
                   title: '操作',
                   width: 60,
-                  render: (_: any, r: any) => (
+                  render: (_: unknown, r: BoundPhone) => (
                     <Button size="small" danger onClick={() => unbindMut.mutate(r.phoneId)}>
                       解绑
                     </Button>

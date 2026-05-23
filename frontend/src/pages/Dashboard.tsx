@@ -15,8 +15,10 @@ import {
 } from 'antd'
 import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '@ant-design/icons'
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
-import { request } from '@/api/request'
+import { ApiGet, type PagedData } from '@/api/request'
 import { announcementApi, type Announcement } from '@/api/announcement'
+import type { OrgStructure } from '@/types/org'
+import type { UserVO } from '@/api/user'
 
 const ANNOUNCEMENT_TYPE_NAMES: Record<number, string> = {
   1: '系统公告',
@@ -103,20 +105,20 @@ const Dashboard = () => {
           await Promise.allSettled([
             statisticsApi.getPhoneStats(),
             statisticsApi.getDeviceStats(),
-            request.get('/orgs'),
-            request.get('/users'),
-            request.get('/bill-allocations', {
+            ApiGet<OrgStructure[]>('/orgs'),
+            ApiGet<UserVO[]>('/users'),
+            ApiGet<PagedData<Record<string, unknown>>>('/bill-allocations', {
               params: { billMonth: new Date().toISOString().slice(0, 7), page: 0, size: 5 },
             }),
             announcementApi.getLatest(),
-            request.get('/work-orders', { params: { page: 0, size: 10 } }),
+            ApiGet<PagedData<WorkOrder>>('/work-orders', { params: { page: 0, size: 10 } }),
           ])
-        if (phoneRes.status === 'fulfilled') setPhoneStats(phoneRes.value.data.data)
-        if (deviceRes.status === 'fulfilled') setDeviceStats(deviceRes.value.data.data)
-        if (orgRes.status === 'fulfilled') setOrgCount((orgRes.value.data.data || []).length)
-        if (userRes.status === 'fulfilled') setUserCount((userRes.value.data.data || []).length)
+        if (phoneRes.status === 'fulfilled') setPhoneStats(phoneRes.value)
+        if (deviceRes.status === 'fulfilled') setDeviceStats(deviceRes.value)
+        if (orgRes.status === 'fulfilled') setOrgCount((orgRes.value || []).length)
+        if (userRes.status === 'fulfilled') setUserCount((userRes.value || []).length)
         if (billRes.status === 'fulfilled') {
-          const billData = billRes.value.data?.data?.content || []
+          const billData = billRes.value?.content || []
           const mapped: RecentBill[] = billData.map((b: Record<string, unknown>) => ({
             id: b.id as number,
             orgName: (b.orgName as string) || '-',
@@ -132,10 +134,10 @@ const Dashboard = () => {
           setRecentBills(mapped)
         }
         if (annRes.status === 'fulfilled') {
-          setAnnouncements(annRes.value.data?.data || [])
+          setAnnouncements(annRes.value || [])
         }
         if (woRes.status === 'fulfilled') {
-          const all = woRes.value.data?.data?.content || []
+          const all = woRes.value?.content || []
           // 同步工单管理: 只展示未完工(status 0/1/2)
           setWorkOrders(all.filter((o: WorkOrder) => [0, 1, 2].includes(Number(o.status))))
         }

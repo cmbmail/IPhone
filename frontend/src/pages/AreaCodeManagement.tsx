@@ -19,7 +19,7 @@ const AreaCodeManagement = () => {
     queryKey: ['areaCodes'],
     queryFn: async () => {
       const response = await areaCodeApi.getAll()
-      return response.data
+      return response
     },
   })
 
@@ -27,7 +27,7 @@ const AreaCodeManagement = () => {
     queryKey: ['orgs'],
     queryFn: async () => {
       const response = await orgApi.getAll()
-      return (response.data as any)?.data
+      return response
     },
   })
 

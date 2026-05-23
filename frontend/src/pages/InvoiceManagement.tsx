@@ -14,20 +14,9 @@ import {
   Statistic,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { invoiceApi } from '@/api/invoice'
-import { request } from '@/api/request'
-import { orgApi } from '@/api/org'
-
-interface Invoice {
-  id: number
-  invoiceNo: string
-  sourceOrgName: string
-  amount: number | null
-  taxAmount: number | null
-  invoiceDate: string
-  billMonth: string
-  status: number
-}
+import { invoiceApi, type Invoice } from '@/api/invoice'
+import { request, ApiGet } from '@/api/request'
+import type { OrgStructure } from '@/types/org'
 import { UploadOutlined, FilePdfOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons'
 
 const { Option } = Select
@@ -44,6 +33,13 @@ const STATUS_NAMES: Record<number, string> = {
   1: '已确认',
   2: '已分发',
   3: '已拒绝',
+}
+
+interface InvoiceListParams {
+  billMonth: string
+  page: number
+  size: number
+  status?: string | number
 }
 
 const InvoiceManagement = () => {
@@ -63,8 +59,8 @@ const InvoiceManagement = () => {
   const { data: orgsData } = useQuery({
     queryKey: ['orgs'],
     queryFn: async () => {
-      const response = await orgApi.getAll()
-      return (response.data as any)?.data || []
+      const response = await ApiGet<OrgStructure[]>('/orgs')
+      return response || []
     },
   })
 
@@ -75,7 +71,7 @@ const InvoiceManagement = () => {
   } = useQuery({
     queryKey: ['invoices', billMonth, status],
     queryFn: async () => {
-      const params: any = { billMonth, page: 0, size: 100 }
+      const params: InvoiceListParams = { billMonth, page: 0, size: 100 }
       if (status) params.status = status
       return invoiceApi.getList(params)
     },
@@ -83,7 +79,7 @@ const InvoiceManagement = () => {
 
   const { data: statsData } = useQuery({
     queryKey: ['invoice-stats', billMonth],
-    queryFn: () => request.get('/invoices/stats', { params: { billMonth } }),
+    queryFn: () => ApiGet<Record<string, number>>('/invoices/stats', { params: { billMonth } }),
   })
 
   const confirmMutation = useMutation({
@@ -121,8 +117,9 @@ const InvoiceManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
       setIsUploadModalOpen(false)
-    } catch (error: any) {
-      message.error(error.response?.data?.message || '上传失败')
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '上传失败'
+      message.error(msg)
     } finally {
       setUploading(false)
     }
@@ -177,7 +174,7 @@ const InvoiceManagement = () => {
       title: '操作',
       key: 'actions',
       width: 150,
-      render: (_: any, record: Invoice) => (
+      render: (_: unknown, record: Invoice) => (
         <Space>
           {record.status === 0 && (
             <Button
@@ -202,8 +199,8 @@ const InvoiceManagement = () => {
     },
   ]
 
-  const invoices = allocationData?.data?.data?.content || []
-  const stats = statsData?.data?.data
+  const invoices = allocationData?.content || []
+  const stats = statsData
 
   return (
     <div>
@@ -277,7 +274,7 @@ const InvoiceManagement = () => {
           dataSource={invoices}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.data?.data?.totalElements }}
+          pagination={{ pageSize: 20, total: allocationData?.totalElements }}
         />
       </Card>
 
@@ -307,7 +304,7 @@ const InvoiceManagement = () => {
               style={{ width: '100%' }}
               placeholder="选择来源组织"
             >
-              {(orgsData || []).map((org: any) => (
+              {(orgsData || []).map((org: OrgStructure) => (
                 <Select.Option key={org.id} value={org.id}>
                   {org.name}
                 </Select.Option>
@@ -321,7 +318,7 @@ const InvoiceManagement = () => {
               style={{ width: '100%' }}
               placeholder="选择来源组织"
             >
-              {(orgsData || []).map((org: any) => (
+              {(orgsData || []).map((org: OrgStructure) => (
                 <Select.Option key={org.id} value={org.id}>
                   {org.name}
                 </Select.Option>

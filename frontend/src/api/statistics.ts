@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet } from './request'
 
 export interface PhoneStatistics {
   totalCount: number
@@ -30,6 +30,6 @@ export interface DashboardStats {
 }
 
 export const statisticsApi = {
-  getPhoneStats: () => request.get<{ data: PhoneStatistics }>('/statistics/phones'),
-  getDeviceStats: () => request.get<{ data: DeviceStatistics }>('/statistics/devices'),
+  getPhoneStats: () => ApiGet<PhoneStatistics>('/statistics/phones'),
+  getDeviceStats: () => ApiGet<DeviceStatistics>('/statistics/devices'),
 }

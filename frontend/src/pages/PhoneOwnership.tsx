@@ -21,7 +21,8 @@ import {
   type PhoneOwnership,
   type ImportCompareItem,
 } from '@/api/phoneOwnership'
-import { request } from '@/api/request'
+import { ApiGet } from '@/api/request'
+import type { OrgStructure } from '@/types/org'
 
 const PhoneOwnershipPage = () => {
   const [keyword, setKeyword] = useState('')
@@ -49,20 +50,20 @@ const PhoneOwnershipPage = () => {
         page,
         size,
       })
-      return res.data
+      return res
     },
   })
 
   const { data: orgsData } = useQuery({
     queryKey: ['orgs'],
     queryFn: async () => {
-      const res = await request.get('/orgs')
-      return res.data?.data || []
+      const res = await ApiGet<OrgStructure[]>('/orgs')
+      return res || []
     },
   })
 
-  const orgs: any[] = orgsData || []
-  const branches = orgs.filter((o: any) => o.level === 1)
+  const orgs: OrgStructure[] = orgsData || []
+  const branches = orgs.filter((o: OrgStructure) => o.level === 1)
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -83,8 +84,7 @@ const PhoneOwnershipPage = () => {
 
   const confirmImportMutation = useMutation({
     mutationFn: (items: ImportCompareItem[]) => phoneOwnershipApi.importConfirm(items),
-    onSuccess: (res: any) => {
-      const count = res.data?.data || 0
+    onSuccess: (count: number) => {
       message.success(`导入成功，共更新 ${count} 条记录`)
       setCompareModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['phone-ownership'] })
@@ -95,7 +95,7 @@ const PhoneOwnershipPage = () => {
   const handleImport = async (file: File) => {
     try {
       const res = await phoneOwnershipApi.importCompare(file)
-      const items: ImportCompareItem[] = res.data?.data || []
+      const items: ImportCompareItem[] = (res as unknown as ImportCompareItem[]) || []
       if (items.length === 0) {
         message.warning('文件中无有效数据')
         return
@@ -122,7 +122,7 @@ const PhoneOwnershipPage = () => {
     setEditModalOpen(true)
   }
 
-  const depts = editBranch ? orgs.filter((o: any) => o.parentId === editBranch) : []
+  const depts = editBranch ? orgs.filter((o: OrgStructure) => o.parentId === editBranch) : []
 
   const columns = [
     { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150 },
@@ -159,8 +159,8 @@ const PhoneOwnershipPage = () => {
     },
   ]
 
-  const totalCount = listData?.data?.totalElements || 0
-  const content: PhoneOwnership[] = listData?.data?.content || []
+  const totalCount = listData?.totalElements || 0
+  const content: PhoneOwnership[] = listData?.content || []
 
   const newCount = compareData.filter((i) => i.isNew).length
   const diffCount = compareData.filter((i) => i.hasDiff).length
@@ -289,7 +289,7 @@ const PhoneOwnershipPage = () => {
               style={{ width: 150 }}
               allowClear
             >
-              {branches.map((b: any) => (
+              {branches.map((b: OrgStructure) => (
                 <Select.Option key={b.id} value={b.id}>
                   {b.branchName || b.name}
                 </Select.Option>
@@ -321,7 +321,7 @@ const PhoneOwnershipPage = () => {
           pagination={{
             current: page + 1,
             pageSize: size,
-            total: listData?.data?.totalElements || 0,
+            total: listData?.totalElements || 0,
             onChange: (p) => setPage(p - 1),
           }}
         />
@@ -347,7 +347,7 @@ const PhoneOwnershipPage = () => {
             }}
             allowClear
           >
-            {branches.map((b: any) => (
+            {branches.map((b: OrgStructure) => (
               <Select.Option key={b.id} value={b.id}>
                 {b.branchName || b.name}
               </Select.Option>
@@ -363,7 +363,7 @@ const PhoneOwnershipPage = () => {
             onChange={setEditDept}
             allowClear
           >
-            {depts.map((d: any) => (
+            {depts.map((d: OrgStructure) => (
               <Select.Option key={d.id} value={d.id}>
                 {d.name}
               </Select.Option>

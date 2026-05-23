@@ -1,4 +1,4 @@
-import { request } from './request'
+import { ApiGet, ApiPost, type PagedData } from './request'
 
 export interface SubsidiaryReconciliation {
   id: number
@@ -35,29 +35,20 @@ export const reconciliationApi = {
     orgId?: number
     page?: number
     size?: number
-  }) =>
-    request.get<{
-      code: number
-      data: { content: SubsidiaryReconciliation[]; total_elements: number }
-    }>('/reconciliations', { params }),
+  }) => ApiGet<PagedData<SubsidiaryReconciliation>>('/reconciliations', { params }),
 
-  getReconciliation: (id: number) =>
-    request.get<{ code: number; data: SubsidiaryReconciliation }>(`/reconciliations/${id}`),
+  getReconciliation: (id: number) => ApiGet<SubsidiaryReconciliation>(`/reconciliations/${id}`),
 
   getPending: (orgId: number) =>
-    request.get<{ code: number; data: SubsidiaryReconciliation[] }>('/reconciliations/pending', {
-      params: { orgId },
-    }),
+    ApiGet<SubsidiaryReconciliation[]>('/reconciliations/pending', { params: { orgId } }),
 
   generateReconciliation: (billMonth: string) =>
-    request.post('/reconciliations/generate', null, { params: { billMonth } }),
+    ApiPost('/reconciliations/generate', null, { params: { billMonth } }),
 
-  subsidiaryConfirm: (id: number) => request.post(`/reconciliations/${id}/subsidiary-confirm`),
+  subsidiaryConfirm: (id: number) => ApiPost(`/reconciliations/${id}/subsidiary-confirm`),
 
-  groupConfirm: (id: number) => request.post(`/reconciliations/${id}/group-confirm`),
+  groupConfirm: (id: number) => ApiPost(`/reconciliations/${id}/group-confirm`),
 
   getSummary: (billMonth: string) =>
-    request.get<{ code: number; data: ReconciliationSummary }>('/reconciliations/summary', {
-      params: { billMonth },
-    }),
+    ApiGet<ReconciliationSummary>('/reconciliations/summary', { params: { billMonth } }),
 }

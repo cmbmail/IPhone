@@ -21,6 +21,9 @@ export interface CreateOrgDTO {
   name: string
   type: 1 | 2 | 3
   status?: 0 | 1
+  branchName?: string
+  orgCode?: string
+  costCenterCode?: string
 }
 
 export interface UpdateOrgDTO {

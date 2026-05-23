@@ -47,10 +47,10 @@ const ReportCenter = () => {
     enabled: !!startDate && !!endDate,
   })
 
-  const phoneAssetReport = phoneAssetData?.data?.data || {}
-  const allocationReport = allocationData?.data?.data || {}
-  const anomalyReport = anomalyData?.data?.data || {}
-  const workOrderReport = workOrderData?.data?.data || {}
+  const phoneAssetReport = phoneAssetData || {}
+  const allocationReport = allocationData || {}
+  const anomalyReport = anomalyData || {}
+  const workOrderReport = workOrderData || {}
 
   const orgColumns = [
     { title: '组织', dataIndex: 'orgName', key: 'orgName' },

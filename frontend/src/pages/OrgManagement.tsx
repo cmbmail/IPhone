@@ -51,7 +51,7 @@ const OrgManagement: React.FC = () => {
   React.useEffect(() => {
     roleApi
       .getActive()
-      .then((res) => setActiveRoles((res.data as any)?.data || []))
+      .then((res) => setActiveRoles(res || []))
       .catch(() => {})
   }, [])
   const [userListLoading, setUserListLoading] = useState(false)
@@ -63,7 +63,7 @@ const OrgManagement: React.FC = () => {
     setLoading(true)
     try {
       const res = await orgApi.getTree()
-      setTreeData((res.data as any)?.data || [])
+      setTreeData(res || [])
     } catch {
       message.error('加载组织架构失败')
     } finally {
@@ -127,7 +127,10 @@ const OrgManagement: React.FC = () => {
   React.useEffect(() => {
     setExpandedKeys(expandedAllKeys)
   }, [expandedAllKeys])
-  const antTreeData = useMemo(() => convertToAntTree(treeData), [treeData, selectedOrgId])
+  const antTreeData = useMemo(
+    () => convertToAntTree(treeData),
+    [treeData, convertToAntTree]
+  )
 
   const nameInputRef = React.useRef<any>(null)
 
@@ -161,7 +164,11 @@ const OrgManagement: React.FC = () => {
   const handleAdd = async () => {
     try {
       const values = await orgForm.validateFields()
-      await orgApi.create({ parentId: editingOrg?.id ?? null, name: values.name, type: 3 } as CreateOrgDTO)
+      await orgApi.create({
+        parentId: editingOrg?.id ?? null,
+        name: values.name,
+        type: 3,
+      } as CreateOrgDTO)
       message.success(`已在「${editingOrg?.name || ''}」下添加「${values.name}」`)
       setAddChildOpen(false)
       setEditModalOpen(false)
@@ -197,8 +204,9 @@ const OrgManagement: React.FC = () => {
         setUserList([])
       }
       fetchTree()
-    } catch (e: any) {
-      message.error(e?.response?.data?.message || '删除失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '删除失败'
+      message.error(msg)
     }
   }
   // ======== User List Logic ========
@@ -207,7 +215,7 @@ const OrgManagement: React.FC = () => {
     setUserListLoading(true)
     try {
       const res = await userApi.getAll()
-      setUserList(res.data?.data || [])
+      setUserList(res || [])
     } catch {
       setUserList([])
     } finally {
@@ -219,7 +227,7 @@ const OrgManagement: React.FC = () => {
     setUserListLoading(true)
     try {
       const res = await userApi.getByOrg(orgId)
-      setUserList(res.data?.data || [])
+      setUserList(res || [])
     } catch {
       setUserList([])
     } finally {
@@ -260,8 +268,9 @@ const OrgManagement: React.FC = () => {
       } else {
         fetchAllUsers()
       }
-    } catch (e: any) {
-      message.error(e?.response?.data?.message || '角色变更失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '角色变更失败'
+      message.error(msg)
     }
   }
 
@@ -281,8 +290,9 @@ const OrgManagement: React.FC = () => {
       } else {
         fetchAllUsers()
       }
-    } catch (e: any) {
-      message.error(e?.response?.data?.message || '部门变更失败')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '部门变更失败'
+      message.error(msg)
     }
   }
 
@@ -294,8 +304,9 @@ const OrgManagement: React.FC = () => {
         try {
           await userApi.resetPassword(user.employeeId)
           message.success('密码已重置')
-        } catch (e: any) {
-          message.error(e?.response?.data?.message || '重置失败')
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : '重置失败'
+          message.error(msg)
         }
       },
     })
@@ -318,8 +329,9 @@ const OrgManagement: React.FC = () => {
           } else {
             fetchAllUsers()
           }
-        } catch (e: any) {
-          message.error(e?.response?.data?.message || `${action}失败`)
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : `${action}失败`
+          message.error(msg)
         }
       },
     })
@@ -339,8 +351,9 @@ const OrgManagement: React.FC = () => {
           } else {
             fetchAllUsers()
           }
-        } catch (e: any) {
-          message.error(e?.response?.data?.message || '删除失败')
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : '删除失败'
+          message.error(msg)
         }
       },
     })
@@ -411,7 +424,7 @@ const OrgManagement: React.FC = () => {
       width: 80,
       align: 'center',
       fixed: 'right' as const,
-      render: (_: any, record: UserVO) => (
+      render: (_: unknown, record: UserVO) => (
         <Button type="link" size="small" onClick={() => openUserEdit(record)}>
           操作
         </Button>

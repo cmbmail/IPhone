@@ -1,4 +1,4 @@
-import { request } from './request'
+import { request, ApiDelete } from './request'
 
 export interface BillUploadResponse {
   code: number
@@ -28,5 +28,5 @@ export const billApi = {
   },
 
   delete: (billMonth: string, chargeType: string, password: string) =>
-    request.delete('/bills', { data: { billMonth, chargeType, password } }),
+    ApiDelete('/bills', { data: { billMonth, chargeType, password } }),
 }

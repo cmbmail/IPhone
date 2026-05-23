@@ -20,8 +20,9 @@ const ChangePassword = () => {
       message.success('密码修改成功，请重新登录')
       clearAuth()
       navigate('/login')
-    } catch (error: any) {
-      message.error(error.response?.data?.message || '密码修改失败')
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '密码修改失败'
+      message.error(msg)
     } finally {
       setLoading(false)
     }

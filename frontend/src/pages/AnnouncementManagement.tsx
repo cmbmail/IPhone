@@ -77,8 +77,7 @@ const AnnouncementManagement = () => {
     queryFn: async () => {
       const params: Record<string, unknown> = { page: 0, size: 50 }
       if (statusFilter) params.status = statusFilter
-      const res = await announcementApi.getAll(params)
-      return res.data
+      return announcementApi.getAll(params)
     },
   })
 
@@ -246,7 +245,7 @@ const AnnouncementManagement = () => {
     },
   ]
 
-  const announcements = announcementData?.data?.content || []
+  const announcements = announcementData?.content || []
 
   return (
     <div>
@@ -288,7 +287,7 @@ const AnnouncementManagement = () => {
           dataSource={announcements}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: announcementData?.data?.totalElements }}
+          pagination={{ pageSize: 20, total: announcementData?.totalElements }}
         />
       </Card>
 

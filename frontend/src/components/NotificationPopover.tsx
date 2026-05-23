@@ -2,7 +2,21 @@ import { useState } from 'react'
 import { Badge, Button, List, Popover, Spin, Empty } from 'antd'
 import { BellOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { notificationApi } from '@/api/notification'
+import { notificationApi, type AppNotification } from '@/api/notification'
+import type { PagedData } from '@/api/request'
+
+interface NotificationItem {
+  id: number
+  title: string
+  message: string
+  content: string
+  status: number
+  createdAt: string
+}
+
+interface UnreadCountData {
+  unreadCount: number
+}
 
 const NotificationPopover = () => {
   const [open, setOpen] = useState(false)
@@ -12,7 +26,7 @@ const NotificationPopover = () => {
     queryKey: ['notifications-unread'],
     queryFn: async () => {
       const r = await notificationApi.getUnreadCount()
-      return r.data.data
+      return r
     },
     refetchInterval: 30000,
   })
@@ -21,7 +35,7 @@ const NotificationPopover = () => {
     queryKey: ['notifications-list'],
     queryFn: async () => {
       const r = await notificationApi.getList(0, 20)
-      return r.data.data?.content || r.data.data || []
+      return r.content || []
     },
     enabled: open,
   })
@@ -39,8 +53,11 @@ const NotificationPopover = () => {
   })
 
   const unreadCount =
-    typeof unreadData === 'number' ? unreadData : (unreadData as any)?.unreadCount || 0
-  const notifications = Array.isArray(listData) ? listData : []
+    typeof unreadData === 'number'
+      ? unreadData
+      : (unreadData as UnreadCountData | undefined)?.unreadCount || 0
+  const notifications: NotificationItem[] = ((listData as PagedData<AppNotification> | undefined)
+    ?.content || []) as unknown as NotificationItem[]
 
   const content = (
     <div style={{ width: 360, maxHeight: 400, overflow: 'auto' }}>
@@ -68,7 +85,7 @@ const NotificationPopover = () => {
         <List
           size="small"
           dataSource={notifications}
-          renderItem={(item: any) => (
+          renderItem={(item: NotificationItem) => (
             <List.Item
               style={{
                 background: item.status === 0 ? '#f6f8fa' : 'transparent',

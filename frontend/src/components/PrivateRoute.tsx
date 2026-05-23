@@ -36,7 +36,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
     authApi
       .getCurrentUser()
       .then((res) => {
-        const user = res.data.data
+        const user = res
         if (user) {
           setAuth(token, user)
         }
@@ -47,7 +47,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
       .finally(() => {
         setVerifying(false)
       })
-  }, [])
+  }, [token, isAuthenticated, setAuth, clearAuth])
 
   if (verifying) {
     return null
