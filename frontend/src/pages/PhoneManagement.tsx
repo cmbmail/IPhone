@@ -12,7 +12,7 @@ import {
   Col,
   Statistic,
 } from 'antd'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { request } from '@/api/request'
 
 // 后端动态计算状态: 0=闲置 1=占用 2=分配中
@@ -41,8 +41,6 @@ const PhoneManagement = () => {
   const [keyword, setKeyword] = useState('')
   const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
   const [filterOrgId, setFilterOrgId] = useState<number | undefined>(undefined)
-
-  const qc = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
     queryKey: ['phone-views', keyword, filterStatus, filterOrgId, page],

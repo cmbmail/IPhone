@@ -147,7 +147,7 @@ const ExtensionPoolManagement = () => {
       dataIndex: 'extensionNumber',
       key: 'extensionNumber',
       width: 120,
-      render: (v: string, record: ExtensionNumber) => <span style={{ fontWeight: 500 }}>{v}</span>,
+      render: (v: string, _record: ExtensionNumber) => <span style={{ fontWeight: 500 }}>{v}</span>,
     },
     {
       title: '电话号码',

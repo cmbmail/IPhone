@@ -6,7 +6,6 @@ import {
   SubsidiaryReconciliation,
   ReconciliationSummary,
 } from '@/api/reconciliation'
-import { orgApi } from '@/api/org'
 import { SyncOutlined, CheckOutlined } from '@ant-design/icons'
 
 const { Option } = Select
@@ -31,14 +30,6 @@ const SubsidiaryReconciliationPage = () => {
     const d = new Date()
     d.setMonth(d.getMonth() - i)
     return d.toISOString().slice(0, 7)
-  })
-
-  const { data: orgsData } = useQuery({
-    queryKey: ['orgs'],
-    queryFn: async () => {
-      const response = await orgApi.getAll()
-      return response.data.data
-    },
   })
 
   const {

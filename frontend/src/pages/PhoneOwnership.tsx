@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import {
   Table,
   Button,
@@ -39,7 +39,6 @@ const PhoneOwnershipPage = () => {
   const [compareData, setCompareData] = useState<ImportCompareItem[]>([])
 
   const queryClient = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: listData, isLoading } = useQuery({
     queryKey: ['phone-ownership', keyword, branchOrgId, page],

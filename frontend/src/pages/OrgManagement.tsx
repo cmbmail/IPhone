@@ -12,7 +12,6 @@ import {
   Tooltip,
   Table,
   Tag,
-  Upload,
 } from 'antd'
 import {
   EditOutlined,
@@ -21,14 +20,12 @@ import {
   KeyOutlined,
   StopOutlined,
   DeleteOutlined,
-  SwapOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
 import type { OrgStructure } from '@/types/org'
-import type { UserVO } from '@/api/user'
 import { orgApi } from '@/api/org'
-import { userApi } from '@/api/user'
+import { userApi, type UserVO } from '@/api/user'
 import { roleApi } from '@/api/role'
 
 const OrgManagement: React.FC = () => {
@@ -144,7 +141,7 @@ const OrgManagement: React.FC = () => {
     setEditingOrg(org)
     let position = 1
     const siblings =
-      org.parentId == null || org.parentId === undefined
+      org.parentId === null || org.parentId === undefined
         ? treeData
         : treeData.find((p) => p.id === org.parentId)?.children || []
     const sorted = [...siblings].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -276,22 +273,6 @@ const OrgManagement: React.FC = () => {
     setEditUserOpen(true)
   }
 
-  const handleUsernameSave = async () => {
-    if (!editingUser) return
-    try {
-      const values = await userForm.validateFields(['username'])
-      await userApi.updateUsername(editingUser.employeeId, values.username)
-      message.success('账号修改成功')
-      if (selectedOrgId) {
-        fetchUsers(selectedOrgId)
-      } else {
-        fetchAllUsers()
-      }
-    } catch (e: any) {
-      if (e?.response?.data?.message) message.error(e.response.data.message)
-    }
-  }
-
   const handleDeptChange = async (newOrgId: number) => {
     if (!editingUser) return
     try {
@@ -388,7 +369,7 @@ const OrgManagement: React.FC = () => {
       key: 'username',
       width: 130,
       align: 'center',
-      render: (v: string, record: UserVO) => (
+      render: (v: string, _record: UserVO) => (
         <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{v}</span>
       ),
     },

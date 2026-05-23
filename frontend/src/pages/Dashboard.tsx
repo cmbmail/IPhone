@@ -62,13 +62,6 @@ const WO_TYPE_COLORS: Record<number, string> = {
   4: 'purple',
   5: 'red',
 }
-const WO_PRIORITY_NAMES: Record<number, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
-const WO_PRIORITY_COLORS: Record<number, string> = {
-  1: 'success',
-  2: 'default',
-  3: 'warning',
-  4: 'error',
-}
 
 interface RecentBill {
   id: number

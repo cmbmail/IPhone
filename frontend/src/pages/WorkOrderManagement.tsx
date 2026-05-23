@@ -20,12 +20,10 @@ import {
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workOrderApi } from '@/api/workOrder'
-import { useAuthStore } from '@/stores/authStore'
-import { PlusOutlined, CheckOutlined, EyeOutlined } from '@ant-design/icons'
+import { PlusOutlined } from '@ant-design/icons'
 import { request } from '@/api/request'
 import type { WorkOrder, WorkOrderItem } from '@/types/workOrder'
 
-const { Option } = Select
 const { TextArea } = Input
 
 const STATUS_COLORS: Record<number, string> = {
@@ -44,13 +42,6 @@ const STATUS_NAMES: Record<number, string> = {
   4: '已归档',
   5: '已取消',
 }
-const PRIORITY_COLORS: Record<number, string> = {
-  1: 'success',
-  2: 'default',
-  3: 'warning',
-  4: 'error',
-}
-const PRIORITY_NAMES: Record<number, string> = { 1: '低', 2: '普通', 3: '高', 4: '紧急' }
 const TYPE_NAMES: Record<number, string> = {
   1: '新增',
   2: '变更',
@@ -85,7 +76,7 @@ const ITEM_STATUS_COLORS: Record<number, string> = {
 const isHistorical = (s: number) => s === 3 || s === 4 || s === 5
 
 const WorkOrderManagement = () => {
-  const [status, setStatus] = useState<number | ''>('')
+  const [status] = useState<number | ''>('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
@@ -94,7 +85,6 @@ const WorkOrderManagement = () => {
   const [extLoading, setExtLoading] = useState(false)
   const [form] = Form.useForm()
   const queryClient = useQueryClient()
-  const { user } = useAuthStore()
 
   const {
     data: orderData,
@@ -109,15 +99,6 @@ const WorkOrderManagement = () => {
     },
   })
 
-  const acceptMutation = useMutation({
-    mutationFn: (id: number) => workOrderApi.accept(id),
-    onSuccess: () => {
-      message.success('工单已接受')
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-    },
-    onError: () => message.error('接受失败'),
-  })
-
   const completeMutation = useMutation({
     mutationFn: (id: number) => workOrderApi.complete(id),
     onSuccess: () => {
@@ -125,15 +106,6 @@ const WorkOrderManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] })
     },
     onError: () => message.error('完成失败'),
-  })
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason: string }) => workOrderApi.reject(id, reason),
-    onSuccess: () => {
-      message.success('工单已拒绝')
-      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-    },
-    onError: () => message.error('拒绝失败'),
   })
 
   const createMutation = useMutation({
@@ -157,40 +129,11 @@ const WorkOrderManagement = () => {
     onError: () => message.error('执行失败'),
   })
 
-  const handleAccept = (record: WorkOrder) => {
-    Modal.confirm({
-      title: '接受工单',
-      content: `接受工单 ${record.workOrderNo}？将指派给您（${user?.username || '当前用户'}）处理`,
-      onOk: () => acceptMutation.mutate(record.id),
-    })
-  }
   const handleComplete = (record: WorkOrder) => {
     Modal.confirm({
       title: '完成工单',
       content: `标记工单 ${record.workOrderNo} 为已完成？`,
       onOk: () => completeMutation.mutate(record.id),
-    })
-  }
-  const handleReject = (record: WorkOrder) => {
-    let r = ''
-    Modal.confirm({
-      title: '拒绝工单',
-      content: (
-        <div>
-          <p>拒绝工单 {record.workOrderNo}</p>
-          <TextArea
-            rows={3}
-            placeholder="请输入拒绝原因"
-            onChange={(e) => {
-              r = e.target.value
-            }}
-          />
-        </div>
-      ),
-      onOk: () => {
-        if (r) rejectMutation.mutate({ id: record.id, reason: r })
-        else message.warning('请输入拒绝原因')
-      },
     })
   }
   const handleViewDetail = (record: WorkOrder) => {

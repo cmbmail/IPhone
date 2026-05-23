@@ -76,19 +76,13 @@ const CHARGE_TABS = [
   { key: '3', label: '闪信费用', icon: <ThunderboltOutlined />, color: '#fa8c16' },
 ]
 
-const statusMap: Record<string, { text: string; color: string }> = {
-  0: { text: '待处理', color: 'orange' },
-  1: { text: '已处理', color: 'green' },
-  2: { text: '异常', color: 'red' },
-}
-
 const fmtMoney = (v: number | null | undefined) => {
-  if (v == null) return '-'
+  if (v === null || v === undefined) return '-'
   return `¥${Number(v).toFixed(2)}`
 }
 
 const fmtDuration = (v: number | null | undefined) => {
-  if (v == null || v === 0) return '-'
+  if (v === null || v === undefined || v === 0) return '-'
   const h = Math.floor(v / 3600)
   const m = Math.floor((v % 3600) / 60)
   const s = v % 60
@@ -223,7 +217,7 @@ const recordingColumns: ColumnsType<BillRecord> = [
     key: 'days',
     width: 80,
     align: 'center',
-    render: (v: number) => (v != null ? `${v}天` : '-'),
+    render: (v: number) => (v !== null && v !== undefined ? `${v}天` : '-'),
   },
   {
     title: '费用小计',
@@ -298,7 +292,7 @@ const flashSmsColumns: ColumnsType<BillRecord> = [
     width: 100,
     align: 'right',
     render: (v: number) =>
-      v != null ? (
+      v !== null && v !== undefined ? (
         <span style={{ fontWeight: 700, color: '#fa8c16' }}>{v.toLocaleString()} 条</span>
       ) : (
         '-'
@@ -310,7 +304,7 @@ const flashSmsColumns: ColumnsType<BillRecord> = [
     width: 120,
     align: 'right',
     render: (_: unknown, r: BillRecord) =>
-      r.sendCount != null ? (
+      r.sendCount !== null && r.sendCount !== undefined ? (
         <span style={{ fontWeight: 700, color: '#fa8c16' }}>¥{(r.sendCount * 0.1).toFixed(2)}</span>
       ) : (
         '-'

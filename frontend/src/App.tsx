@@ -1,12 +1,10 @@
 import { useState, lazy, Suspense } from 'react'
-import { Spin } from 'antd'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import {
+  Spin,
   ConfigProvider,
   Menu,
   Button,
   Avatar,
-  Badge,
   Input,
   Dropdown,
   Modal,
@@ -14,11 +12,10 @@ import {
   Popconfirm,
   message,
 } from 'antd'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BellOutlined,
-  SearchOutlined,
   LogoutOutlined,
   LockOutlined,
   TeamOutlined,

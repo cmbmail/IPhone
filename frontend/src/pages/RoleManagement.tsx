@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { request } from '../api/request'
 
 import {
   Table,
@@ -37,12 +36,7 @@ const RoleManagement: React.FC = () => {
   const [editingRole, setEditingRole] = useState<SysRole | null>(null)
   const [allPermissions, setAllPermissions] = useState<Record<string, SysPermission[]>>({})
   const [rolePermissionIds, setRolePermissionIds] = useState<number[]>([])
-  const [roleUsers, setRoleUsers] = useState<
-    { id: number; username: string; employee_no: string; role: string; status: string }[]
-  >([])
-  const [userLoading, setUserLoading] = useState(false)
   const [form] = Form.useForm()
-  const [permForm] = Form.useForm()
 
   const fetchRoles = async () => {
     setLoading(true)
@@ -184,37 +178,6 @@ const RoleManagement: React.FC = () => {
     return checkedCount > 0 && checkedCount < modulePermIds.length
   }
 
-  // ======== View Users ========
-
-  const openUserModal = async (role: SysRole) => {
-    setEditingRole(role)
-    setUserModalOpen(true)
-    setUserLoading(true)
-    try {
-      // Use request utility instead of raw fetch
-      const res = await request.get('/roles/' + role.id + '/user-count')
-      const countData = await res.json()
-      const count = countData?.data
-      if (count > 0) {
-        // Query users by role_id via /employees endpoint is not available
-        // We'll show the count only for now
-        // Fetch actual users for this role
-        try {
-          const res = await request.get(`/roles/${record.id}/users`)
-          setRoleUsers(res.data?.data || [])
-        } catch {
-          setRoleUsers([])
-        }
-      } else {
-        setRoleUsers([])
-      }
-    } catch {
-      setRoleUsers([])
-    } finally {
-      setUserLoading(false)
-    }
-  }
-
   // ======== Columns ========
 
   const columns = [
@@ -298,8 +261,6 @@ const RoleManagement: React.FC = () => {
       ),
     },
   ]
-
-  const permCountMap: Record<number, number> = {}
 
   const totalPermissions = Object.values(allPermissions).flat().length
 

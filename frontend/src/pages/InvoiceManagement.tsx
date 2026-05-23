@@ -39,7 +39,7 @@ const InvoiceManagement = () => {
   const [status, setStatus] = useState<number | ''>('')
   const [selectedOrgId, setSelectedOrgId] = useState<number>(1)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [uploading, setUploading] = useState(false)
+  const [, setUploading] = useState(false)
   const queryClient = useQueryClient()
 
   const months = Array.from({ length: 12 }, (_, i) => {
@@ -139,14 +139,14 @@ const InvoiceManagement = () => {
       dataIndex: 'amount',
       key: 'amount',
       width: 120,
-      render: (val: number | null) => (val != null ? '\u00A5' + val.toFixed(2) : '-'),
+      render: (val: number | null) => (val !== null ? '\u00A5' + val.toFixed(2) : '-'),
     },
     {
       title: '税额',
       dataIndex: 'taxAmount',
       key: 'taxAmount',
       width: 100,
-      render: (val: number | null) => (val != null ? '\u00A5' + val.toFixed(2) : '-'),
+      render: (val: number | null) => (val !== null ? '\u00A5' + val.toFixed(2) : '-'),
     },
     { title: '开票日期', dataIndex: 'invoiceDate', key: 'invoiceDate', width: 120 },
     { title: '账单月份', dataIndex: 'billMonth', key: 'billMonth', width: 100 },

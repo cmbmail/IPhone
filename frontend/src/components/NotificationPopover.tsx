@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, Button, List, Popover, Space, Spin, Empty } from 'antd'
+import { Badge, Button, List, Popover, Spin, Empty } from 'antd'
 import { BellOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api/notification'

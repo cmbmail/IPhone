@@ -1,18 +1,5 @@
 import { useState } from 'react'
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Tag,
-  message,
-  Space,
-  Drawer,
-  Descriptions,
-  Timeline,
-} from 'antd'
+import { Table, Button, Modal, Form, Input, Tag, message, Space, Drawer, Descriptions } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { phoneDeviceApi } from '@/api/phoneDevice'
 
@@ -57,16 +44,6 @@ const DeviceManagement = () => {
     enabled: !!selectedDevice && detailOpen,
   })
 
-  const { data: devHistory } = useQuery({
-    queryKey: ['device-history', selectedDevice?.id],
-    queryFn: async () => {
-      if (!selectedDevice) return []
-      const r = await phoneDeviceApi.getHistory(selectedDevice.id)
-      return r.data.data || []
-    },
-    enabled: !!selectedDevice && detailOpen,
-  })
-
   const onSuccess = (msg: string) => {
     message.success(msg)
     qc.invalidateQueries({ queryKey: ['phone-devices'] })
@@ -91,7 +68,7 @@ const DeviceManagement = () => {
     onSuccess: () => onSuccess('停用成功'),
   })
   const reactivateMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.reactivate(selectedDevice.id),
+    mutationFn: (_d: any) => phoneDeviceApi.reactivate(selectedDevice.id),
     onSuccess: () => onSuccess('恢复成功'),
   })
   const repairMut = useMutation({
@@ -99,7 +76,7 @@ const DeviceManagement = () => {
     onSuccess: () => onSuccess('送修成功'),
   })
   const repairDoneMut = useMutation({
-    mutationFn: (d: any) => phoneDeviceApi.repairDone(selectedDevice.id),
+    mutationFn: (_d: any) => phoneDeviceApi.repairDone(selectedDevice.id),
     onSuccess: () => onSuccess('修复成功'),
   })
   const retireMut = useMutation({
