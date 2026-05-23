@@ -56,7 +56,7 @@ const Dashboard = () => {
           request.get('/users'),
           request.get('/bill-allocations', { params: { billMonth: new Date().toISOString().slice(0, 7), page: 0, size: 5 } }),
           announcementApi.getLatest(),
-          request.get('/work-orders', { params: { page: 0, size: 10 } }),
+          request.get('/work-orders', { params: { status: 0, page: 0, size: 10 } }),
         ])
         if (phoneRes.status === 'fulfilled') setPhoneStats(phoneRes.value.data.data)
         if (deviceRes.status === 'fulfilled') setDeviceStats(deviceRes.value.data.data)
@@ -183,7 +183,7 @@ const Dashboard = () => {
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={18}>
-          <Card title="最近工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
+          <Card title="待处理工单" extra={<a href="/work-orders" style={{ fontSize: 13 }}>查看全部</a>}>
             <Table
               columns={woColumns}
               dataSource={workOrders}
