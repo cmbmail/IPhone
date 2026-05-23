@@ -9,22 +9,7 @@ export interface ExtensionPool {
   updatedBy?: string
 }
 
-export interface CreateExtensionPoolDTO {
-  orgId: number
-  startNumber: string
-  endNumber: string
-}
-
 export interface UpdateExtensionPoolDTO {
   startNumber?: string
   endNumber?: string
-}
-
-export interface ExtensionPoolUsage {
-  poolId: number
-  totalCount: number
-  usedCount: number
-  idleCount: number
-  usageRate: number
-  status: 'green' | 'yellow' | 'red'
 }

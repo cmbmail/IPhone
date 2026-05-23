@@ -59,12 +59,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    /** @deprecated Use generateToken with permissions list instead */
-    @Deprecated
-    public String generateToken(String username, String role, Long scopeOrgId) {
-        return generateToken(username, role, scopeOrgId, null, List.of());
-    }
-
     public String extractUsername(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

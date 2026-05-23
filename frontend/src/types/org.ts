@@ -28,7 +28,3 @@ export interface UpdateOrgDTO {
   type?: 1 | 2 | 3
   status?: 0 | 1
 }
-
-export interface OrgTreeNode extends OrgStructure {
-  children: OrgTreeNode[]
-}
