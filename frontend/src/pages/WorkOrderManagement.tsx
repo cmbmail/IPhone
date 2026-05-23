@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import { Table, Button, Card, Select, Tag, Space, Modal, message, Input, Row, Col, Statistic, Drawer, Descriptions, Timeline, Form } from 'antd'
+import { Table, Button, Card, Select, Tag, Space, Modal, message, Input, Row, Col, Statistic, Drawer, Descriptions, Timeline, Form, Dropdown } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workOrderApi } from '@/api/workOrder'
 import { useAuthStore } from '@/stores/authStore'
-import { PlusOutlined, CheckOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons'
+import { PlusOutlined, CheckOutlined, EyeOutlined } from '@ant-design/icons'
 import { request } from '@/api/request'
 import type { WorkOrder, WorkOrderItem } from '@/types/workOrder'
 
@@ -22,7 +22,6 @@ const ITEM_STATUS_COLORS: Record<number, string> = { 0: 'processing', 1: 'proces
 
 const WorkOrderManagement = () => {
   const [status, setStatus] = useState<number | ''>('')
-  const [typeSelectOpen, setTypeSelectOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
@@ -80,7 +79,6 @@ const WorkOrderManagement = () => {
 
   // 选择工单类型后，进入创建表单
   const handleTypeSelect = (type: number) => {
-    setTypeSelectOpen(false)
     setSelectedType(type)
     form.resetFields()
     form.setFieldsValue({ type })
@@ -159,21 +157,26 @@ const WorkOrderManagement = () => {
             </Select>
             <Button onClick={() => refetch()}>刷新</Button>
           </Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setTypeSelectOpen(true)}>新建</Button>
+          <Dropdown
+            menu={{
+              items: Object.entries(TYPE_NAMES).map(([value, label]) => ({
+                key: value,
+                label: (
+                  <span>
+                    <Tag color={TYPE_COLORS[Number(value)]} style={{ marginRight: 6 }}>{label}</Tag>
+                    创建{label}工单
+                  </span>
+                ),
+              })),
+              onClick: ({ key }) => handleTypeSelect(Number(key)),
+            }}
+            trigger={['click']}
+          >
+            <Button type="primary" icon={<PlusOutlined />}>新建</Button>
+          </Dropdown>
         </div>
         <Table columns={columns} dataSource={orders} loading={isLoading} rowKey="id" pagination={{ pageSize: 20, total: orderData?.data?.data?.totalElements }} />
       </Card>
-
-      {/* 工单类型选择 */}
-      <Modal title="选择工单类型" open={typeSelectOpen} onCancel={() => setTypeSelectOpen(false)} footer={null} width={360}>
-        <Space direction="vertical" style={{ width: '100%' }} size={12}>
-          {Object.entries(TYPE_NAMES).map(([value, label]) => (
-            <Button key={value} block size="large" style={{ textAlign: 'left', height: 48, fontSize: 15 }} onClick={() => handleTypeSelect(Number(value))}>
-              <Tag color={TYPE_COLORS[Number(value)]} style={{ marginRight: 8 }}>{label}</Tag>创建{label}工单
-            </Button>
-          ))}
-        </Space>
-      </Modal>
 
       {/* 创建工单表单 */}
       <Modal
