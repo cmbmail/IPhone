@@ -183,7 +183,12 @@ public class BillImportService {
 
     private void fillFlashSms(BillRaw b, String[] v) {
         // 闪信费用: 月份(0) 主号码(1) 子号码(2) 地市(3) 下发量(4)
-        // Note: billMonth already set by buildBillRaw from parameter; Excel col0 is just display
+        // Override billMonth with per-row month from Excel (e.g. "202601")
+        String rowMonth = s(v, 0);
+        if (!rowMonth.isEmpty() && rowMonth.matches("^\\d{6}$")) {
+            // Add dash for consistent format: "202601" → "2026-01"
+            b.setBillMonth(rowMonth.substring(0, 4) + "-" + rowMonth.substring(4, 6));
+        }
         b.setPhoneNumber(s(v, 1));  // 主号码
         b.setSubNumber(s(v, 2));    // 子号码
         b.setCity(s(v, 3));

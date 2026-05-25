@@ -587,7 +587,7 @@ const BillManagement = () => {
                 </li>
               )}
               {activeTab === '2' && <li>Sheet名需含「彩铃」，列：分机号、号码、开通时间、费用</li>}
-              {activeTab === '3' && <li>闪信费用按季度结算，请单独上传闪信费用文件</li>}
+              {activeTab === '3' && <li>闪信费用按Excel中「月份」列自动分配到对应月度账单</li>}
               {activeTab === '3' && (
                 <li>Sheet名需含「闪信」，列：月份、主号码、子号码、地市、下发量</li>
               )}
