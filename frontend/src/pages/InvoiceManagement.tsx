@@ -12,27 +12,29 @@ import {
   Row,
   Col,
   Statistic,
+  Alert,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { invoiceApi, type Invoice } from '@/api/invoice'
-import { request, ApiGet } from '@/api/request'
+import { invoiceApi, type Invoice, type BatchUploadResult } from '@/api/invoice'
+import { ApiGet } from '@/api/request'
 import type { OrgStructure } from '@/types/org'
 import { UploadOutlined, FilePdfOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons'
 
 const { Option } = Select
 
+// Backend status: 0=PENDING, 1=DISTRIBUTED, 2=READ, 3=CONFIRMED
 const STATUS_COLORS: Record<number, string> = {
   0: 'warning',
   1: 'success',
   2: 'processing',
-  3: 'error',
+  3: 'default',
 }
 
 const STATUS_NAMES: Record<number, string> = {
   0: '待处理',
-  1: '已确认',
-  2: '已分发',
-  3: '已拒绝',
+  1: '已分发',
+  2: '已读',
+  3: '已确认',
 }
 
 interface InvoiceListParams {
@@ -45,10 +47,14 @@ interface InvoiceListParams {
 const InvoiceManagement = () => {
   const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
   const [status, setStatus] = useState<number | ''>('')
-  const [selectedOrgId, setSelectedOrgId] = useState<number>(1)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [, setUploading] = useState(false)
+  const [fileList, setFileList] = useState<File[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<BatchUploadResult | null>(null)
   const queryClient = useQueryClient()
+
+  // Convert "2026-05" to "202605" for backend
+  const billMonthForApi = billMonth.replace('-', '')
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
@@ -56,7 +62,7 @@ const InvoiceManagement = () => {
     return d.toISOString().slice(0, 7)
   })
 
-  const { data: orgsData } = useQuery({
+  useQuery({
     queryKey: ['orgs'],
     queryFn: async () => {
       const response = await ApiGet<OrgStructure[]>('/orgs')
@@ -69,17 +75,17 @@ const InvoiceManagement = () => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['invoices', billMonth, status],
+    queryKey: ['invoices', billMonthForApi, status],
     queryFn: async () => {
-      const params: InvoiceListParams = { billMonth, page: 0, size: 100 }
-      if (status) params.status = status
+      const params: InvoiceListParams = { billMonth: billMonthForApi, page: 0, size: 100 }
+      if (status !== '') params.status = status
       return invoiceApi.getList(params)
     },
   })
 
   const { data: statsData } = useQuery({
-    queryKey: ['invoice-stats', billMonth],
-    queryFn: () => ApiGet<Record<string, number>>('/invoices/stats', { params: { billMonth } }),
+    queryKey: ['invoice-stats', billMonthForApi],
+    queryFn: () => ApiGet<Record<string, number>>('/invoices/statistics', { params: { billMonth: billMonthForApi } }),
   })
 
   const confirmMutation = useMutation({
@@ -102,28 +108,30 @@ const InvoiceManagement = () => {
     onError: () => message.error('删除发票失败'),
   })
 
-  const handleUpload = async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('billMonth', billMonth)
-    formData.append('sourceOrgId', String(selectedOrgId || 1))
-
+  const handleBatchUpload = async () => {
+    if (fileList.length === 0) {
+      message.warning('请选择至少一个PDF文件')
+      return
+    }
     setUploading(true)
+    setUploadResult(null)
     try {
-      await request.post('/invoices/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      message.success('发票上传成功')
-      queryClient.invalidateQueries({ queryKey: ['invoices'] })
-      queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
-      setIsUploadModalOpen(false)
+      const result = await invoiceApi.batchUpload(fileList, billMonthForApi)
+      setUploadResult(result)
+      if (result.success > 0) {
+        message.success(`成功上传 ${result.success} 个发票`)
+        queryClient.invalidateQueries({ queryKey: ['invoices'] })
+        queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
+      }
+      if (result.failed > 0) {
+        message.warning(`${result.failed} 个文件上传失败，请查看详情`)
+      }
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : '上传失败'
+      const msg = error instanceof Error ? error.message : '批量上传失败'
       message.error(msg)
     } finally {
       setUploading(false)
     }
-    return false
   }
 
   const handleConfirm = (record: Invoice) => {
@@ -160,12 +168,11 @@ const InvoiceManagement = () => {
       render: (val: number | null) => (val !== null ? '\u00A5' + val.toFixed(2) : '-'),
     },
     { title: '开票日期', dataIndex: 'invoiceDate', key: 'invoiceDate', width: 120 },
-    { title: '账单月份', dataIndex: 'billMonth', key: 'billMonth', width: 100 },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 100,
       render: (status: number) => (
         <Tag color={STATUS_COLORS[status] || 'default'}>{STATUS_NAMES[status]}</Tag>
       ),
@@ -176,7 +183,7 @@ const InvoiceManagement = () => {
       width: 150,
       render: (_: unknown, record: Invoice) => (
         <Space>
-          {record.status === 0 && (
+          {(record.status === 0 || record.status === 1) && (
             <Button
               size="small"
               type="primary"
@@ -202,6 +209,12 @@ const InvoiceManagement = () => {
   const invoices = allocationData?.content || []
   const stats = statsData
 
+  const closeUploadModal = () => {
+    setIsUploadModalOpen(false)
+    setFileList([])
+    setUploadResult(null)
+  }
+
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -222,17 +235,17 @@ const InvoiceManagement = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="已确认"
-              value={stats?.confirmed || 0}
-              valueStyle={{ color: '#3f8600' }}
+              title="已分发"
+              value={stats?.distributed || 0}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
             <Statistic
-              title="已分发"
-              value={stats?.distributed || 0}
+              title="已确认"
+              value={stats?.confirmed || 0}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -256,15 +269,16 @@ const InvoiceManagement = () => {
             placeholder="选择状态"
           >
             <Option value={0}>待处理</Option>
-            <Option value={1}>已确认</Option>
-            <Option value={2}>已分发</Option>
+            <Option value={1}>已分发</Option>
+            <Option value={2}>已读</Option>
+            <Option value={3}>已确认</Option>
           </Select>
           <Button
             type="primary"
             icon={<UploadOutlined />}
             onClick={() => setIsUploadModalOpen(true)}
           >
-            上传发票
+            批量上传
           </Button>
           <Button onClick={() => refetch()}>刷新</Button>
         </Space>
@@ -279,63 +293,106 @@ const InvoiceManagement = () => {
       </Card>
 
       <Modal
-        title="上传发票"
+        title="批量上传发票"
         open={isUploadModalOpen}
-        onCancel={() => setIsUploadModalOpen(false)}
-        footer={null}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Select
-            value={billMonth}
-            onChange={setBillMonth}
-            style={{ width: '100%' }}
-            placeholder="选择账单月份"
+        onCancel={closeUploadModal}
+        width={640}
+        footer={[
+          <Button key="cancel" onClick={closeUploadModal}>
+            关闭
+          </Button>,
+          <Button
+            key="upload"
+            type="primary"
+            loading={uploading}
+            disabled={fileList.length === 0}
+            onClick={handleBatchUpload}
           >
-            {months.map((m) => (
-              <Option key={m} value={m}>
-                {m}
-              </Option>
-            ))}
-          </Select>
-          <div style={{ marginBottom: 16 }}>
-            <Select
-              value={selectedOrgId}
-              onChange={setSelectedOrgId}
-              style={{ width: '100%' }}
-              placeholder="选择来源组织"
-            >
-              {(orgsData || []).map((org: OrgStructure) => (
-                <Select.Option key={org.id} value={org.id}>
-                  {org.name}
-                </Select.Option>
+            上传 {fileList.length > 0 ? `(${fileList.length}个文件)` : ''}
+          </Button>,
+        ]}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <div style={{ marginBottom: 8, fontWeight: 500 }}>账单月份</div>
+            <Select value={billMonth} onChange={setBillMonth} style={{ width: '100%' }}>
+              {months.map((m) => (
+                <Option key={m} value={m}>
+                  {m}
+                </Option>
               ))}
             </Select>
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <Select
-              value={selectedOrgId}
-              onChange={setSelectedOrgId}
-              style={{ width: '100%' }}
-              placeholder="选择来源组织"
-            >
-              {(orgsData || []).map((org: OrgStructure) => (
-                <Select.Option key={org.id} value={org.id}>
-                  {org.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
+
+          <Alert
+            type="info"
+            showIcon
+            message="文件命名规则：分行名_其他信息.pdf，例如 北京_202605_001.pdf"
+            description="系统将自动从文件名前缀匹配分行。如未匹配到，将分配至默认组织。"
+          />
+
           <Upload.Dragger
-            accept=".pdf,.jpg,.jpeg,.png"
-            beforeUpload={handleUpload}
-            showUploadList={false}
+            accept=".pdf"
+            multiple
+            beforeUpload={(file) => {
+              setFileList((prev) => [...prev, file])
+              return false // prevent auto upload
+            }}
+            onRemove={(file) => {
+              setFileList((prev) => prev.filter((f) => f !== file))
+              return false
+            }}
+            fileList={fileList.map((f, idx) => ({
+              uid: `${idx}`,
+              name: f.name,
+              status: 'done' as const,
+            }))}
           >
             <p className="ant-upload-drag-icon">
               <FilePdfOutlined />
             </p>
-            <p className="ant-upload-text">点击或拖拽发票文件上传</p>
-            <p className="ant-upload-hint">支持 PDF、JPG、PNG 格式</p>
+            <p className="ant-upload-text">点击或拖拽PDF文件上传</p>
+            <p className="ant-upload-hint">支持同时选择多个PDF文件</p>
           </Upload.Dragger>
+
+          {uploadResult && (
+            <div>
+              <Alert
+                type={uploadResult.failed > 0 ? 'warning' : 'success'}
+                showIcon
+                message={`上传完成：成功 ${uploadResult.success} 个，失败 ${uploadResult.failed} 个`}
+                style={{ marginBottom: 8 }}
+              />
+              {uploadResult.details.length > 0 && (
+                <Table
+                  size="small"
+                  pagination={false}
+                  dataSource={uploadResult.details.map((d, i) => ({ ...d, key: i }))}
+                  columns={[
+                    { title: '文件名', dataIndex: 'fileName', key: 'fileName' },
+                    { title: '匹配组织', dataIndex: 'matchedOrg', key: 'matchedOrg', render: (v: string) => v || '-' },
+                    {
+                      title: '状态',
+                      dataIndex: 'status',
+                      key: 'status',
+                      render: (v: string) =>
+                        v === 'success' ? (
+                          <Tag color="success">成功</Tag>
+                        ) : (
+                          <Tag color="error">失败</Tag>
+                        ),
+                    },
+                    {
+                      title: '原因',
+                      dataIndex: 'reason',
+                      key: 'reason',
+                      render: (v: string) => v || '-',
+                    },
+                  ]}
+                />
+              )}
+            </div>
+          )}
         </Space>
       </Modal>
     </div>

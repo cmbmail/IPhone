@@ -1,4 +1,4 @@
-import { ApiGet, ApiPost, ApiDelete, type PagedData } from './request'
+import { ApiGet, ApiPost, ApiDelete, type PagedData, request } from './request'
 
 export interface Invoice {
   id: number
@@ -15,6 +15,20 @@ export interface Invoice {
   createdAt?: string
 }
 
+export interface BatchUploadResult {
+  total: number
+  success: number
+  failed: number
+  details: Array<{
+    fileName: string
+    status: 'success' | 'failed'
+    reason?: string
+    invoiceId?: number
+    invoiceNo?: string
+    matchedOrg?: string
+  }>
+}
+
 export const invoiceApi = {
   getList: (params?: {
     billMonth?: string
@@ -25,4 +39,12 @@ export const invoiceApi = {
   getById: (id: number) => ApiGet<Invoice>(`/invoices/${id}`),
   confirm: (id: number) => ApiPost(`/invoices/${id}/confirm`),
   delete: (id: number) => ApiDelete(`/invoices/${id}`),
+  batchUpload: (files: File[], billMonth: string) => {
+    const formData = new FormData()
+    files.forEach((file) => formData.append('files', file))
+    formData.append('billMonth', billMonth)
+    return request.post<unknown, BatchUploadResult>('/invoices/batch-upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }

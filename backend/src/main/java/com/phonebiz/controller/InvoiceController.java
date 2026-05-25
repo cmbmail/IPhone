@@ -46,6 +46,21 @@ public class InvoiceController {
         }
     }
 
+    @PostMapping("/batch-upload")
+    @PreAuthorize("hasAuthority('inv:create') or hasRole('ADMIN')")
+    @AuditLog(module = "invoice", operation = "批量上传发票", targetType = "Invoice")
+    public ApiResponse<Map<String, Object>> batchUploadInvoices(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestParam String billMonth,
+            Authentication authentication) {
+        if (files == null || files.length == 0) {
+            return ApiResponse.error(400, "请选择至少一个文件");
+        }
+        Map<String, Object> result = invoiceService.batchUploadInvoices(
+                files, billMonth, authentication != null ? authentication.getName() : "system");
+        return ApiResponse.success(result);
+    }
+
     @GetMapping
     public ApiResponse<Page<Invoice>> getInvoices(
             @RequestParam(required = false) String billMonth,

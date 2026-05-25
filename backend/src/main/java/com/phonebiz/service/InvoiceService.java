@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -343,5 +344,181 @@ public class InvoiceService {
         stats.put("read", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_READ));
         stats.put("confirmed", invoiceRepository.countByBillMonthAndStatus(billMonth, Invoice.INV_CONFIRMED));
         return stats;
+    }
+
+    // ======================== Batch Upload ========================
+
+    /**
+     * Batch upload invoices. Filename convention: 分行名_其他.pdf
+     * The prefix before the first '_' or '-' is matched against org_structure names.
+     */
+    @Transactional
+    public Map<String, Object> batchUploadInvoices(MultipartFile[] files, String billMonth, String operator) {
+        if (!BILL_MONTH_PATTERN.matcher(billMonth).matches()) {
+            throw new BusinessException(ErrorCode.SYS_002, "Invalid billMonth format, expected yyyyMM");
+        }
+
+        // Pre-load all org structures for matching
+        List<OrgStructure> allOrgs = orgStructureRepository.findAll();
+        Map<String, OrgStructure> orgNameMap = new LinkedHashMap<>();
+        for (OrgStructure org : allOrgs) {
+            orgNameMap.put(org.getName(), org);
+        }
+
+        int successCount = 0;
+        int failCount = 0;
+        List<Map<String, Object>> details = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String originalFileName = file.getOriginalFilename();
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("fileName", originalFileName);
+
+            try {
+                // Validate PDF
+                if (originalFileName == null || (!originalFileName.toLowerCase().endsWith(".pdf"))) {
+                    detail.put("status", "failed");
+                    detail.put("reason", "仅支持PDF文件");
+                    failCount++;
+                    details.add(detail);
+                    continue;
+                }
+
+                byte[] fileBytes = file.getBytes();
+                if (fileBytes.length < 5 || fileBytes[0] != 0x25 || fileBytes[1] != 0x50
+                        || fileBytes[2] != 0x44 || fileBytes[3] != 0x46 || fileBytes[4] != 0x2D) {
+                    detail.put("status", "failed");
+                    detail.put("reason", "无效的PDF文件格式");
+                    failCount++;
+                    details.add(detail);
+                    continue;
+                }
+
+                // Extract branch name from filename prefix
+                String branchName = extractBranchName(originalFileName);
+                OrgStructure matchedOrg = matchOrgByBranchName(branchName, orgNameMap);
+
+                Long sourceOrgId;
+                String sourceOrgName;
+                if (matchedOrg != null) {
+                    sourceOrgId = matchedOrg.getId();
+                    sourceOrgName = matchedOrg.getName();
+                    detail.put("matchedOrg", sourceOrgName);
+                } else {
+                    // Fallback: use the first top-level org (集团) as default
+                    sourceOrgId = allOrgs.isEmpty() ? 1L : allOrgs.get(0).getId();
+                    sourceOrgName = getSourceOrgName(sourceOrgId);
+                    detail.put("matchedOrg", sourceOrgName + "(默认-未匹配到分行)");
+                    log.warn("Batch upload: filename '{}' branch '{}' not matched, using default org",
+                            originalFileName, branchName);
+                }
+
+                // Check duplicate invoiceNo
+                String invoiceNo = extractInvoiceNo(originalFileName);
+                if (invoiceRepository.findByInvoiceNo(invoiceNo).isPresent()) {
+                    detail.put("status", "failed");
+                    detail.put("reason", "发票号重复: " + invoiceNo);
+                    failCount++;
+                    details.add(detail);
+                    continue;
+                }
+
+                // Save file
+                String storagePath = ensureStoragePath(billMonth);
+                String storedFileName = generateStoredFileName(invoiceNo, originalFileName);
+                Path filePath = Paths.get(storagePath, storedFileName);
+                Files.copy(new java.io.ByteArrayInputStream(fileBytes), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                String fileHash = calculateSHA256(fileBytes);
+
+                // Create invoice
+                Invoice invoice = Invoice.builder()
+                        .invoiceNo(invoiceNo)
+                        .billMonth(billMonth)
+                        .sourceOrgId(sourceOrgId)
+                        .sourceOrgName(sourceOrgName)
+                        .recipientOrgId(sourceOrgId)
+                        .build();
+
+                invoice = invoiceRepository.save(invoice);
+
+                InvoiceFile invoiceFile = InvoiceFile.builder()
+                        .invoiceId(invoice.getId())
+                        .fileName(originalFileName)
+                        .filePath(filePath.toString())
+                        .fileSize((long) fileBytes.length)
+                        .md5(fileHash)
+                        .build();
+                invoiceFileRepository.save(invoiceFile);
+
+                processOcrAndDistribute(invoice.getId(), filePath);
+
+                detail.put("status", "success");
+                detail.put("invoiceId", invoice.getId());
+                detail.put("invoiceNo", invoiceNo);
+                successCount++;
+            } catch (Exception e) {
+                log.error("Batch upload failed for file: {}", originalFileName, e);
+                detail.put("status", "failed");
+                detail.put("reason", "处理异常: " + e.getMessage());
+                failCount++;
+            }
+            details.add(detail);
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("total", files.length);
+        result.put("success", successCount);
+        result.put("failed", failCount);
+        result.put("details", details);
+        return result;
+    }
+
+    /**
+     * Extract branch name prefix from filename.
+     * Convention: 分行名_其余部分.pdf or 分行名-其余部分.pdf
+     * e.g. "北京_202605_001.pdf" → "北京"
+     */
+    private String extractBranchName(String fileName) {
+        // Remove extension first
+        String nameWithoutExt = fileName;
+        int dotIdx = fileName.lastIndexOf('.');
+        if (dotIdx > 0) {
+            nameWithoutExt = fileName.substring(0, dotIdx);
+        }
+        // Split by first '_' or '-'
+        int sepIdx = -1;
+        for (int i = 0; i < nameWithoutExt.length(); i++) {
+            char c = nameWithoutExt.charAt(i);
+            if (c == '_' || c == '-') {
+                sepIdx = i;
+                break;
+            }
+        }
+        if (sepIdx > 0) {
+            return nameWithoutExt.substring(0, sepIdx);
+        }
+        return nameWithoutExt; // No separator, use entire name (without ext)
+    }
+
+    /**
+     * Match branch name against org structure names.
+     * Supports partial matching: "北京" matches "北京分公司"
+     */
+    private OrgStructure matchOrgByBranchName(String branchName, Map<String, OrgStructure> orgNameMap) {
+        if (branchName == null || branchName.isEmpty()) {
+            return null;
+        }
+        // Exact match first
+        if (orgNameMap.containsKey(branchName)) {
+            return orgNameMap.get(branchName);
+        }
+        // Partial match: branchName is contained in org name
+        for (Map.Entry<String, OrgStructure> entry : orgNameMap.entrySet()) {
+            if (entry.getKey().contains(branchName) || branchName.contains(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 }
