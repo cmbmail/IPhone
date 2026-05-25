@@ -404,8 +404,21 @@ const BillManagement = () => {
   const importMutation = useMutation({
     mutationFn: ({ file, month }: { file: File; month: string }) =>
       billApi.importBills(month, file),
-    onSuccess: () => {
-      message.success('导入成功')
+    onSuccess: (data) => {
+      const result = data as { importedCount?: number; monthDistribution?: Record<string, number> }
+      const count = result?.importedCount ?? 0
+      const dist = result?.monthDistribution
+      if (dist && Object.keys(dist).length > 0) {
+        const months = Object.keys(dist)
+        const msg = months.map(m => `${m}: ${dist[m]}条`).join('，')
+        message.success(`导入成功，共 ${count} 条（${msg}）`)
+        // Auto-switch to the first month that has data (useful for flash SMS)
+        if (months.length > 0 && months[0] !== billMonth) {
+          setBillMonth(months[0])
+        }
+      } else {
+        message.success(`导入成功，共 ${count} 条`)
+      }
       setIsUploadModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
@@ -418,8 +431,20 @@ const BillManagement = () => {
   const importAndAllocateMutation = useMutation({
     mutationFn: ({ file, month }: { file: File; month: string }) =>
       billApi.importAndAllocate(month, file),
-    onSuccess: () => {
-      message.success('导入并分摊成功')
+    onSuccess: (data) => {
+      const result = data as { importedCount?: number; monthDistribution?: Record<string, number> }
+      const count = result?.importedCount ?? 0
+      const dist = result?.monthDistribution
+      if (dist && Object.keys(dist).length > 0) {
+        const months = Object.keys(dist)
+        const msg = months.map(m => `${m}: ${dist[m]}条`).join('，')
+        message.success(`导入并分摊成功，共 ${count} 条（${msg}）`)
+        if (months.length > 0 && months[0] !== billMonth) {
+          setBillMonth(months[0])
+        }
+      } else {
+        message.success(`导入并分摊成功，共 ${count} 条`)
+      }
       setIsUploadModalOpen(false)
       queryClient.invalidateQueries({ queryKey: ['bills'] })
     },

@@ -1,9 +1,10 @@
 import { request, ApiDelete } from './request'
 
-export interface BillUploadResponse {
-  code: number
-  data: number
-  message: string
+export interface BillImportResult {
+  importedCount: number
+  billMonth: string
+  monthDistribution: Record<string, number>
+  allocationStatus?: string
 }
 
 export const billApi = {
@@ -12,7 +13,7 @@ export const billApi = {
     formData.append('billMonth', billMonth)
     formData.append('file', file)
     if (operator) formData.append('operator', operator)
-    return request.post<BillUploadResponse>('/bills/import', formData, {
+    return request.post<BillImportResult>('/bills/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
@@ -22,7 +23,7 @@ export const billApi = {
     formData.append('billMonth', billMonth)
     formData.append('file', file)
     if (operator) formData.append('operator', operator)
-    return request.post('/bills/import-and-allocate', formData, {
+    return request.post<BillImportResult>('/bills/import-and-allocate', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },

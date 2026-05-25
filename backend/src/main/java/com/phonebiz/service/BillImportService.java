@@ -43,8 +43,13 @@ public class BillImportService {
 
     @Transactional
     public int importBillRaw(String billMonth, MultipartFile file, String operator) throws IOException {
+        return importBillRawDetailed(billMonth, file, operator).get("importedCount") instanceof Integer c ? c : 0;
+    }
+
+    @Transactional
+    public Map<String, Object> importBillRawDetailed(String billMonthParam, MultipartFile file, String operator) throws IOException {
         // Normalize billMonth to "yyyy-MM" format (e.g. "202605" -> "2026-05")
-        billMonth = normalizeBillMonth(billMonth);
+        String billMonth = normalizeBillMonth(billMonthParam);
 
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.endsWith(".xlsx")) {
@@ -58,6 +63,7 @@ public class BillImportService {
 
         try (Workbook workbook = new XSSFWorkbook(new java.io.ByteArrayInputStream(fileBytes))) {
             int total = 0;
+            Map<String, Integer> monthDistribution = new LinkedHashMap<>();
             for (int si = 0; si < workbook.getNumberOfSheets(); si++) {
                 Sheet sheet = workbook.getSheetAt(si);
                 String sheetName = sheet.getSheetName();
@@ -75,6 +81,9 @@ public class BillImportService {
                     try {
                         BillRaw bill = buildBillRaw(row, billMonth, chargeType, fileName, operator);
                         batch.add(bill);
+                        // Track which month each record ended up in
+                        String actualMonth = bill.getBillMonth();
+                        monthDistribution.merge(actualMonth, 1, Integer::sum);
                         if (batch.size() >= 100) {
                             billRawRepository.saveAll(batch);
                             total += batch.size();
@@ -90,7 +99,12 @@ public class BillImportService {
                 }
             }
             log.info("Imported {} records from {}", total, fileName);
-            return total;
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("billMonth", billMonth);
+            result.put("importedCount", total);
+            result.put("monthDistribution", monthDistribution);
+            return result;
         }
     }
 

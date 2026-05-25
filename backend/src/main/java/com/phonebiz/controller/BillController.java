@@ -59,13 +59,12 @@ public class BillController {
     @PostMapping("/import")
     @PreAuthorize("hasAuthority('bill:import') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "导入账单", targetType = "BillRaw")
-    public ApiResponse<Integer> importBills(@RequestParam String billMonth,
+    public ApiResponse<Map<String, Object>> importBills(@RequestParam String billMonth,
                                            @RequestParam("file") MultipartFile file,
                                            Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         try {
-            int count = billImportService.importBillRaw(billMonth, file, operator);
-            return ApiResponse.success(count);
+            return ApiResponse.success(billImportService.importBillRawDetailed(billMonth, file, operator));
         } catch (BusinessException e) {
             return ApiResponse.error(e.getErrorCode().getCode(), e.getMessage());
         } catch (Exception e) {
@@ -82,12 +81,12 @@ public class BillController {
                                              Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
         try {
-            int count = billImportService.importBillRaw(billMonth, file, operator);
-            billImportService.processImportAsync(billMonth, operator);
-            Map<String, Object> result = new java.util.LinkedHashMap<>();
-            result.put("billMonth", billMonth);
-            result.put("importedCount", count);
-            result.put("allocationStatus", "processing");
+            Map<String, Object> result = billImportService.importBillRawDetailed(billMonth, file, operator);
+            int count = (Integer) result.get("importedCount");
+            if (count > 0) {
+                billImportService.processImportAsync(billMonth, operator);
+                result.put("allocationStatus", "processing");
+            }
             return ApiResponse.success(result);
         } catch (BusinessException e) {
             return ApiResponse.error(e.getErrorCode().getCode(), e.getMessage());
