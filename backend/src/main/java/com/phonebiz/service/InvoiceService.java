@@ -105,10 +105,26 @@ public class InvoiceService {
     }
 
     private String extractInvoiceNo(String fileName) {
-        Matcher matcher = INVOICE_NO_PATTERN.matcher(fileName);
+        // Remove extension first
+        String nameWithoutExt = fileName;
+        int dotIdx = fileName.lastIndexOf('.');
+        if (dotIdx > 0) {
+            nameWithoutExt = fileName.substring(0, dotIdx);
+        }
+
+        // Try matching 8-20 char alphanumeric sequence first
+        Matcher matcher = INVOICE_NO_PATTERN.matcher(nameWithoutExt);
         if (matcher.find()) {
             return matcher.group();
         }
+
+        // Fallback: use entire filename (without ext) as invoiceNo
+        // This ensures same filename produces same invoiceNo for duplicate detection
+        String sanitized = nameWithoutExt.replaceAll("[^A-Za-z0-9\\u4e00-\\u9fa5_-]", "");
+        if (!sanitized.isEmpty()) {
+            return sanitized;
+        }
+
         return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
 
