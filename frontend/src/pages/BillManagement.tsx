@@ -369,9 +369,6 @@ const BillManagement = () => {
   const chargeType = CHARGE_TABS.find((t) => t.key === activeTab)?.key || activeTab
   const tabConfig = CHARGE_TABS.find((t) => t.key === activeTab)!
 
-  // Convert "2026-05" to "202605" for backend API
-  const billMonthForApi = billMonth.replace('-', '')
-
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
     d.setMonth(d.getMonth() - i)
@@ -379,16 +376,16 @@ const BillManagement = () => {
   })
 
   const { data: billData, isLoading } = useQuery({
-    queryKey: ['bills', billMonthForApi, chargeType, page, pageSize],
+    queryKey: ['bills', billMonth, chargeType, page, pageSize],
     queryFn: async () => {
       return ApiGet<PageData>('/bills', {
-        params: { billMonth: billMonthForApi, chargeType, page, size: pageSize },
+        params: { billMonth, chargeType, page, size: pageSize },
       })
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (password: string) => billApi.delete(billMonthForApi, chargeType, password),
+    mutationFn: (password: string) => billApi.delete(billMonth, chargeType, password),
     onSuccess: () => {
       message.success('删除成功')
       setIsDeleteModalOpen(false)
@@ -433,9 +430,9 @@ const BillManagement = () => {
   })
   const handleUpload = (file: File) => {
     if (uploadMode === 'importAndAllocate') {
-      importAndAllocateMutation.mutate({ file, month: billMonthForApi })
+      importAndAllocateMutation.mutate({ file, month: billMonth })
     } else {
-      importMutation.mutate({ file, month: billMonthForApi })
+      importMutation.mutate({ file, month: billMonth })
     }
     return false
   }

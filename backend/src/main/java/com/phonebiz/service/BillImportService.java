@@ -43,6 +43,9 @@ public class BillImportService {
 
     @Transactional
     public int importBillRaw(String billMonth, MultipartFile file, String operator) throws IOException {
+        // Normalize billMonth to "yyyy-MM" format (e.g. "202605" -> "2026-05")
+        billMonth = normalizeBillMonth(billMonth);
+
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.endsWith(".xlsx")) {
             throw new BusinessException(ErrorCode.SYS_001, "Only .xlsx files are allowed");
@@ -197,6 +200,15 @@ public class BillImportService {
     }
 
     // --- helpers ---
+
+    private String normalizeBillMonth(String bm) {
+        if (bm == null || bm.isEmpty()) return bm;
+        // Already in "yyyy-MM" format
+        if (bm.matches("^\\d{4}-\\d{2}$")) return bm;
+        // Convert "yyyyMM" to "yyyy-MM" (e.g. "202605" -> "2026-05")
+        if (bm.matches("^\\d{6}$")) return bm.substring(0, 4) + "-" + bm.substring(4, 6);
+        return bm;
+    }
 
     private String s(String[] v, int i) {
         return (i >= 0 && i < v.length && v[i] != null) ? v[i].trim() : "";
