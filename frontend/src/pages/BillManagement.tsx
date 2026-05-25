@@ -29,7 +29,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
 import { billApi } from '@/api/bill'
-import { request } from '@/api/request'
+import { ApiGet } from '@/api/request'
 
 const { Option } = Select
 
@@ -37,30 +37,32 @@ interface BillRecord {
   id: number
   billMonth: string
   fileName: string
-  phone_number: string
-  user_id: string
+  phoneNumber: string
+  employeeNo: string
   deptName: string
-  extension_number: string
-  platform_usage_fee: number
-  number_monthly_rent: number
-  outbound_duration: number
-  transfer_outbound_duration: number
-  domestic_charge: number
-  international_duration: number
-  international_charge: number
-  charge_amount: number
-  charge_type: number
-  allocation_time: string | null
-  activation_time: string | null
-  deactivation_time: string | null
-  billing_start_date: string | null
-  billing_end_date: string | null
+  extensionNumber: string
+  platformUsageFee: number
+  numberMonthlyRent: number
+  outboundDuration: number
+  transferOutboundDuration: number
+  domesticCharge: number
+  internationalDuration: number
+  internationalCharge: number
+  chargeAmount: number
+  chargeType: number
+  allocationTime: string | null
+  activationTime: string | null
+  deactivationTime: string | null
+  billingStartDate: string | null
+  billingEndDate: string | null
   days: number
   sendCount: number | null
   remark: string
-  import_status: number
-  imported_by: string
-  imported_at: string
+  importStatus: number
+  importedBy: string
+  importedAt: string
+  city: string | null
+  subNumber: string | null
 }
 
 interface PageData {
@@ -279,11 +281,27 @@ const flashSmsColumns: ColumnsType<BillRecord> = [
     align: 'center',
   },
   {
-    title: '电话号码',
+    title: '主号码',
     dataIndex: 'phoneNumber',
+    key: 'pn',
+    width: 140,
+    render: (v: string) => <span style={{ fontFamily: 'monospace' }}>{v || '-'}</span>,
+    align: 'center',
+  },
+  {
+    title: '子号码',
+    dataIndex: 'subNumber',
     key: 'sn',
     width: 140,
     render: (v: string) => <span style={{ fontFamily: 'monospace' }}>{v || '-'}</span>,
+    align: 'center',
+  },
+  {
+    title: '地市',
+    dataIndex: 'city',
+    key: 'city',
+    width: 100,
+    render: (v: string) => v || '-',
     align: 'center',
   },
   {
@@ -351,6 +369,9 @@ const BillManagement = () => {
   const chargeType = CHARGE_TABS.find((t) => t.key === activeTab)?.key || activeTab
   const tabConfig = CHARGE_TABS.find((t) => t.key === activeTab)!
 
+  // Convert "2026-05" to "202605" for backend API
+  const billMonthForApi = billMonth.replace('-', '')
+
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
     d.setMonth(d.getMonth() - i)
@@ -358,17 +379,16 @@ const BillManagement = () => {
   })
 
   const { data: billData, isLoading } = useQuery({
-    queryKey: ['bills', billMonth, chargeType, page, pageSize],
+    queryKey: ['bills', billMonthForApi, chargeType, page, pageSize],
     queryFn: async () => {
-      const res = await request.get('/bills', {
-        params: { billMonth, chargeType, page, size: pageSize },
+      return ApiGet<PageData>('/bills', {
+        params: { billMonth: billMonthForApi, chargeType, page, size: pageSize },
       })
-      return res.data as PageData
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (password: string) => billApi.delete(billMonth, chargeType, password),
+    mutationFn: (password: string) => billApi.delete(billMonthForApi, chargeType, password),
     onSuccess: () => {
       message.success('删除成功')
       setIsDeleteModalOpen(false)
@@ -413,9 +433,9 @@ const BillManagement = () => {
   })
   const handleUpload = (file: File) => {
     if (uploadMode === 'importAndAllocate') {
-      importAndAllocateMutation.mutate({ file, month: billMonth })
+      importAndAllocateMutation.mutate({ file, month: billMonthForApi })
     } else {
-      importMutation.mutate({ file, month: billMonth })
+      importMutation.mutate({ file, month: billMonthForApi })
     }
     return false
   }
@@ -457,7 +477,7 @@ const BillManagement = () => {
             <Statistic
               title="总金额"
               value={(billData?.content || []).reduce(
-                (s: number, r: BillRecord) => s + (r.charge_amount || 0),
+                (s: number, r: BillRecord) => s + (r.chargeAmount || 0),
                 0
               )}
               prefix="¥"

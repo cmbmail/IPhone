@@ -184,8 +184,8 @@ public class BillImportService {
     private void fillFlashSms(BillRaw b, String[] v) {
         // 闪信费用: 月份(0) 主号码(1) 子号码(2) 地市(3) 下发量(4)
         // Note: billMonth already set by buildBillRaw from parameter; Excel col0 is just display
-        // b.setBillMonth(s(v, 0));  // keep parameter billMonth (e.g. 2026-04) not Excel (e.g. 202601)
-        b.setPhoneNumber(s(v, 1));  // 子号码存入phone_number
+        b.setPhoneNumber(s(v, 1));  // 主号码
+        b.setSubNumber(s(v, 2));    // 子号码
         b.setCity(s(v, 3));
         b.setSendCount(intg(s(v, 4)));
         b.setChargeAmount(BigDecimal.ZERO);  // flash SMS has no per-row charge
