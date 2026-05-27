@@ -12,6 +12,7 @@ import {
   Tooltip,
   Table,
   Tag,
+  Tabs,
 } from 'antd'
 import {
   EditOutlined,
@@ -21,13 +22,54 @@ import {
   StopOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
+  PhoneOutlined,
 } from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
 import type { ColumnsType } from 'antd/es/table'
 import type { OrgStructure, CreateOrgDTO } from '@/types/org'
 import { orgApi } from '@/api/org'
+import { phoneBranchApi, type BranchPoolStats } from '@/api/phoneBranch'
 import { userApi, type UserVO } from '@/api/user'
 import { roleApi } from '@/api/role'
+
+// Type constants matching backend OrgStructure
+const ORG_GROUP = 1       // 集团
+const ORG_BRANCH = 2      // 分行
+const ORG_DEPT = 3        // 部门
+const ORG_COMP_SUB = 4    // 综合支行
+const ORG_RETL_SUB = 5    // 零专支行
+
+const TYPE_LABELS: Record<number, string> = {
+  1: '集团',
+  2: '分行',
+  3: '部门',
+  4: '综合支行',
+  5: '零专支行',
+}
+
+const TYPE_COLORS: Record<number, string> = {
+  1: '#722ed1',
+  2: '#1677ff',
+  3: '#52c41a',
+  4: '#fa8c16',
+  5: '#eb2f96',
+}
+
+// Allowed child types for each parent type
+const ALLOWED_CHILD_TYPES: Record<number, { value: number; label: string }[]> = {
+  1: [{ value: 2, label: '分行' }],
+  2: [
+    { value: 2, label: '二级分行' },
+    { value: 3, label: '部门' },
+    { value: 4, label: '综合支行' },
+  ],
+  3: [{ value: 3, label: '部门' }],
+  4: [{ value: 5, label: '零专支行' }],
+  5: [],
+}
+
+// Icon mapping for tree
+const TYPE_ICONS: Record<number, React.ReactNode> = {}
 
 const OrgManagement: React.FC = () => {
   const [treeData, setTreeData] = useState<OrgStructure[]>([])
@@ -48,6 +90,14 @@ const OrgManagement: React.FC = () => {
   const [userForm] = Form.useForm()
   const [activeRoles, setActiveRoles] = useState<{ id: number; name: string; code: string }[]>([])
 
+  // Phone pool state
+  const [activeTab, setActiveTab] = useState('users')
+  const [branchPoolPhones, setBranchPoolPhones] = useState<any[]>([])
+  const [branchPoolStats, setBranchPoolStats] = useState<BranchPoolStats | null>(null)
+  const [poolLoading, setPoolLoading] = useState(false)
+  const [allocateDeptModalOpen, setAllocateDeptModalOpen] = useState(false)
+  const [selectedPoolKeys, setSelectedPoolKeys] = useState<number[]>([])
+  const [selectedDept, setSelectedDept] = useState<number | undefined>(undefined)
   React.useEffect(() => {
     roleApi
       .getActive()
@@ -91,11 +141,12 @@ const OrgManagement: React.FC = () => {
   const convertToAntTree = (nodes: OrgStructure[]): DataNode[] => {
     return nodes.map((node) => {
       const isSelected = node.id === selectedOrgId
+      const typeColor = TYPE_COLORS[node.type] || '#666'
       return {
         key: String(node.id),
         title: (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 0' }}>
-            <ApartmentOutlined />
+            <ApartmentOutlined style={{ color: typeColor }} />
             <span
               style={{
                 fontWeight: isSelected ? 600 : 500,
@@ -104,6 +155,12 @@ const OrgManagement: React.FC = () => {
             >
               {node.name}
             </span>
+            <Tag
+              style={{ fontSize: 10, lineHeight: '16px', padding: '0 4px', marginLeft: -4 }}
+              color={typeColor}
+            >
+              {TYPE_LABELS[node.type] || '?'}
+            </Tag>
             <Tooltip title="编辑">
               <Button
                 type="link"
@@ -136,7 +193,11 @@ const OrgManagement: React.FC = () => {
 
   const openAddChildForm = () => {
     orgForm.resetFields()
-    orgForm.setFieldsValue({ name: '' })
+    // Auto-set default type based on parent
+    const parent = editingOrg
+    const allowedTypes = parent ? ALLOWED_CHILD_TYPES[parent.type] || [] : []
+    const defaultType = allowedTypes.length > 0 ? allowedTypes[0].value : ORG_DEPT
+    orgForm.setFieldsValue({ name: '', type: defaultType })
     setAddChildOpen(true)
     setTimeout(() => nameInputRef.current?.focus(), 100)
   }
@@ -251,11 +312,93 @@ const OrgManagement: React.FC = () => {
       }
       setSelectedOrgName(findName(treeData))
       fetchUsers(orgId)
+      // Load phone pool for branches (type=2)
+      const findOrg = (nodes: OrgStructure[]): OrgStructure | null => {
+        for (const n of nodes) {
+          if (n.id === orgId) return n
+          if (n.children) {
+            const found = findOrg(n.children)
+            if (found) return found
+          }
+        }
+        return null
+      }
+      const org = findOrg(treeData)
+      if (org && org.type === ORG_BRANCH) {
+        fetchBranchPool(orgId)
+        setActiveTab('phonePool')
+      } else {
+        setBranchPoolPhones([])
+        setBranchPoolStats(null)
+        setActiveTab('users')
+      }
     } else {
       setSelectedOrgId(null)
       setSelectedOrgName('')
       fetchAllUsers()
+      setBranchPoolPhones([])
+      setBranchPoolStats(null)
     }
+  }
+
+  const fetchBranchPool = async (branchOrgId: number) => {
+    setPoolLoading(true)
+    try {
+      const [phones, stats] = await Promise.all([
+        phoneBranchApi.getBranchPool(branchOrgId),
+        phoneBranchApi.getBranchPoolStats(branchOrgId),
+      ])
+      setBranchPoolPhones(phones || [])
+      setBranchPoolStats(stats || null)
+    } catch {
+      setBranchPoolPhones([])
+      setBranchPoolStats(null)
+    } finally {
+      setPoolLoading(false)
+    }
+  }
+
+  const handleDeptAllocate = async () => {
+    if (selectedPoolKeys.length === 0) {
+      message.warning('请先选择号码')
+      return
+    }
+    if (!selectedDept) {
+      message.warning('请选择目标部门')
+      return
+    }
+    try {
+      const res = await phoneBranchApi.deptAllocate({
+        phoneIds: selectedPoolKeys,
+        deptOrgId: selectedDept,
+      })
+      message.success(`已分配 ${res.length} 个号码到部门`)
+      setAllocateDeptModalOpen(false)
+      setSelectedPoolKeys([])
+      setSelectedDept(undefined)
+      if (selectedOrgId) fetchBranchPool(selectedOrgId)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '分配失败'
+      message.error(msg)
+    }
+  }
+
+  const handleBranchRevoke = async (phoneId: number) => {
+    if (!selectedOrgId) return
+    Modal.confirm({
+      title: '回收到系统池',
+      content: '确定将该号码回收到系统池？',
+      onOk: async () => {
+        try {
+          await phoneBranchApi.branchRevoke({ phoneIds: [phoneId], branchOrgId: selectedOrgId })
+          message.success('已回收到系统池')
+          if (selectedOrgId) fetchBranchPool(selectedOrgId)
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : '回收失败'
+          message.error(msg)
+        }
+      },
+    })
   }
 
   const handleRoleChange = async (roleId: number) => {
@@ -372,6 +515,31 @@ const OrgManagement: React.FC = () => {
     return flat
   }, [treeData])
 
+  // Phone pool columns
+  const poolColumns: ColumnsType<any> = [
+    { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140 },
+    { title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100 },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 80,
+      render: (s: number) => (s === 0 ? <Tag color="default">空闲</Tag> : <Tag color="blue">预留</Tag>),
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 120,
+      render: (_: unknown, record: any) => (
+        <Space>
+          <Button type="link" size="small" onClick={() => handleBranchRevoke(record.id)} danger>
+            回收
+          </Button>
+        </Space>
+      ),
+    },
+  ]
+
   const userColumns: ColumnsType<UserVO> = [
     { title: '姓名', dataIndex: 'name', key: 'name', width: 100, align: 'center' },
     {
@@ -483,36 +651,119 @@ const OrgManagement: React.FC = () => {
             flexDirection: 'column',
           }}
         >
-          <>
-            <div
-              style={{
-                padding: '12px 16px',
-                borderBottom: '1px solid #f0f0f0',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <TeamOutlined style={{ color: '#1677ff' }} />
-                <span style={{ fontWeight: 600 }}>{selectedOrgName || '全部用户'}</span>
-                <span style={{ color: '#999', fontSize: 13 }}>用户列表</span>
-                <Tag color="blue">{userList.length} 人</Tag>
-              </div>
-            </div>
-            <div style={{ flex: 1, overflow: 'auto' }}>
-              <Table
-                columns={userColumns}
-                dataSource={userList}
-                loading={userListLoading}
-                rowKey="employeeId"
-                size="small"
-                pagination={false}
-                scroll={{ x: 800 }}
-                locale={{ emptyText: '该组织下暂无用户' }}
-              />
-            </div>
-          </>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              {
+                key: 'users',
+                label: (
+                  <span>
+                    <TeamOutlined />
+                    用户列表
+                  </span>
+                ),
+                children: (
+                  <div>
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #f0f0f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontWeight: 600 }}>{selectedOrgName || '全部用户'}</span>
+                        <Tag color="blue">{userList.length} 人</Tag>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, overflow: 'auto' }}>
+                      <Table
+                        columns={userColumns}
+                        dataSource={userList}
+                        loading={userListLoading}
+                        rowKey="employeeId"
+                        size="small"
+                        pagination={false}
+                        scroll={{ x: 800 }}
+                        locale={{ emptyText: '该组织下暂无用户' }}
+                      />
+                    </div>
+                  </div>
+                ),
+              },
+              ...(selectedOrgId !== null
+                ? [
+                    {
+                      key: 'phonePool' as const,
+                      label: (
+                        <span>
+                          <PhoneOutlined />
+                          号码池
+                        </span>
+                      ),
+                      children: (
+                        <div>
+                          <div
+                            style={{
+                              padding: '12px 16px',
+                              borderBottom: '1px solid #f0f0f0',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontWeight: 600 }}>号码池</span>
+                              <Tag color="blue">{branchPoolPhones.length} 号</Tag>
+                              {branchPoolStats && (
+                                <Space size={12}>
+                                  <span style={{ color: '#666', fontSize: 13 }}>
+                                    分行池: {branchPoolStats.poolCount}
+                                  </span>
+                                  <span style={{ color: '#666', fontSize: 13 }}>
+                                    总量: {branchPoolStats.totalCount}
+                                  </span>
+                                  <span style={{ color: '#666', fontSize: 13 }}>
+                                    系统池: {branchPoolStats.systemPoolCount}
+                                  </span>
+                                </Space>
+                              )}
+                            </div>
+                            <Button
+                              type="primary"
+                              size="small"
+                              disabled={selectedPoolKeys.length === 0}
+                              onClick={() => setAllocateDeptModalOpen(true)}
+                            >
+                              分配到部门 ({selectedPoolKeys.length})
+                            </Button>
+                          </div>
+                          <div style={{ flex: 1, overflow: 'auto' }}>
+                            <Table
+                              columns={poolColumns}
+                              dataSource={branchPoolPhones}
+                              loading={poolLoading}
+                              rowKey="id"
+                              size="small"
+                              pagination={false}
+                              rowSelection={{
+                                selectedRowKeys: selectedPoolKeys,
+                                onChange: (keys) => setSelectedPoolKeys(keys as number[]),
+                              }}
+                              scroll={{ x: 500 }}
+                              locale={{ emptyText: '该分行号码池为空' }}
+                            />
+                          </div>
+                        </div>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
       </div>
 
@@ -548,6 +799,21 @@ const OrgManagement: React.FC = () => {
               )}
             </div>
           </Form.Item>
+          {addChildOpen && (
+            <Form.Item
+              name="type"
+              label="机构类型"
+              rules={[{ required: true, message: '请选择机构类型' }]}
+            >
+              <Select
+                placeholder="选择类型"
+                options={(editingOrg ? ALLOWED_CHILD_TYPES[editingOrg.type] || [] : []).map((t) => ({
+                  value: t.value,
+                  label: t.label,
+                }))}
+              />
+            </Form.Item>
+          )}
           {!addChildOpen && (
             <>
               <Form.Item
@@ -691,6 +957,39 @@ const OrgManagement: React.FC = () => {
             </Button>
           </Popconfirm>
         </div>
+      </Modal>
+
+      {/* Dept Allocate Modal */}
+      <Modal
+        title="分配号码到部门"
+        open={allocateDeptModalOpen}
+        onCancel={() => {
+          setAllocateDeptModalOpen(false)
+          setSelectedDept(undefined)
+          setSelectedPoolKeys([])
+        }}
+        onOk={handleDeptAllocate}
+        okText="确认分配"
+        cancelText="取消"
+        width={400}
+      >
+        <div style={{ marginBottom: 16 }}>
+          已选择 <Tag color="blue">{selectedPoolKeys.length}</Tag> 个号码
+        </div>
+        <Select
+          placeholder="选择目标部门"
+          value={selectedDept}
+          onChange={setSelectedDept}
+          style={{ width: '100%' }}
+          showSearch
+          optionFilterProp="label"
+          options={allOrgs
+            .filter((o) => o.id !== selectedOrgId && o.level > 1)
+            .map((o) => ({
+              value: o.id,
+              label: '\u00A0\u00A0'.repeat(o.level - 1) + o.name,
+            }))}
+        />
       </Modal>
     </div>
   )

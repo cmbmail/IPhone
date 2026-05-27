@@ -69,4 +69,35 @@ public interface PhoneNumberRepository extends JpaRepository<PhoneNumber, Long> 
     @Query("SELECT p FROM PhoneNumber p WHERE p.phoneNumber LIKE %:keyword% OR p.remark LIKE %:keyword%")
     List<PhoneNumber> searchByKeyword(@Param("keyword") String keyword);
 
+    // ---- Two-phase branch allocation queries ----
+
+    /** Phones in system pool: branch_org_id IS NULL */
+    @Query("SELECT p FROM PhoneNumber p WHERE p.branchOrgId IS NULL AND p.status IN (0, 4) ORDER BY p.createdAt")
+    List<PhoneNumber> findSystemPoolPhones();
+
+    /** Phones in branch pool: branch_org_id = :branchOrgId AND org_id IS NULL */
+    @Query("SELECT p FROM PhoneNumber p WHERE p.branchOrgId = :branchOrgId AND p.orgId IS NULL AND p.status IN (0, 4) ORDER BY p.createdAt")
+    List<PhoneNumber> findBranchPoolPhones(@Param("branchOrgId") Long branchOrgId);
+
+    /** Count phones in a branch pool */
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.branchOrgId = :branchOrgId AND p.orgId IS NULL")
+    long countBranchPoolPhones(@Param("branchOrgId") Long branchOrgId);
+
+    /** Count phones allocated to a specific dept within a branch */
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.branchOrgId = :branchOrgId AND p.orgId = :orgId")
+    long countBranchDeptPhones(@Param("branchOrgId") Long branchOrgId, @Param("orgId") Long orgId);
+
+    /** Count all phones under a branch (pool + allocated) */
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.branchOrgId = :branchOrgId")
+    long countAllBranchPhones(@Param("branchOrgId") Long branchOrgId);
+
+    /** Lock phones by IDs for branch operations */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PhoneNumber p WHERE p.id IN :ids")
+    List<PhoneNumber> findByIdsForBranchUpdate(@Param("ids") List<Long> ids);
+
+    /** Count system pool size */
+    @Query("SELECT COUNT(p) FROM PhoneNumber p WHERE p.branchOrgId IS NULL AND p.status IN (0, 4)")
+    long countSystemPoolPhones();
+
 }

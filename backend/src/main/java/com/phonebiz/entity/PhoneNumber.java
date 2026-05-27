@@ -47,6 +47,9 @@ public class PhoneNumber extends BaseEntity {
     @Column(name = "org_id")
     private Long orgId;
 
+    @Column(name = "branch_org_id")
+    private Long branchOrgId;
+
     @Column(name = "allocation_org_id")
     private Long allocationOrgId;
 

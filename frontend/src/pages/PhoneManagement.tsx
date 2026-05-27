@@ -11,9 +11,12 @@ import {
   Row,
   Col,
   Statistic,
+  Button,
+  Modal,
 } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { request } from '@/api/request'
+import { phoneBranchApi } from '@/api/phoneBranch'
 import type { OrgStructure } from '@/types/org'
 
 // 后端动态计算状态: 0=闲置 1=占用 2=分配中
@@ -42,6 +45,12 @@ const PhoneManagement = () => {
   const [keyword, setKeyword] = useState('')
   const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
   const [filterOrgId, setFilterOrgId] = useState<number | undefined>(undefined)
+
+  // Branch allocate modal state
+  const [branchModalOpen, setBranchModalOpen] = useState(false)
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+  const [selectedBranch, setSelectedBranch] = useState<number | undefined>(undefined)
+  const queryClient = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
     queryKey: ['phone-views', keyword, filterStatus, filterOrgId, page],
@@ -82,6 +91,31 @@ const PhoneManagement = () => {
       cancel: '注销',
     }
     message.info(`${labels[key]}操作将生成工单，功能开发中`)
+  }
+
+  const handleBranchAllocate = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请先选择号码')
+      return
+    }
+    if (!selectedBranch) {
+      message.warning('请选择目标分行')
+      return
+    }
+    try {
+      const res = await phoneBranchApi.branchAllocate({
+        phoneIds: selectedRowKeys,
+        branchOrgId: selectedBranch,
+      })
+      message.success(`已分配 ${res.length} 个号码到分行`)
+      setBranchModalOpen(false)
+      setSelectedRowKeys([])
+      setSelectedBranch(undefined)
+      queryClient.invalidateQueries({ queryKey: ['phone-views'] })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '分配失败'
+      message.error(msg)
+    }
   }
 
   const columns = [
@@ -258,6 +292,15 @@ const PhoneManagement = () => {
                 ))}
             </Select>
           </Space>
+          <Space>
+            <Button
+              type="primary"
+              disabled={selectedRowKeys.length === 0}
+              onClick={() => setBranchModalOpen(true)}
+            >
+              分配到分行 ({selectedRowKeys.length})
+            </Button>
+          </Space>
         </div>
 
         <Table
@@ -265,6 +308,10 @@ const PhoneManagement = () => {
           dataSource={content}
           loading={isLoading}
           rowKey="id"
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys as number[]),
+          }}
           pagination={{
             current: page + 1,
             pageSize,
@@ -273,6 +320,36 @@ const PhoneManagement = () => {
           }}
         />
       </Card>
+
+      {/* Branch Allocate Modal */}
+      <Modal
+        title="分配号码到分行"
+        open={branchModalOpen}
+        onCancel={() => {
+          setBranchModalOpen(false)
+          setSelectedBranch(undefined)
+        }}
+        onOk={handleBranchAllocate}
+        okText="确认分配"
+        cancelText="取消"
+        width={400}
+      >
+        <div style={{ marginBottom: 16 }}>
+          已选择 <Tag color="blue">{selectedRowKeys.length}</Tag> 个号码
+        </div>
+        <Select
+          placeholder="选择目标分行"
+          value={selectedBranch}
+          onChange={setSelectedBranch}
+          style={{ width: '100%' }}
+          options={orgs
+            .filter((o: OrgStructure) => o.level === 1)
+            .map((o: OrgStructure) => ({
+              value: o.id,
+              label: o.name,
+            }))}
+        />
+      </Modal>
     </div>
   )
 }

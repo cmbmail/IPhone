@@ -7,7 +7,8 @@ export interface PhoneNumber {
   isShared: boolean
   isReentry: boolean
   status: number
-  orgId?: number
+  orgId?: number | null
+  branchOrgId?: number | null
   allocationOrgId?: number
   remark?: string
   version: number

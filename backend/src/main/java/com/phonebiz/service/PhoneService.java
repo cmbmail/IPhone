@@ -15,12 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.phonebiz.common.BusinessException;
 import com.phonebiz.common.ErrorCode;
 import com.phonebiz.dto.CreatePhoneRequest;
+import com.phonebiz.dto.DeptAllocateRequest;
+import com.phonebiz.dto.BranchAllocateRequest;
 import com.phonebiz.dto.PhoneAllocationRequest;
 import com.phonebiz.dto.PhoneChangeRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
 import com.phonebiz.dto.UpdatePhoneRequest;
 import com.phonebiz.entity.PhoneHistory;
 import com.phonebiz.entity.PhoneNumber;
+import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.entity.PhoneSurrenderRecord;
 import com.phonebiz.repository.EmployeeRepository;
 import com.phonebiz.repository.OrgStructureRepository;
@@ -749,6 +752,330 @@ public class PhoneService {
 
         log.info("Phone {} status changed from {} to {} by {}", phone.getPhoneNumber(), fromStatus, newStatus, operator);
         return saved;
+    }
+
+    // ==================== Two-Phase Branch Allocation ====================
+
+    /**
+     * Phase 1: Allocate phones from system pool to a branch.
+     * Sets branch_org_id on phone_number.
+     */
+    @Transactional
+    public java.util.List<PhoneNumber> branchAllocate(BranchAllocateRequest request, String operator) {
+        Long branchOrgId = request.getBranchOrgId();
+
+        // Validate branch org exists and is a branch type (分行 type=2)
+        OrgStructure branch = orgRepository.findById(branchOrgId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORG_001));
+        if (!branch.isBranch()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "目标必须是分行");
+        }
+
+        // Lock all phone records
+        List<PhoneNumber> phones = phoneRepository.findByIdsForBranchUpdate(request.getPhoneIds());
+
+        if (phones.size() != request.getPhoneIds().size()) {
+            throw new BusinessException(ErrorCode.PHONE_001, "Some phone IDs not found");
+        }
+
+        List<PhoneNumber> updated = new java.util.ArrayList<>();
+        for (PhoneNumber phone : phones) {
+            // Must be in system pool (branch_org_id IS NULL)
+            if (phone.getBranchOrgId() != null) {
+                log.warn("Phone {} already in branch pool {}, skipping", phone.getPhoneNumber(), phone.getBranchOrgId());
+                continue;
+            }
+
+            String fromBranch = null;
+            String toBranch = String.valueOf(branchOrgId);
+
+            phone.setBranchOrgId(branchOrgId);
+            phone.setUpdatedBy(operator);
+
+            PhoneNumber saved = phoneRepository.save(phone);
+
+            recordHistory(
+                saved.getId(),
+                "branch_allocate",
+                saved.getStatus(),
+                saved.getStatus(),
+                saved.getEmployeeNo(),
+                saved.getEmployeeNo(),
+                fromBranch,
+                toBranch,
+                operator,
+                null,
+                request.getRemark() != null ? "分配到分行: " + request.getRemark() : "分配到分行"
+            );
+
+            updated.add(saved);
+        }
+
+        log.info("Allocated {} phones to branch {} by {}", updated.size(), branchOrgId, operator);
+        if (updated.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were allocated — they may already be in a branch pool");
+        }
+        return updated;
+    }
+
+    /**
+     * Phase 2: Allocate phones from branch pool to a specific department.
+     * Sets org_id on phone_number (branch_org_id must already be set).
+     * Validates that the dept belongs to the same branch.
+     */
+    @Transactional
+    public java.util.List<PhoneNumber> deptAllocate(DeptAllocateRequest request, String operator) {
+        Long deptOrgId = request.getDeptOrgId();
+
+        // Validate dept org exists
+        OrgStructure dept = orgRepository.findById(deptOrgId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORG_001));
+
+        // Lock all phone records
+        List<PhoneNumber> phones = phoneRepository.findByIdsForBranchUpdate(request.getPhoneIds());
+
+        if (phones.size() != request.getPhoneIds().size()) {
+            throw new BusinessException(ErrorCode.PHONE_001, "Some phone IDs not found");
+        }
+
+        // Data scope check: if user has scopeOrgId (non-admin), validate access
+        Long scopeOrgId = dataScope.getCurrentScopeOrgId();
+        if (scopeOrgId != null) {
+            // Branch admin can only allocate to depts under their branch
+            OrgStructure scopeOrg = orgRepository.findById(scopeOrgId).orElse(null);
+            String scopePath = scopeOrg != null ? scopeOrg.getPath() : "/" + scopeOrgId;
+            if (!dept.getPath().startsWith(scopePath + "/") && !dept.getPath().equals(scopePath)) {
+                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Cannot allocate to department outside your scope");
+            }
+        }
+
+        List<PhoneNumber> updated = new java.util.ArrayList<>();
+        for (PhoneNumber phone : phones) {
+            // Must be in branch pool (branch_org_id set, org_id NULL)
+            if (phone.getBranchOrgId() == null) {
+                log.warn("Phone {} not in any branch pool, skipping", phone.getPhoneNumber());
+                continue;
+            }
+            if (phone.getOrgId() != null) {
+                log.warn("Phone {} already allocated to dept {}, skipping", phone.getPhoneNumber(), phone.getOrgId());
+                continue;
+            }
+
+            // Validate dept belongs to the same branch
+            Long phoneBranchId = phone.getBranchOrgId();
+            if (!dept.getPath().contains("/" + phoneBranchId + "/") && !dept.getPath().equals("/" + phoneBranchId)) {
+                OrgStructure branch = orgRepository.findById(phoneBranchId).orElse(null);
+                if (branch == null || !dept.getPath().startsWith(branch.getPath() + "/")) {
+                    throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED,
+                        "Phone " + phone.getPhoneNumber() + " belongs to a different branch than the target department");
+                }
+            }
+
+            String fromOrg = phone.getOrgId() != null ? String.valueOf(phone.getOrgId()) : null;
+            String toOrg = String.valueOf(deptOrgId);
+
+            phone.setOrgId(deptOrgId);
+            if (phone.getStatus() == PhoneNumber.PS_IDLE) {
+                phone.setStatus(PhoneNumber.PS_ACTIVE);
+            }
+            phone.setUpdatedBy(operator);
+
+            PhoneNumber saved = phoneRepository.save(phone);
+
+            recordHistory(
+                saved.getId(),
+                "dept_allocate",
+                PhoneNumber.PS_IDLE,
+                saved.getStatus(),
+                saved.getEmployeeNo(),
+                saved.getEmployeeNo(),
+                fromOrg,
+                toOrg,
+                operator,
+                null,
+                request.getRemark() != null ? "分配到部门: " + request.getRemark() : "分配到部门"
+            );
+
+            updated.add(saved);
+        }
+
+        log.info("Allocated {} phones to dept {} by {}", updated.size(), deptOrgId, operator);
+        if (updated.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were allocated — they may not be in a branch pool or already allocated to a department");
+        }
+        return updated;
+    }
+
+    /**
+     * Return phone from department back to branch pool.
+     * Clears org_id but keeps branch_org_id.
+     */
+    @Transactional
+    public java.util.List<PhoneNumber> deptRevoke(BranchAllocateRequest request, String operator) {
+        // Reuse BranchAllocateRequest: phoneIds + branchOrgId (for scope verification)
+        List<PhoneNumber> phones = phoneRepository.findByIdsForBranchUpdate(request.getPhoneIds());
+
+        if (phones.size() != request.getPhoneIds().size()) {
+            throw new BusinessException(ErrorCode.PHONE_001, "Some phone IDs not found");
+        }
+
+        // Data scope check
+        for (PhoneNumber phone : phones) {
+            if (phone.getBranchOrgId() != null && !isBranchAccessible(phone.getBranchOrgId())) {
+                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Cannot revoke phones outside your branch scope");
+            }
+        }
+
+        List<PhoneNumber> updated = new java.util.ArrayList<>();
+        for (PhoneNumber phone : phones) {
+            if (phone.getOrgId() == null) {
+                log.warn("Phone {} not allocated to any dept, skipping", phone.getPhoneNumber());
+                continue;
+            }
+
+            String fromOrg = String.valueOf(phone.getOrgId());
+
+            phone.setOrgId(null);
+            phone.setEmployeeNo(null);
+            phone.setExtensionNumber(null);
+            phone.setExtensionType(null);
+            phone.setStatus(PhoneNumber.PS_IDLE);
+            phone.setUpdatedBy(operator);
+
+            PhoneNumber saved = phoneRepository.save(phone);
+
+            recordHistory(
+                saved.getId(),
+                "dept_revoke",
+                PhoneNumber.PS_ACTIVE,
+                PhoneNumber.PS_IDLE,
+                phone.getEmployeeNo(),
+                null,
+                fromOrg,
+                String.valueOf(saved.getBranchOrgId()),
+                operator,
+                null,
+                request.getRemark() != null ? "从部门回收到分行池: " + request.getRemark() : "从部门回收到分行池"
+            );
+
+            updated.add(saved);
+        }
+
+        log.info("Revoked {} phones from dept back to branch pool by {}", updated.size(), operator);
+        if (updated.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were revoked — they may not be allocated to any department");
+        }
+        return updated;
+    }
+
+    /**
+     * Return phone from branch back to system pool.
+     * Clears both org_id and branch_org_id.
+     */
+    @Transactional
+    public java.util.List<PhoneNumber> branchRevoke(BranchAllocateRequest request, String operator) {
+        List<PhoneNumber> phones = phoneRepository.findByIdsForBranchUpdate(request.getPhoneIds());
+
+        if (phones.size() != request.getPhoneIds().size()) {
+            throw new BusinessException(ErrorCode.PHONE_001, "Some phone IDs not found");
+        }
+
+        // Data scope check: admin can revoke any branch; others only their own
+        for (PhoneNumber phone : phones) {
+            if (phone.getBranchOrgId() != null && !isBranchAccessible(phone.getBranchOrgId())) {
+                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "Cannot revoke phones outside your branch scope");
+            }
+        }
+
+        // Validate no phone is allocated to a dept (org_id must be null)
+        for (PhoneNumber phone : phones) {
+            if (phone.getOrgId() != null) {
+                throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED,
+                    "Phone " + phone.getPhoneNumber() + " is still allocated to a department. Revoke from dept first.");
+            }
+        }
+
+        List<PhoneNumber> updated = new java.util.ArrayList<>();
+        for (PhoneNumber phone : phones) {
+            if (phone.getBranchOrgId() == null) {
+                log.warn("Phone {} not in any branch pool, skipping", phone.getPhoneNumber());
+                continue;
+            }
+
+            String fromBranch = String.valueOf(phone.getBranchOrgId());
+
+            phone.setBranchOrgId(null);
+            phone.setOrgId(null);
+            phone.setUpdatedBy(operator);
+
+            PhoneNumber saved = phoneRepository.save(phone);
+
+            recordHistory(
+                saved.getId(),
+                "branch_revoke",
+                saved.getStatus(),
+                saved.getStatus(),
+                saved.getEmployeeNo(),
+                saved.getEmployeeNo(),
+                fromBranch,
+                null,
+                operator,
+                null,
+                request.getRemark() != null ? "从分行回收到系统池: " + request.getRemark() : "从分行回收到系统池"
+            );
+
+            updated.add(saved);
+        }
+
+        log.info("Revoked {} phones from branch back to system pool by {}", updated.size(), operator);
+        if (updated.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were revoked — they may not be in any branch pool");
+        }
+        return updated;
+    }
+
+    /**
+     * Check if current user's scope allows access to a given branch org.
+     * Admin (scopeOrgId = root org, e.g., 1) can access all branches.
+     * Branch admin can only access their own branch.
+     */
+    private boolean isBranchAccessible(Long branchOrgId) {
+        Long scopeOrgId = dataScope.getCurrentScopeOrgId();
+        if (scopeOrgId == null) return true; // no restriction
+
+        if (scopeOrgId.equals(branchOrgId)) return true; // same branch
+
+        // Check if scopeOrg is an ancestor of the branch org
+        OrgStructure scopeOrg = orgRepository.findById(scopeOrgId).orElse(null);
+        OrgStructure branchOrg = orgRepository.findById(branchOrgId).orElse(null);
+        if (scopeOrg != null && branchOrg != null) {
+            return branchOrg.getPath().startsWith(scopeOrg.getPath() + "/");
+        }
+        return false;
+    }
+    @Transactional(readOnly = true)
+    public java.util.List<PhoneNumber> getBranchPoolPhones(Long branchOrgId) {
+        return phoneRepository.findBranchPoolPhones(branchOrgId);
+    }
+
+    /**
+     * Get system pool phones (branch_org_id IS NULL).
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<PhoneNumber> getSystemPoolPhones() {
+        return phoneRepository.findSystemPoolPhones();
+    }
+
+    /**
+     * Get branch pool statistics: count of pool phones + allocated phones per branch.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getBranchPoolStats(Long branchOrgId) {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("poolCount", phoneRepository.countBranchPoolPhones(branchOrgId));
+        stats.put("totalCount", phoneRepository.countAllBranchPhones(branchOrgId));
+        stats.put("systemPoolCount", phoneRepository.countSystemPoolPhones());
+        return stats;
     }
 }
 

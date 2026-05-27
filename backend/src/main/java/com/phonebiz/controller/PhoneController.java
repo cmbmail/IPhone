@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.CreatePhoneRequest;
+import com.phonebiz.dto.BranchAllocateRequest;
+import com.phonebiz.dto.DeptAllocateRequest;
 import com.phonebiz.dto.PhoneAllocationRequest;
 import com.phonebiz.dto.PhoneChangeRequest;
 import com.phonebiz.dto.PhoneReclaimRequest;
@@ -229,6 +231,66 @@ public class PhoneController {
         String operator = authentication != null ? authentication.getName() : "system";
         int successCount = phoneService.batchChangeMultiple(phoneIds, request, operator);
         return ApiResponse.success(successCount);
+    }
+
+    // ==================== Two-Phase Branch Allocation ====================
+
+    @PostMapping("/branch-allocate")
+    @PreAuthorize("hasAuthority('phone:branch-assign') or hasRole('ADMIN')")
+    @AuditLog(module = "phone", operation = "分配号码到分行", targetType = "PhoneNumber")
+    public ApiResponse<List<PhoneNumber>> branchAllocate(
+            @Valid @RequestBody BranchAllocateRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.branchAllocate(request, operator));
+    }
+
+    @PostMapping("/dept-allocate")
+    @PreAuthorize("hasAuthority('phone:assign') or hasRole('ADMIN')")
+    @AuditLog(module = "phone", operation = "分配号码到部门", targetType = "PhoneNumber")
+    public ApiResponse<List<PhoneNumber>> deptAllocate(
+            @Valid @RequestBody DeptAllocateRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.deptAllocate(request, operator));
+    }
+
+    @PostMapping("/dept-revoke")
+    @PreAuthorize("hasAuthority('phone:assign') or hasRole('ADMIN')")
+    @AuditLog(module = "phone", operation = "从部门回收号码到分行", targetType = "PhoneNumber")
+    public ApiResponse<List<PhoneNumber>> deptRevoke(
+            @Valid @RequestBody BranchAllocateRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.deptRevoke(request, operator));
+    }
+
+    @PostMapping("/branch-revoke")
+    @PreAuthorize("hasAuthority('phone:branch-revoke') or hasRole('ADMIN')")
+    @AuditLog(module = "phone", operation = "从分行回收号码到系统池", targetType = "PhoneNumber")
+    public ApiResponse<List<PhoneNumber>> branchRevoke(
+            @Valid @RequestBody BranchAllocateRequest request,
+            Authentication authentication) {
+        String operator = authentication != null ? authentication.getName() : "system";
+        return ApiResponse.success(phoneService.branchRevoke(request, operator));
+    }
+
+    @GetMapping("/system-pool")
+    @PreAuthorize("hasAuthority('phone:branch-assign') or hasRole('ADMIN')")
+    public ApiResponse<List<PhoneNumber>> getSystemPool() {
+        return ApiResponse.success(phoneService.getSystemPoolPhones());
+    }
+
+    @GetMapping("/branch-pool/{branchOrgId}")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
+    public ApiResponse<List<PhoneNumber>> getBranchPool(@PathVariable Long branchOrgId) {
+        return ApiResponse.success(phoneService.getBranchPoolPhones(branchOrgId));
+    }
+
+    @GetMapping("/branch-pool-stats/{branchOrgId}")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
+    public ApiResponse<java.util.Map<String, Object>> getBranchPoolStats(@PathVariable Long branchOrgId) {
+        return ApiResponse.success(phoneService.getBranchPoolStats(branchOrgId));
     }
 }
 

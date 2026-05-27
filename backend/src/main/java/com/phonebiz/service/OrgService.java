@@ -59,13 +59,21 @@ public class OrgService {
         org.setCostCenterCode(request.getCostCenterCode());
         
         if (request.getType() != null) {
-            org.setType(Integer.valueOf(request.getType()));
+            int newType = Integer.valueOf(request.getType());
+            // Validate type compatibility with parent if type is changing
+            if (org.getParentId() != null && newType != org.getType()) {
+                OrgStructure parent = getOrgById(org.getParentId());
+                parent.validateChildType(newType);
+            }
+            org.setType(newType);
         }
-        
+
         if (request.getParentId() != null) {
             checkCycle(null, request.getParentId());
             OrgStructure parent = getOrgById(request.getParentId());
             org.setLevel(parent.getLevel() + 1);
+            // Validate parent-child type compatibility
+            parent.validateChildType(org.getType());
         } else {
             org.setLevel(0);
         }
@@ -212,8 +220,8 @@ public class OrgService {
                 org.setType(OrgStructure.ORG_GROUP);
             } else {
                 OrgStructure parent = orgRepository.findById(pid).orElse(null);
-                if (parent != null && parent.getType() == OrgStructure.ORG_GROUP) {
-                    org.setType(OrgStructure.ORG_SUBSIDIARY);
+                if (parent != null) {
+                    org.setType(deriveChildType(parent.getType()));
                 } else {
                     org.setType(OrgStructure.ORG_DEPT);
                 }
@@ -319,6 +327,11 @@ public class OrgService {
     }
 
     private List<OrgStructure> buildTree(List<OrgStructure> allOrgs) {
+        // Clear JPA EAGER-loaded children first to avoid duplication
+        for (OrgStructure org : allOrgs) {
+            org.getChildren().clear();
+        }
+
         Map<Long, OrgStructure> map = allOrgs.stream()
                 .collect(Collectors.toMap(OrgStructure::getId, o -> o));
 
@@ -357,5 +370,23 @@ public class OrgService {
             OrgStructure parent = orgRepository.findById(current).orElse(null);
             current = parent != null ? parent.getParentId() : null;
         }
+    }
+
+    /**
+     * Derive the default child type based on parent type.
+     *   集团(1) → 分行(2)
+     *   分行(2) → 部门(3) (default, can also be 分行/综合支行)
+     *   部门(3) → 部门(3)
+     *   综合支行(4) → 零专支行(5)
+     *   零专支行(5) → no children (returns dept as fallback)
+     */
+    private int deriveChildType(int parentType) {
+        return switch (parentType) {
+            case OrgStructure.ORG_GROUP -> OrgStructure.ORG_BRANCH;
+            case OrgStructure.ORG_BRANCH -> OrgStructure.ORG_DEPT;
+            case OrgStructure.ORG_DEPT -> OrgStructure.ORG_DEPT;
+            case OrgStructure.ORG_COMP_SUB -> OrgStructure.ORG_RETL_SUB;
+            default -> OrgStructure.ORG_DEPT;
+        };
     }
 }

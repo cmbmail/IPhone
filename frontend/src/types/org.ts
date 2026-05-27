@@ -2,7 +2,7 @@ export interface OrgStructure {
   id: number
   parentId: number | null
   name: string
-  type: 1 | 2 | 3
+  type: 1 | 2 | 3 | 4 | 5
   level: number
   sortOrder: number
   path: string
@@ -19,7 +19,7 @@ export interface OrgStructure {
 export interface CreateOrgDTO {
   parentId: number | null
   name: string
-  type: 1 | 2 | 3
+  type: 1 | 2 | 3 | 4 | 5
   status?: 0 | 1
   branchName?: string
   orgCode?: string
