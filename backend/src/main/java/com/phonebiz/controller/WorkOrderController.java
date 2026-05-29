@@ -50,7 +50,7 @@ public class WorkOrderController {
         return ApiResponse.success(result);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<WorkOrderDTO> getWorkOrderById(@PathVariable Long id) {
         return ApiResponse.success(workOrderService.getWorkOrderById(id));
     }
@@ -86,7 +86,7 @@ public class WorkOrderController {
         return ApiResponse.success(result);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "更新工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<WorkOrderDTO> updateWorkOrder(@PathVariable Long id,
@@ -94,7 +94,7 @@ public class WorkOrderController {
         return ApiResponse.success(workOrderService.updateWorkOrder(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('wo:delete') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "删除工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<Void> deleteWorkOrder(@PathVariable Long id) {
@@ -102,7 +102,7 @@ public class WorkOrderController {
         return ApiResponse.success("Work order deleted", null);
     }
 
-    @PostMapping("/{id}/accept")
+    @PostMapping("/{id:[0-9]+}/accept")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN') or hasRole('OPS')")
     @AuditLog(module = "work-order", operation = "接单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<WorkOrderDTO> acceptWorkOrder(@PathVariable Long id, Authentication authentication) {
@@ -113,14 +113,14 @@ public class WorkOrderController {
         return ApiResponse.success(workOrderService.acceptWorkOrder(id, handlerId, username));
     }
 
-    @PostMapping("/{id}/process")
+    @PostMapping("/{id:[0-9]+}/process")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN') or hasRole('OPS')")
     @AuditLog(module = "work-order", operation = "处理工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<WorkOrderDTO> processWorkOrder(@PathVariable Long id) {
         return ApiResponse.success(workOrderService.processWorkOrder(id));
     }
 
-    @PostMapping("/{id}/complete")
+    @PostMapping("/{id:[0-9]+}/complete")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN') or hasRole('OPS')")
     @AuditLog(module = "work-order", operation = "完成工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<WorkOrderDTO> completeWorkOrder(@PathVariable Long id,
@@ -128,7 +128,7 @@ public class WorkOrderController {
         return ApiResponse.success(workOrderService.completeWorkOrder(id, remark));
     }
 
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id:[0-9]+}/reject")
     @PreAuthorize("hasAuthority('wo:edit') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "驳回工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<WorkOrderDTO> rejectWorkOrder(@PathVariable Long id,
@@ -136,7 +136,7 @@ public class WorkOrderController {
         return ApiResponse.success(workOrderService.rejectWorkOrder(id, reason));
     }
 
-    @PostMapping("/{id}/batch-split")
+    @PostMapping("/{id:[0-9]+}/batch-split")
     @PreAuthorize("hasAuthority('wo:create') or hasRole('ADMIN')")
     @AuditLog(module = "work-order", operation = "拆分工单", targetType = "WorkOrder", targetId = "#id")
     public ApiResponse<List<WorkOrderDTO>> batchSplitWorkOrder(@PathVariable Long id) {

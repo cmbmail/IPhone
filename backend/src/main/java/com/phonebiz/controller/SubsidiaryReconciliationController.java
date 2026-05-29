@@ -44,7 +44,7 @@ public class SubsidiaryReconciliationController {
         return ApiResponse.success(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<SubsidiaryReconciliation> getReconciliation(@PathVariable Long id) {
         SubsidiaryReconciliation reconciliation = reconciliationService.getReconciliation(id);
         return ApiResponse.success(reconciliation);
@@ -56,7 +56,7 @@ public class SubsidiaryReconciliationController {
         return ApiResponse.success(pending);
     }
 
-    @PostMapping("/{id}/subsidiary-confirm")
+    @PostMapping("/{id:[0-9]+}/subsidiary-confirm")
     @PreAuthorize("hasAuthority('recon:view') or hasRole('ADMIN')")
     @AuditLog(module = "reconciliation", operation = "子公司确认", targetType = "SubsidiaryReconciliation", targetId = "#id")
     public ApiResponse<SubsidiaryReconciliation> subsidiaryConfirm(
@@ -66,7 +66,7 @@ public class SubsidiaryReconciliationController {
         return ApiResponse.success(reconciliation);
     }
 
-    @PostMapping("/{id}/group-confirm")
+    @PostMapping("/{id:[0-9]+}/group-confirm")
     @PreAuthorize("hasAuthority('recon:view') or hasRole('ADMIN')")
     @AuditLog(module = "reconciliation", operation = "集团确认", targetType = "SubsidiaryReconciliation", targetId = "#id")
     public ApiResponse<SubsidiaryReconciliation> groupConfirm(

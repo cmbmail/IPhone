@@ -42,12 +42,12 @@ public class OrgController {
         return ApiResponse.success(orgService.getAllActiveOrgs());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<OrgStructure> getOrgById(@PathVariable Long id) {
         return ApiResponse.success(orgService.getOrgById(id));
     }
 
-    @GetMapping("/{id}/children")
+    @GetMapping("/{id:[0-9]+}/children")
     public ApiResponse<List<OrgStructure>> getChildren(@PathVariable Long id) {
         return ApiResponse.success(orgService.getChildren(id));
     }
@@ -62,7 +62,7 @@ public class OrgController {
         return ApiResponse.success(orgService.createOrg(request, operator));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('org:edit') or hasRole('ADMIN')")
     @AuditLog(module = "org", operation = "更新组织", targetType = "OrgStructure", targetId = "#id")
     public ApiResponse<OrgStructure> updateOrg(
@@ -73,7 +73,7 @@ public class OrgController {
         return ApiResponse.success(orgService.updateOrg(id, request, operator));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('org:delete') or hasRole('ADMIN')")
     @AuditLog(module = "org", operation = "删除组织", targetType = "OrgStructure", targetId = "#id")
     public ApiResponse<Void> deleteOrg(@PathVariable Long id) {

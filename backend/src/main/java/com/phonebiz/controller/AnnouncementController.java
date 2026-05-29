@@ -36,7 +36,7 @@ public class AnnouncementController {
         return ApiResponse.success(announcementService.getLatestPublished(5));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<Announcement> getAnnouncement(@PathVariable Long id) {
         return ApiResponse.success(announcementService.getAnnouncementById(id));
     }
@@ -47,27 +47,27 @@ public class AnnouncementController {
         return ApiResponse.success(announcementService.createAnnouncement(announcement));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Announcement> updateAnnouncement(@PathVariable Long id,
                                                          @RequestBody Announcement announcement) {
         return ApiResponse.success(announcementService.updateAnnouncement(id, announcement));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteAnnouncement(@PathVariable Long id) {
         announcementService.deleteAnnouncement(id);
         return ApiResponse.success("Deleted", null);
     }
 
-    @PostMapping("/{id}/publish")
+    @PostMapping("/{id:[0-9]+}/publish")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Announcement> publishAnnouncement(@PathVariable Long id) {
         return ApiResponse.success(announcementService.publishAnnouncement(id));
     }
 
-    @PostMapping("/{id}/archive")
+    @PostMapping("/{id:[0-9]+}/archive")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Announcement> archiveAnnouncement(@PathVariable Long id) {
         return ApiResponse.success(announcementService.archiveAnnouncement(id));

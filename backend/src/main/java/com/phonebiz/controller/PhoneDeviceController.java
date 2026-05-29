@@ -41,21 +41,21 @@ public class PhoneDeviceController {
         return ApiResponse.success(result);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<PhoneDeviceDTO> getDeviceDetail(@PathVariable Long id) {
         PhoneDeviceDTO device = phoneDeviceService.getDeviceDetail(id);
         return ApiResponse.success(device);
     }
 
-    @GetMapping("/{id}/phones")
+    @GetMapping("/{id:[0-9]+}/phones")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<List<BoundPhoneDTO>> getBoundPhones(@PathVariable Long id) {
         List<BoundPhoneDTO> phones = phoneDeviceService.getBoundPhones(id);
         return ApiResponse.success(phones);
     }
 
-    @GetMapping("/{id}/history")
+    @GetMapping("/{id:[0-9]+}/history")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<List<PhoneDeviceHistoryDTO>> getDeviceHistory(@PathVariable Long id) {
         List<PhoneDeviceHistoryDTO> history = phoneDeviceService.getDeviceHistory(id);
@@ -71,7 +71,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('device:assign') or hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> updateDevice(@PathVariable Long id, @Valid @RequestBody UpdatePhoneDeviceRequest request) {
         PhoneDeviceDTO device = phoneDeviceService.updateDevice(id, request);
@@ -79,7 +79,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/assign")
+    @PostMapping("/{id:[0-9]+}/assign")
     @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> assignDevice(@PathVariable Long id, @Valid @RequestBody AssignPhoneDeviceRequest request) {
         PhoneDeviceDTO device = phoneDeviceService.assignDevice(id, request);
@@ -87,7 +87,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/reclaim")
+    @PostMapping("/{id:[0-9]+}/reclaim")
     @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> reclaimDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -96,7 +96,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/deactivate")
+    @PostMapping("/{id:[0-9]+}/deactivate")
     @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> deactivateDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -105,7 +105,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/reactivate")
+    @PostMapping("/{id:[0-9]+}/reactivate")
     @PreAuthorize("hasAuthority('device:manage') or hasRole('ADMIN')")
     public ApiResponse<PhoneDeviceDTO> reactivateDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -114,7 +114,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/repair")
+    @PostMapping("/{id:[0-9]+}/repair")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<PhoneDeviceDTO> repairDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -123,7 +123,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/repair-done")
+    @PostMapping("/{id:[0-9]+}/repair-done")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<PhoneDeviceDTO> repairDoneDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -132,7 +132,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/retire")
+    @PostMapping("/{id:[0-9]+}/retire")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<PhoneDeviceDTO> retireDevice(@PathVariable Long id, @RequestBody(required = false) Map<String, String> body) {
         String remark = body != null ? body.get("remark") : null;
@@ -141,7 +141,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @PostMapping("/{id}/bind-phone")
+    @PostMapping("/{id:[0-9]+}/bind-phone")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<Void> bindPhone(@PathVariable Long id, @Valid @RequestBody BindPhoneRequest request) {
         phoneDeviceService.bindPhone(id, request);
@@ -149,7 +149,7 @@ public class PhoneDeviceController {
     }
 
     @AuditLog(module = "phonedevice", operation = "PhoneDevice 操作")
-    @DeleteMapping("/{id}/unbind-phone/{phoneId}")
+    @DeleteMapping("/{id:[0-9]+}/unbind-phone/{phoneId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS')")
     public ApiResponse<Void> unbindPhone(@PathVariable Long id, @PathVariable Long phoneId) {
         phoneDeviceService.unbindPhone(id, phoneId);

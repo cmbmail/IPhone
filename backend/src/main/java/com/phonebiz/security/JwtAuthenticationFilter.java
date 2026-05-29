@@ -128,7 +128,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .map(u -> u.needsPasswordChange())
                     .orElse(false);
         } catch (Exception e) {
-            log.warn("Failed to check password change status for {}: {}", username, e.getMessage());
+            log.warn("Failed to check password change status");
             return false;
         }
     }

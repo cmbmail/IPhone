@@ -32,7 +32,7 @@ public class SysUserController {
         return ApiResponse.success(sysUserService.getAllUsers());
     }
 
-    @PutMapping("/{id}/username")
+    @PutMapping("/{id:[0-9]+}/username")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     public ApiResponse<Void> updateUsername(@PathVariable Long id, @RequestBody Map<String, String> body, Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
@@ -40,7 +40,7 @@ public class SysUserController {
         return ApiResponse.success("Username updated", null);
     }
 
-    @PutMapping("/{id}/department")
+    @PutMapping("/{id:[0-9]+}/department")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     public ApiResponse<Void> updateDepartment(@PathVariable Long id, @RequestBody Map<String, Long> body, Authentication authentication) {
         String operator = authentication != null ? authentication.getName() : "system";
@@ -48,7 +48,7 @@ public class SysUserController {
         return ApiResponse.success("Department updated", null);
     }
 
-    @PutMapping("/{id}/reset-password")
+    @PutMapping("/{id:[0-9]+}/reset-password")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     @AuditLog(module = "user", operation = "重置密码", targetType = "SysUser", targetId = "#id")
     public ApiResponse<Void> resetPassword(@PathVariable Long id, Authentication authentication) {
@@ -57,7 +57,7 @@ public class SysUserController {
         return ApiResponse.success("Password reset", null);
     }
 
-    @PutMapping("/{id}/disable")
+    @PutMapping("/{id:[0-9]+}/disable")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     @AuditLog(module = "user", operation = "禁用用户", targetType = "SysUser", targetId = "#id")
     public ApiResponse<Void> disableUser(@PathVariable Long id, Authentication authentication) {
@@ -66,7 +66,7 @@ public class SysUserController {
         return ApiResponse.success("User disabled", null);
     }
 
-    @PutMapping("/{id}/enable")
+    @PutMapping("/{id:[0-9]+}/enable")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     @AuditLog(module = "user", operation = "启用用户", targetType = "SysUser", targetId = "#id")
     public ApiResponse<Void> enableUser(@PathVariable Long id, Authentication authentication) {
@@ -75,7 +75,7 @@ public class SysUserController {
         return ApiResponse.success("User enabled", null);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('sys:user') or hasRole('ADMIN')")
     @AuditLog(module = "user", operation = "删除用户", targetType = "SysUser", targetId = "#id")
     public ApiResponse<Void> deleteUser(@PathVariable Long id, Authentication authentication) {
@@ -84,7 +84,7 @@ public class SysUserController {
         return ApiResponse.success("User deleted", null);
     }
 
-    @PutMapping("/{id}/role")
+    @PutMapping("/{id:[0-9]+}/role")
     @PreAuthorize("hasAuthority('sys:role') or hasRole('ADMIN')")
     @AuditLog(module = "user", operation = "变更角色", targetType = "SysUser", targetId = "#id")
     public ApiResponse<Void> updateRole(@PathVariable Long id, @RequestBody Map<String, Long> body, Authentication authentication) {

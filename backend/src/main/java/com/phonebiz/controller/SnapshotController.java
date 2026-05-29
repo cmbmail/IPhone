@@ -72,7 +72,7 @@ public class SnapshotController {
         ));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPS', 'FINANCE', 'BOSS')")
     public ApiResponse<PhoneSnapshot> getSnapshot(@PathVariable Long id) {
         PhoneSnapshot snapshot = snapshotService.getSnapshot(id);

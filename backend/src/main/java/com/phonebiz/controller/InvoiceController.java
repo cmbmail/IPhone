@@ -86,7 +86,7 @@ public class InvoiceController {
         return ApiResponse.success(result);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<Invoice> getInvoice(@PathVariable Long id) {
         Invoice invoice = invoiceService.getInvoiceById(id);
         return ApiResponse.success(invoice);
@@ -102,13 +102,13 @@ public class InvoiceController {
         return ApiResponse.success(invoice);
     }
 
-    @PostMapping("/{id}/read")
+    @PostMapping("/{id:[0-9]+}/read")
     public ApiResponse<Invoice> markAsRead(@PathVariable Long id) {
         Invoice invoice = invoiceService.markAsRead(id);
         return ApiResponse.success(invoice);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('inv:delete') or hasRole('ADMIN')")
     @AuditLog(module = "invoice", operation = "删除发票", targetType = "Invoice", targetId = "#id")
     public ApiResponse<Void> deleteInvoice(@PathVariable Long id) {

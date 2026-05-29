@@ -37,12 +37,12 @@ public class SysRoleController {
         return ApiResponse.success(roleService.getActiveRoles());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<SysRole> getRoleById(@PathVariable Long id) {
         return ApiResponse.success(roleService.getRoleById(id));
     }
 
-    @GetMapping("/{id}/permissions")
+    @GetMapping("/{id:[0-9]+}/permissions")
     public ApiResponse<List<SysPermission>> getRolePermissions(@PathVariable Long id) {
         return ApiResponse.success(roleService.getPermissionsByRoleId(id));
     }
@@ -57,7 +57,7 @@ public class SysRoleController {
         return ApiResponse.success(roleService.getPermissionsGroupedByModule());
     }
 
-    @GetMapping("/{id}/user-count")
+    @GetMapping("/{id:[0-9]+}/user-count")
     public ApiResponse<Long> getUserCountByRole(@PathVariable Long id) {
         return ApiResponse.success(roleService.getUserCountByRoleId(id));
     }
@@ -72,7 +72,7 @@ public class SysRoleController {
         return ApiResponse.success(roleService.createRole(request, operator));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('sys:role') or hasRole('ADMIN')")
     @AuditLog(module = "role", operation = "更新角色", targetType = "SysRole", targetId = "#id")
     public ApiResponse<SysRole> updateRole(
@@ -83,7 +83,7 @@ public class SysRoleController {
         return ApiResponse.success(roleService.updateRole(id, request, operator));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('sys:role') or hasRole('ADMIN')")
     @AuditLog(module = "role", operation = "删除角色", targetType = "SysRole", targetId = "#id")
     public ApiResponse<Void> deleteRole(@PathVariable Long id) {

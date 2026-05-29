@@ -31,7 +31,7 @@ public class DeviceOperationController {
         return ApiResponse.success(operationService.getOperations(pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<DeviceOperation> getOperationById(@PathVariable Long id) {
         return ApiResponse.success(operationService.getOperationById(id));
     }

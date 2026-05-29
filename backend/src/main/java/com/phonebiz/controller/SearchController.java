@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/search")
 @PreAuthorize("isAuthenticated()")
+@Slf4j
 @RequiredArgsConstructor
 public class SearchController {
 
@@ -55,7 +57,7 @@ public class SearchController {
                 item.put("route", "/phones");
                 results.add(item);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Search operation failed", e); throw new RuntimeException(e); }
 
         // Search extension numbers
         try {
@@ -69,7 +71,7 @@ public class SearchController {
                 item.put("route", "/extension-pools");
                 results.add(item);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Search operation failed", e); throw new RuntimeException(e); }
 
         // Search work orders
         try {
@@ -83,7 +85,7 @@ public class SearchController {
                 item.put("route", "/work-orders");
                 results.add(item);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Search operation failed", e); throw new RuntimeException(e); }
 
         // Search employees
         try {
@@ -97,7 +99,7 @@ public class SearchController {
                 item.put("route", "/orgs");
                 results.add(item);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Search operation failed", e); throw new RuntimeException(e); }
 
         // Search devices
         try {
@@ -111,7 +113,7 @@ public class SearchController {
                 item.put("route", "/devices");
                 results.add(item);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.warn("Search operation failed", e); throw new RuntimeException(e); }
 
         return ApiResponse.success(results.subList(0, Math.min(20, results.size())));
     }

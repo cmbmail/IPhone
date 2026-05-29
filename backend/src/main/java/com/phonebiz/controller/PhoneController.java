@@ -50,7 +50,7 @@ public class PhoneController {
         return ApiResponse.success(phoneService.getPhones(pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<PhoneNumber> getPhoneById(@PathVariable Long id) {
         return ApiResponse.success(phoneService.getPhoneById(id));
@@ -79,7 +79,7 @@ public class PhoneController {
         return ApiResponse.success(phoneService.getPhonesByStatus(phoneStatus, pageable));
     }
 
-    @GetMapping("/{id}/history")
+    @GetMapping("/{id:[0-9]+}/history")
     @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ApiResponse<Page<PhoneHistory>> getPhoneHistory(
             @PathVariable Long id,
@@ -105,7 +105,7 @@ public class PhoneController {
         return ApiResponse.success(phoneService.createPhone(request, operator));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('phone:change') or hasRole('ADMIN')")
     @AuditLog(module = "phone", operation = "更新号码", targetType = "PhoneNumber", targetId = "#id")
     public ApiResponse<PhoneNumber> updatePhone(

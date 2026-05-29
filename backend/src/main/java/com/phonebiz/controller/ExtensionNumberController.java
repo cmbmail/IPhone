@@ -57,7 +57,7 @@ public class ExtensionNumberController {
                 .build());
     }
 
-    @PostMapping("/{id}/allocate")
+    @PostMapping("/{id:[0-9]+}/allocate")
     @PreAuthorize("hasAuthority('phone:assign') or hasRole('ADMIN')")
     @AuditLog(module = "extensionNumber", operation = "分配分机号", targetType = "ExtensionNumber", targetId = "#id")
     public ApiResponse<ExtensionNumber> allocate(@PathVariable Long id,
@@ -70,7 +70,7 @@ public class ExtensionNumberController {
         return ApiResponse.success(extService.allocate(id, userName, deptOrgId, deptName, phoneNumber, operator));
     }
 
-    @PostMapping("/{id}/reclaim")
+    @PostMapping("/{id:[0-9]+}/reclaim")
     @PreAuthorize("hasAuthority('phone:revoke') or hasRole('ADMIN')")
     @AuditLog(module = "extensionNumber", operation = "回收分机号", targetType = "ExtensionNumber", targetId = "#id")
     public ApiResponse<ExtensionNumber> reclaim(@PathVariable Long id, Authentication auth) {

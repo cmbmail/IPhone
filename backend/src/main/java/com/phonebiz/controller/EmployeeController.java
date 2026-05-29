@@ -37,7 +37,7 @@ public class EmployeeController {
         return ApiResponse.success(employeeService.getEmployees(pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<Employee> getEmployeeById(@PathVariable Long id) {
         return ApiResponse.success(employeeService.getEmployeeById(id));
     }
@@ -67,7 +67,7 @@ public class EmployeeController {
         return ApiResponse.success(employeeService.createEmployee(request, operator));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('emp:edit') or hasRole('ADMIN')")
     @AuditLog(module = "employee", operation = "更新员工", targetType = "Employee", targetId = "#id")
     public ApiResponse<Employee> updateEmployee(
@@ -78,7 +78,7 @@ public class EmployeeController {
         return ApiResponse.success(employeeService.updateEmployee(id, request, operator));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('emp:delete') or hasRole('ADMIN')")
     @AuditLog(module = "employee", operation = "删除员工", targetType = "Employee", targetId = "#id")
     public ApiResponse<Void> deleteEmployee(@PathVariable Long id) {

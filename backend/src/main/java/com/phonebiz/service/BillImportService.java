@@ -153,7 +153,7 @@ public class BillImportService {
 
         try {
             b.setRawData(objectMapper.writeValueAsString(Map.of()));
-        } catch (JsonProcessingException ignored) {}
+        } catch (JsonProcessingException e) { log.warn("BillImport JSON parse failed", e); throw new RuntimeException(e); }
 
         return b;
     }
@@ -252,16 +252,16 @@ public class BillImportService {
         // try yyyy-MM-dd HH:mm:ss
         try {
             return LocalDateTime.parse(t, DATETIME_FMT).toLocalDate();
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.debug("Date parse failed, trying next format: {}", e.getMessage()); }
         // try yyyy-MM-dd
         try {
             return LocalDate.parse(t, DATE_FMT);
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.debug("Date parse failed, trying next format: {}", e.getMessage()); }
         // try Excel numeric date
         try {
             double d = Double.parseDouble(t);
             return LocalDate.of(1899, 12, 30).plusDays((long) d);
-        } catch (Exception ignored) {}
+        } catch (Exception e) { log.debug("Date parse failed, trying next format: {}", e.getMessage()); }
         return null;
     }
 

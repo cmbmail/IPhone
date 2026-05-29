@@ -73,7 +73,7 @@ public class BillAllocationController {
         return ApiResponse.success(billAllocationRepository.findByBillMonthAndFinanceConfirmSubmit(billMonth, BillAllocation.FinanceSubmitStatus.pending, pageable));
     }
 
-    @PostMapping("/{id}/confirm-org")
+    @PostMapping("/{id:[0-9]+}/confirm-org")
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "确认组织", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> confirmOrg(@PathVariable Long id,
@@ -83,7 +83,7 @@ public class BillAllocationController {
         return ApiResponse.success(null);
     }
 
-    @PostMapping("/{id}/confirm-amount")
+    @PostMapping("/{id:[0-9]+}/confirm-amount")
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "确认金额", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> confirmAmount(@PathVariable Long id,
@@ -93,7 +93,7 @@ public class BillAllocationController {
         return ApiResponse.success(null);
     }
 
-    @PostMapping("/{id}/confirm-anomaly")
+    @PostMapping("/{id:[0-9]+}/confirm-anomaly")
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "确认异常", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> confirmAnomaly(@PathVariable Long id,
@@ -103,7 +103,7 @@ public class BillAllocationController {
         return ApiResponse.success(null);
     }
 
-    @PostMapping("/{id}/submit")
+    @PostMapping("/{id:[0-9]+}/submit")
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "提交账单", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> submit(@PathVariable Long id,
@@ -113,7 +113,7 @@ public class BillAllocationController {
         return ApiResponse.success(null);
     }
 
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id:[0-9]+}/reject")
     @PreAuthorize("hasAuthority('bill:allocate') or hasRole('ADMIN')")
     @AuditLog(module = "bill", operation = "驳回账单", targetType = "BillAllocation", targetId = "#id")
     public ApiResponse<Void> reject(@PathVariable Long id,

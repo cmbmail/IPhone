@@ -36,7 +36,7 @@ public class PhoneOwnershipController {
         return ApiResponse.success(phoneOwnershipService.search(keyword, branchOrgId, pageable));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('phone:assign') or hasRole('ADMIN')")
     @AuditLog(module = "phoneOwnership", operation = "编辑号码归属", targetType = "PhoneOwnership", targetId = "#id")
     public ApiResponse<PhoneOwnership> update(@PathVariable Long id,

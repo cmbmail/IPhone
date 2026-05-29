@@ -29,7 +29,7 @@ public class AreaCodeController {
         return ApiResponse.success(areaCodeService.getAllMappings());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<AreaCodeOrgMapping> getMappingById(@PathVariable Long id) {
         return ApiResponse.success(areaCodeService.getMappingById(id));
     }
@@ -59,7 +59,7 @@ public class AreaCodeController {
     }
 
     @AuditLog(module = "areacode", operation = "AreaCode 操作")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     public ApiResponse<Void> deleteMapping(@PathVariable Long id) {
         areaCodeService.deleteMapping(id);
         return ApiResponse.success("Area code mapping deleted successfully", null);

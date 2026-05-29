@@ -202,7 +202,7 @@ public class ImportService {
         if (data.containsKey("orgId")) {
             try {
                 existing.setOrgId(Long.parseLong(String.valueOf(data.get("orgId"))));
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException e) { log.warn("ImportService number format error", e); throw new RuntimeException(e); }
         }
         
         if (data.containsKey("extensionNumber")) {

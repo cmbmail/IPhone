@@ -29,7 +29,7 @@ public class ExtensionPoolController {
         return ApiResponse.success(poolService.getAllPools());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<ExtensionPool> getPoolById(@PathVariable Long id) {
         return ApiResponse.success(poolService.getPoolById(id));
     }
@@ -39,7 +39,7 @@ public class ExtensionPoolController {
         return ApiResponse.success(poolService.getPoolsByOrg(orgId));
     }
 
-    @GetMapping("/{id}/usage")
+    @GetMapping("/{id:[0-9]+}/usage")
     public ApiResponse<ExtensionPoolService.ExtensionPoolUsage> getPoolUsage(@PathVariable Long id) {
         return ApiResponse.success(poolService.getPoolUsage(id));
     }
@@ -54,13 +54,13 @@ public class ExtensionPoolController {
     }
 
     @AuditLog(module = "extensionpool", operation = "ExtensionPool 操作")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     public ApiResponse<Void> deletePool(@PathVariable Long id) {
         poolService.deletePool(id);
         return ApiResponse.success("Extension pool deleted successfully", null);
     }
 
-    @GetMapping("/{id}/exhaustion")
+    @GetMapping("/{id:[0-9]+}/exhaustion")
     public ApiResponse<ExtensionPoolService.PoolExhaustionInfo> checkExhaustion(@PathVariable Long id) {
         return ApiResponse.success(poolService.checkExhaustion(id));
     }

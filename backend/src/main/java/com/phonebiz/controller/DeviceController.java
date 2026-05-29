@@ -36,7 +36,7 @@ public class DeviceController {
         return ApiResponse.success(deviceService.getDevices(pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<Device> getDeviceById(@PathVariable Long id) {
         return ApiResponse.success(deviceService.getDeviceById(id));
     }
@@ -72,7 +72,7 @@ public class DeviceController {
         return ApiResponse.success(deviceService.createDevice(device));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('device:assign') or hasRole('ADMIN')")
     @AuditLog(module = "device", operation = "更新设备", targetType = "Device", targetId = "#id")
     public ApiResponse<Device> updateDevice(@PathVariable Long id, @Valid @RequestBody UpdateDeviceRequest request) {
@@ -89,7 +89,7 @@ public class DeviceController {
         return ApiResponse.success(deviceService.updateDevice(id, existing));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAuthority('device:revoke') or hasRole('ADMIN')")
     @AuditLog(module = "device", operation = "删除设备", targetType = "Device", targetId = "#id")
     public ApiResponse<Void> deleteDevice(@PathVariable Long id) {

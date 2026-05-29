@@ -30,7 +30,7 @@ public class CostCenterController {
         return ApiResponse.success(costCenterService.getAllCostCenters());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public ApiResponse<CostCenterMapping> getCostCenterById(@PathVariable Long id) {
         return ApiResponse.success(costCenterService.getCostCenterById(id));
     }
@@ -50,7 +50,7 @@ public class CostCenterController {
     }
 
     @AuditLog(module = "costcenter", operation = "CostCenter 操作")
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     public ApiResponse<CostCenterMapping> updateCostCenter(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCostCenterRequest request,
@@ -60,7 +60,7 @@ public class CostCenterController {
     }
 
     @AuditLog(module = "costcenter", operation = "CostCenter 操作")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     public ApiResponse<Void> deleteCostCenter(@PathVariable Long id) {
         costCenterService.deleteCostCenter(id);
         return ApiResponse.success("Cost center deleted successfully", null);
