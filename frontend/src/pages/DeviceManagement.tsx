@@ -28,6 +28,7 @@ interface BoundPhone {
 
 const DeviceManagement = () => {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [selectedDevice, setSelectedDevice] = useState<PhoneDeviceDTO | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [modalType, setModalType] = useState('')
@@ -35,9 +36,9 @@ const DeviceManagement = () => {
   const qc = useQueryClient()
 
   const { data: devicesData, isLoading } = useQuery({
-    queryKey: ['phone-devices', page],
+    queryKey: ['phone-devices', page, pageSize],
     queryFn: async () => {
-      const r = await phoneDeviceApi.getList({ page, size: 20 })
+      const r = await phoneDeviceApi.getList({ page, size: pageSize })
       return r
     },
   })
@@ -347,10 +348,11 @@ const DeviceManagement = () => {
         rowKey="id"
         pagination={{
           current: page + 1,
-          pageSize: 20,
+          pageSize,
           total: devicesData?.totalElements,
           showTotal: (t) => `共 ${t} 条`,
-          onChange: (p) => setPage(p - 1),
+          onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
+            showSizeChanger: true,
         }}
         scroll={{ x: 1100 }}
       />

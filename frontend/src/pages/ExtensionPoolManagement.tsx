@@ -33,7 +33,7 @@ const ExtensionPoolManagement = () => {
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined)
   const [deptFilter, setDeptFilter] = useState<number | undefined>(undefined)
   const [page, setPage] = useState(0)
-  const [size] = useState(20)
+  const [pageSize, setPageSize] = useState(20)
 
   // 操作弹窗
   const [actionModalOpen, setActionModalOpen] = useState(false)
@@ -46,14 +46,14 @@ const ExtensionPoolManagement = () => {
   const queryClient = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
-    queryKey: ['extension-numbers', keyword, statusFilter, deptFilter, page],
+    queryKey: ['extension-numbers', keyword, statusFilter, deptFilter, page, pageSize],
     queryFn: async () => {
       const res = await extensionNumberApi.search({
         keyword: keyword || undefined,
         status: statusFilter !== undefined ? String(statusFilter) : undefined,
         deptOrgId: deptFilter || undefined,
         page,
-        size,
+        size: pageSize,
       })
       return res
     },
@@ -290,9 +290,10 @@ const ExtensionPoolManagement = () => {
           rowKey="id"
           pagination={{
             current: page + 1,
-            pageSize: size,
+            pageSize,
             total: listData?.totalElements || 0,
-            onChange: (p) => setPage(p - 1),
+            onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
+            showSizeChanger: true,
           }}
         />
       </Card>

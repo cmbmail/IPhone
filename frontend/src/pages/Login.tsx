@@ -15,7 +15,6 @@ const Login = () => {
       const response = await authApi.login(values);
       const { token, user, expiresIn, permissions } = response;
 
-      // Merge permissions into user object for authStore
       const userWithPermissions = { ...user, permissions: permissions ?? [] };
 
       localStorage.setItem("expiresIn", String(expiresIn));

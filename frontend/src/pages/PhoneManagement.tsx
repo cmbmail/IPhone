@@ -41,7 +41,7 @@ interface PhoneView {
 
 const PhoneManagement = () => {
   const [page, setPage] = useState(0)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(20)
   const [keyword, setKeyword] = useState('')
   const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
   const [filterOrgId, setFilterOrgId] = useState<number | undefined>(undefined)
@@ -53,7 +53,7 @@ const PhoneManagement = () => {
   const queryClient = useQueryClient()
 
   const { data: listData, isLoading } = useQuery({
-    queryKey: ['phone-views', keyword, filterStatus, filterOrgId, page],
+    queryKey: ['phone-views', keyword, filterStatus, filterOrgId, page, pageSize],
     queryFn: async () => {
       const params: Record<string, unknown> = { page, size: pageSize }
       if (keyword) params.keyword = keyword
@@ -316,7 +316,8 @@ const PhoneManagement = () => {
             current: page + 1,
             pageSize,
             total: listData?.data?.totalElements || 0,
-            onChange: (p) => setPage(p - 1),
+            onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
+            showSizeChanger: true,
           }}
         />
       </Card>
