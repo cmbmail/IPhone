@@ -95,7 +95,7 @@ public class AuthService {
                 permissionCodes
         );
 
-        LoginResponse response = LoginResponse.from(user, token, jwtUtil.getExpiration());
+        LoginResponse response = LoginResponse.from(user, token, jwtUtil.getExpiration(), permissionCodes);
         if (user.needsPasswordChange()) {
             response.setForceChangePassword(true);
         }
@@ -161,14 +161,7 @@ public class AuthService {
         SysUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_004, "Authentication failed"));
 
-        return LoginResponse.UserInfo.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .employeeNo(user.getEmployeeNo())
-                .role(String.valueOf(user.getRole()))
-                .scopeOrgId(user.getScopeOrgId())
-                .lastLoginAt(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null)
-                .needsPasswordChange(user.needsPasswordChange())
-                .build();
+        List<String> permissionCodes = loadPermissionCodes(user);
+        return LoginResponse.userToInfo(user, permissionCodes);
     }
 }

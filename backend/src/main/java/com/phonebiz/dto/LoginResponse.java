@@ -32,21 +32,38 @@ public class LoginResponse {
         private Long scopeOrgId;
         private String lastLoginAt;
         private Boolean needsPasswordChange;
+        private List<String> permissions;
     }
 
-    public static LoginResponse from(SysUser user, String token, long expiresIn) {
+    private static String mapRoleToName(int role) {
+        return switch (role) {
+            case 1 -> "admin";
+            case 2 -> "ops";
+            case 3 -> "finance";
+            case 4 -> "boss";
+            default -> "user";
+        };
+    }
+
+    public static LoginResponse from(SysUser user, String token, long expiresIn, List<String> permissions) {
         return LoginResponse.builder()
                 .token(token)
                 .expiresIn(expiresIn)
-                .user(UserInfo.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .employeeNo(user.getEmployeeNo())
-                        .role(String.valueOf(user.getRole()))
-                        .scopeOrgId(user.getScopeOrgId())
-                        .lastLoginAt(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null)
-                        .needsPasswordChange(user.needsPasswordChange())
-                        .build())
+                .permissions(permissions)
+                .user(userToInfo(user, permissions))
+                .build();
+    }
+
+    public static UserInfo userToInfo(SysUser user, List<String> permissions) {
+        return UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .employeeNo(user.getEmployeeNo())
+                .role(mapRoleToName(user.getRole()))
+                .scopeOrgId(user.getScopeOrgId())
+                .lastLoginAt(user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : null)
+                .needsPasswordChange(user.needsPasswordChange())
+                .permissions(permissions)
                 .build();
     }
 }

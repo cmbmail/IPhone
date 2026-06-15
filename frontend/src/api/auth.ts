@@ -5,6 +5,7 @@ export interface LoginData {
   token: string
   user: UserInfo & { needsPasswordChange?: boolean; name?: string }
   expiresIn: number
+  permissions: string[]
 }
 
 export const authApi = {

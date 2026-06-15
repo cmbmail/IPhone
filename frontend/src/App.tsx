@@ -37,7 +37,11 @@ import {
 } from '@ant-design/icons'
 import zhCN from 'antd/locale/zh_CN'
 import { PrivateRoute } from '@/components/PrivateRoute'
+import { PermissionGuard } from '@/components/PermissionGuard'
 import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
+import { ROLE_LABEL } from '@/types/auth'
+import type { Role } from '@/types/auth'
 import { authApi } from '@/api/auth'
 import Login from '@/pages/Login'
 
@@ -68,23 +72,26 @@ const ChangePassword = lazy(() => import('@/pages/ChangePassword'))
 
 // Layout components replaced with plain divs for reliable flex layout
 
+// Menu items with permission metadata
+// allowedRoles: who can see this menu (admin always passes)
+// permission: alternative to role check (admin always passes)
 const menuItems = [
   {
     key: 'sub-work-orders',
     icon: <CarryOutOutlined />,
     label: '工单管理',
-    children: [{ key: '/work-orders', icon: <CarryOutOutlined />, label: '工单管理' }],
+    children: [{ key: '/work-orders', icon: <CarryOutOutlined />, label: '工单管理', permission: 'wo:view' }],
   },
   {
     key: 'sub-phones',
     icon: <PhoneOutlined />,
     label: '号码管理',
     children: [
-      { key: '/phones', icon: <PhoneOutlined />, label: '号码资源' },
-      { key: '/extensionNumber-pools', icon: <AppstoreOutlined />, label: '分机池' },
-      { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理' },
-      { key: '/devices', icon: <DesktopOutlined />, label: '设备管理' },
-      { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属' },
+      { key: '/phones', icon: <PhoneOutlined />, label: '号码资源', permission: 'phone:view' },
+      { key: '/extensionNumber-pools', icon: <AppstoreOutlined />, label: '分机池', permission: 'ext:view' },
+      { key: '/area-codes', icon: <EnvironmentOutlined />, label: '区号管理', permission: 'areacode:view' },
+      { key: '/devices', icon: <DesktopOutlined />, label: '设备管理', permission: 'device:view' },
+      { key: '/phone-ownership', icon: <ApartmentOutlined />, label: '号码归属', permission: 'phone:view' },
     ],
   },
   {
@@ -92,23 +99,23 @@ const menuItems = [
     icon: <AccountBookOutlined />,
     label: '费用管理',
     children: [
-      { key: '/cost-centers', icon: <WalletOutlined />, label: '成本中心' },
-      { key: '/bills', icon: <AccountBookOutlined />, label: '账单管理' },
-      { key: '/bill-allocations', icon: <SwapOutlined />, label: '账单分摊' },
-      { key: '/invoices', icon: <CheckOutlined />, label: '发票管理' },
-      { key: '/reconciliations', icon: <AuditOutlined />, label: '子公司对账' },
+      { key: '/cost-centers', icon: <WalletOutlined />, label: '成本中心', permission: 'cost:view' },
+      { key: '/bills', icon: <AccountBookOutlined />, label: '账单管理', permission: 'bill:view' },
+      { key: '/bill-allocations', icon: <SwapOutlined />, label: '账单分摊', permission: 'bill:allocate' },
+      { key: '/invoices', icon: <CheckOutlined />, label: '发票管理', permission: 'inv:view' },
+      { key: '/reconciliations', icon: <AuditOutlined />, label: '子公司对账', permission: 'recon:view' },
     ],
   },
-  { key: '/orgs', icon: <TeamOutlined />, label: '用户管理' },
+  { key: '/orgs', icon: <TeamOutlined />, label: '用户管理', permission: 'org:view' },
   {
     key: 'sub-system',
     icon: <BarChartOutlined />,
     label: '系统管理',
     children: [
-      { key: '/reports', icon: <BarChartOutlined />, label: '报表中心' },
-      { key: '/audit-logs', icon: <FileTextOutlined />, label: '审计日志' },
-      { key: '/roles', icon: <SafetyCertificateOutlined />, label: '角色管理' },
-      { key: '/announcements', icon: <NotificationOutlined />, label: '通知公告' },
+      { key: '/reports', icon: <BarChartOutlined />, label: '报表中心', permission: 'rpt:view' },
+      { key: '/audit-logs', icon: <FileTextOutlined />, label: '审计日志', allowedRoles: ['admin'] as Role[] },
+      { key: '/roles', icon: <SafetyCertificateOutlined />, label: '角色管理', allowedRoles: ['admin'] as Role[] },
+      { key: '/announcements', icon: <NotificationOutlined />, label: '通知公告', anyRole: ['admin', 'ops'] as Role[] },
     ],
   },
 ]
@@ -140,11 +147,31 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [openKeys, setOpenKeys] = useState<string[]>([])
   const { user, clearAuth } = useAuthStore()
+  const { hasPermission, hasAnyRole } = usePermission()
   const [pwdModalOpen, setPwdModalOpen] = useState(false)
   const [pwdLoading, setPwdLoading] = useState(false)
   const [pwdForm] = Form.useForm()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+
+  // Filter menu items based on permissions
+  const filteredMenuItems = menuItems
+    .map((group) => {
+      if ('children' in group && group.children) {
+        const filteredChildren = group.children.filter((item) => {
+          if (item.allowedRoles) return hasAnyRole(item.allowedRoles)
+          if (item.permission) return hasPermission(item.permission)
+          if ((item as { anyRole?: Role[] }).anyRole) return hasAnyRole((item as { anyRole?: Role[] }).anyRole!)
+          return true
+        })
+        return filteredChildren.length > 0 ? { ...group, children: filteredChildren } : null
+      }
+      // Top-level item (no children)
+      if ((group as { allowedRoles?: Role[] }).allowedRoles) return hasAnyRole((group as { allowedRoles?: Role[] }).allowedRoles!) ? group : null
+      if ((group as { permission?: string }).permission) return hasPermission((group as { permission?: string }).permission!) ? group : null
+      return group
+    })
+    .filter(Boolean)
 
   const handleUserMenuClick = ({ key }: { key: string }) => {
     if (key === 'change-password') {
@@ -208,7 +235,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             selectedKeys={[location.pathname === '/dashboard' ? '' : location.pathname]}
             openKeys={openKeys}
             onOpenChange={setOpenKeys}
-            items={menuItems}
+            items={filteredMenuItems}
             onClick={({ key }) => navigate(key)}
             style={{ background: 'transparent', border: 'none' }}
           />
@@ -276,7 +303,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
                     {user?.username || '用户'}
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>管理员</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user?.role ? ROLE_LABEL[user.role] : '用户'}</span>
                 </div>
               </div>
             </Dropdown>
@@ -372,6 +399,19 @@ const PrivateRouteWithLayout = ({ children }: { children: React.ReactNode }) => 
   </PrivateRoute>
 )
 
+/** Route wrapper with permission guard */
+const GuardedRoute = ({ children, permission, allowedRoles }: {
+  children: React.ReactNode
+  permission?: string
+  allowedRoles?: Role[]
+}) => (
+  <PrivateRouteWithLayout>
+    <PermissionGuard permission={permission} anyRole={allowedRoles}>
+      {children}
+    </PermissionGuard>
+  </PrivateRouteWithLayout>
+)
+
 const App = () => (
   <ConfigProvider locale={zhCN}>
     <BrowserRouter>
@@ -393,150 +433,24 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/change-password" element={<ChangePassword />} />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRouteWithLayout>
-                  <Dashboard />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/work-orders"
-              element={
-                <PrivateRouteWithLayout>
-                  <WorkOrderManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/phones"
-              element={
-                <PrivateRouteWithLayout>
-                  <PhoneManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/phone-ownership"
-              element={
-                <PrivateRouteWithLayout>
-                  <PhoneOwnershipPage />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/extensionNumber-pools"
-              element={
-                <PrivateRouteWithLayout>
-                  <ExtensionPoolManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/area-codes"
-              element={
-                <PrivateRouteWithLayout>
-                  <AreaCodeManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/devices"
-              element={
-                <PrivateRouteWithLayout>
-                  <DeviceManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/cost-centers"
-              element={
-                <PrivateRouteWithLayout>
-                  <CostCenterManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/bills"
-              element={
-                <PrivateRouteWithLayout>
-                  <BillManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/bill-allocations"
-              element={
-                <PrivateRouteWithLayout>
-                  <BillAllocationManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/invoices"
-              element={
-                <PrivateRouteWithLayout>
-                  <InvoiceManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/reconciliations"
-              element={
-                <PrivateRouteWithLayout>
-                  <SubsidiaryReconciliationPage />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/orgs"
-              element={
-                <PrivateRouteWithLayout>
-                  <OrgManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <PrivateRouteWithLayout>
-                  <ReportCenter />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/roles"
-              element={
-                <PrivateRouteWithLayout>
-                  <RoleManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/user-management"
-              element={
-                <PrivateRouteWithLayout>
-                  <UserManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/audit-logs"
-              element={
-                <PrivateRouteWithLayout>
-                  <AuditLogManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
-            <Route
-              path="/announcements"
-              element={
-                <PrivateRouteWithLayout>
-                  <AnnouncementManagement />
-                </PrivateRouteWithLayout>
-              }
-            />
+            <Route path="/dashboard" element={<PrivateRouteWithLayout><Dashboard /></PrivateRouteWithLayout>} />
+            <Route path="/work-orders" element={<GuardedRoute permission="wo:view"><WorkOrderManagement /></GuardedRoute>} />
+            <Route path="/phones" element={<GuardedRoute permission="phone:view"><PhoneManagement /></GuardedRoute>} />
+            <Route path="/phone-ownership" element={<GuardedRoute permission="phone:view"><PhoneOwnershipPage /></GuardedRoute>} />
+            <Route path="/extensionNumber-pools" element={<GuardedRoute permission="ext:view"><ExtensionPoolManagement /></GuardedRoute>} />
+            <Route path="/area-codes" element={<GuardedRoute permission="areacode:view"><AreaCodeManagement /></GuardedRoute>} />
+            <Route path="/devices" element={<GuardedRoute permission="device:view"><DeviceManagement /></GuardedRoute>} />
+            <Route path="/cost-centers" element={<GuardedRoute permission="cost:view"><CostCenterManagement /></GuardedRoute>} />
+            <Route path="/bills" element={<GuardedRoute permission="bill:view"><BillManagement /></GuardedRoute>} />
+            <Route path="/bill-allocations" element={<GuardedRoute permission="bill:allocate"><BillAllocationManagement /></GuardedRoute>} />
+            <Route path="/invoices" element={<GuardedRoute permission="inv:view"><InvoiceManagement /></GuardedRoute>} />
+            <Route path="/reconciliations" element={<GuardedRoute permission="recon:view"><SubsidiaryReconciliationPage /></GuardedRoute>} />
+            <Route path="/orgs" element={<GuardedRoute permission="org:view"><OrgManagement /></GuardedRoute>} />
+            <Route path="/reports" element={<GuardedRoute permission="rpt:view"><ReportCenter /></GuardedRoute>} />
+            <Route path="/roles" element={<GuardedRoute allowedRoles={['admin']}><RoleManagement /></GuardedRoute>} />
+            <Route path="/user-management" element={<GuardedRoute allowedRoles={['admin']}><UserManagement /></GuardedRoute>} />
+            <Route path="/audit-logs" element={<GuardedRoute allowedRoles={['admin']}><AuditLogManagement /></GuardedRoute>} />
+            <Route path="/announcements" element={<PrivateRouteWithLayout><AnnouncementManagement /></PrivateRouteWithLayout>} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
