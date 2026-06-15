@@ -18,6 +18,10 @@ import com.phonebiz.entity.PhoneSnapshot;
 import com.phonebiz.repository.BillAllocationRepository;
 import com.phonebiz.repository.BillRawRepository;
 import com.phonebiz.repository.CostCenterMappingRepository;
+import com.phonebiz.dto.BillAllocationDTO;
+import com.phonebiz.dto.BillAllocationSummaryDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.phonebiz.repository.PhoneSnapshotRepository;
 
 @Slf4j
@@ -243,5 +247,81 @@ public class BillAllocationService {
         allocation.setFinanceConfirmAnomaly(BillAllocation.FinanceConfirmStatus.pending);
         billAllocationRepository.save(allocation);
     }
-}
 
+    // ==================== Query methods (moved from Controller) ====================
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getAllocations(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonth(billMonth, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getAnomalies(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonthAndAnomalyFlag(billMonth, true, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getPendingOrgConfirm(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonthAndAdminConfirmOrg(billMonth, BillAllocation.ConfirmStatus.pending, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getPendingAmountConfirm(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonthAndAdminConfirmAmount(billMonth, BillAllocation.ConfirmStatus.pending, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getPendingFinanceConfirm(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonthAndFinanceConfirmAnomaly(billMonth, BillAllocation.FinanceConfirmStatus.pending, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BillAllocationDTO> getPendingSubmit(String billMonth, Pageable pageable) {
+        Page<BillAllocation> page = billAllocationRepository.findByBillMonthAndFinanceConfirmSubmit(billMonth, BillAllocation.FinanceSubmitStatus.pending, pageable);
+        return page.map(BillAllocationDTO::from);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<BillAllocationSummaryDTO> getAllocationSummary(String billMonth) {
+        java.util.List<Object[]> rows = billRawRepository.sumByBranch(billMonth);
+        java.util.List<BillAllocationSummaryDTO> result = new java.util.ArrayList<>();
+        for (Object[] row : rows) {
+            String branchName = (String) row[0];
+            if (branchName == null || branchName.isEmpty()) {
+                branchName = "未分配";
+            }
+            java.math.BigDecimal platformUsageFee = (java.math.BigDecimal) row[1];
+            java.math.BigDecimal numberMonthlyRent = (java.math.BigDecimal) row[2];
+            Integer outboundDuration = ((Number) row[3]).intValue();
+            Integer transferOutboundDuration = ((Number) row[4]).intValue();
+            java.math.BigDecimal domesticCharge = (java.math.BigDecimal) row[5];
+            java.math.BigDecimal internationalCharge = (java.math.BigDecimal) row[6];
+            java.math.BigDecimal recordingFee = (java.math.BigDecimal) row[7];
+            java.math.BigDecimal ringtoneFee = (java.math.BigDecimal) row[8];
+            java.math.BigDecimal flashSmsFee = (java.math.BigDecimal) row[9];
+            java.math.BigDecimal totalAmount = (java.math.BigDecimal) row[10];
+            java.math.BigDecimal feeSubtotal = platformUsageFee.add(numberMonthlyRent).add(domesticCharge).add(internationalCharge);
+
+            result.add(BillAllocationSummaryDTO.builder()
+                    .branchName(branchName)
+                    .platformUsageFee(platformUsageFee)
+                    .numberMonthlyRent(numberMonthlyRent)
+                    .outboundDuration(outboundDuration)
+                    .transferOutboundDuration(transferOutboundDuration)
+                    .domesticCharge(domesticCharge)
+                    .internationalCharge(internationalCharge)
+                    .feeSubtotal(feeSubtotal)
+                    .recordingFee(recordingFee)
+                    .ringtoneFee(ringtoneFee)
+                    .flashSmsFee(flashSmsFee)
+                    .totalAmount(totalAmount)
+                    .build());
+        }
+        return result;
+    }
+}
