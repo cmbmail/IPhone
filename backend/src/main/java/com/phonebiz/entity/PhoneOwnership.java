@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 @Entity
+@Where(clause = "deleted_at IS NULL")
 @Table(name = "phone_ownership")
 @Data
 @Builder

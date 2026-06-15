@@ -23,9 +23,6 @@ public class SubsidiaryReconciliation extends BaseEntity {
     public static final int RECON_GROUP_CONFIRMED = 2;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "bill_month", length = 7, nullable = false)
     private String billMonth;

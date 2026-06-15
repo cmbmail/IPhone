@@ -26,6 +26,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final SysUserRepository sysUserRepository;
 
+    @Transactional(readOnly = true)
     public Long getUserIdByUsername(String username) {
         return sysUserRepository.findByUsername(username)
                 .map(SysUser::getId)

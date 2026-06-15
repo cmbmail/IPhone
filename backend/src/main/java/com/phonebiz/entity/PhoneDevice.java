@@ -9,9 +9,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 @Data
 @Entity
+@Where(clause = "deleted_at IS NULL")
 @Table(name = "phone_device", uniqueConstraints = {
     @UniqueConstraint(columnNames = "mac_address")
 })

@@ -41,6 +41,7 @@ public class ExtensionNumberService {
      * 2. 电话号码不为空 + 有未完成工单引用该分机号 → 分配中(2)
      * 3. 电话号码不为空 + 无未完成工单 → 占用(1)
      */
+    @Transactional(readOnly = true)
     public Page<ExtensionNumber> search(String keyword, Integer status, Long deptOrgId, Pageable pageable) {
         Page<ExtensionNumber> page = extRepo.searchOrdered(keyword, null, deptOrgId, pageable);
 

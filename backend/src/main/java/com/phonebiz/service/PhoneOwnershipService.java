@@ -27,10 +27,12 @@ public class PhoneOwnershipService {
     private final PhoneOwnershipRepository phoneOwnershipRepository;
     private final OrgStructureRepository orgStructureRepository;
 
+    @Transactional(readOnly = true)
     public Page<PhoneOwnership> search(String keyword, Long branchOrgId, Pageable pageable) {
         return phoneOwnershipRepository.search(keyword, branchOrgId, pageable);
     }
 
+    @Transactional(readOnly = true)
     public List<PhoneOwnership> listAll() {
         return phoneOwnershipRepository.findAllByOrderByPhoneNumberAsc();
     }

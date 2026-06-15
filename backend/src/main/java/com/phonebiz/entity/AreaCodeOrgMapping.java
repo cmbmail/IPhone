@@ -12,9 +12,6 @@ import lombok.EqualsAndHashCode;
 @Table(name = "area_code_org_mapping")
 public class AreaCodeOrgMapping extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "area_code", nullable = false, length = 10)
     private String areaCode;

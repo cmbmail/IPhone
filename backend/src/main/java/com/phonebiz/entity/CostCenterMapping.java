@@ -16,9 +16,6 @@ public class CostCenterMapping extends BaseEntity {
     public static final int CC_ACTIVE = 1;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "org_id", nullable = false)
     private Long orgId;

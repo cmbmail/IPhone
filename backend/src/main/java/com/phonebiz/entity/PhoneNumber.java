@@ -20,9 +20,6 @@ public class PhoneNumber extends BaseEntity {
     public static final int PS_DISABLED = 5;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "phone_number", nullable = false, unique = true, length = 50)
     private String phoneNumber;

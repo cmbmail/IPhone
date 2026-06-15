@@ -12,9 +12,6 @@ import lombok.EqualsAndHashCode;
 @Table(name = "extension_pool")
 public class ExtensionPool extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "org_id", nullable = false)
     private Long orgId;

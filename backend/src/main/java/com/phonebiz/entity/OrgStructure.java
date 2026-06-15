@@ -44,9 +44,6 @@ public class OrgStructure extends BaseEntity {
     }
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "parent_id")
     private Long parentId;
@@ -86,9 +83,9 @@ public class OrgStructure extends BaseEntity {
     public void calculateLevelAndPath() {
         if (this.parentId == null) {
             this.level = 0;
-            this.path = "/" + this.id;
+            this.path = "/" + this.getId();
         } else {
-            this.path = this.path + "/" + this.id;
+            this.path = this.path + "/" + this.getId();
         }
     }
 
@@ -142,7 +139,7 @@ public class OrgStructure extends BaseEntity {
         if (newParentId == null) {
             return;
         }
-        if (newParentId.equals(this.id)) {
+        if (newParentId.equals(this.getId())) {
             throw new BusinessException(ErrorCode.ORG_003);
         }
     }

@@ -224,6 +224,7 @@ public class ImportService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.IMPORT_001));
     }
 
+    @Transactional(readOnly = true)
     public int getProgress(String batchId) {
         return progressMap.getOrDefault(batchId, 0);
     }

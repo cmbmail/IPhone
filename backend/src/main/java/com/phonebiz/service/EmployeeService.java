@@ -201,6 +201,7 @@ public class EmployeeService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<Long> getOrgIdsUnderScope(Long scopeOrgId) {
         if (scopeOrgId == null) {
             return orgRepository.findAll().stream()

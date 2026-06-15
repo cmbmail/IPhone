@@ -21,6 +21,7 @@ import com.phonebiz.repository.ExtensionNumberRepository;
 import com.phonebiz.repository.OrgStructureRepository;
 import com.phonebiz.repository.PhoneDeviceRepository;
 import com.phonebiz.repository.PhoneNumberRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -37,6 +38,7 @@ public class PhoneViewService {
     public static final int STATUS_OCCUPIED = 1;
     public static final int STATUS_ALLOCATING = 2;
 
+    @Transactional(readOnly = true)
     public Page<PhoneViewDTO> listPhones(String keyword, Integer status, Long orgId, Pageable pageable) {
         // 1. 查分页电话号码
         String countJpql = "SELECT COUNT(p) FROM PhoneNumber p WHERE p.deletedAt IS NULL";

@@ -23,9 +23,6 @@ public class SysUser extends BaseEntity {
     public static final int USER_BOSS = 4;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;

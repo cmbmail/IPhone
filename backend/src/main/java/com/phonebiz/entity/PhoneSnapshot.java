@@ -19,9 +19,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PhoneSnapshot extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "snapshot_month", length = 7, nullable = false)
     private String snapshotMonth;

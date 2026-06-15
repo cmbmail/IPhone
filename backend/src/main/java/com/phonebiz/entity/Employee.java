@@ -18,9 +18,6 @@ public class Employee extends BaseEntity {
     public static final int EMP_INACTIVE = 0;
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "employee_no", nullable = false, unique = true, length = 20)
     private String employeeNo;

@@ -129,7 +129,7 @@ public class DeviceService {
         return deviceRepository.save(device);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Device checkin(String deviceId, String ipAddress, String firmwareVersion) {
         Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_001));

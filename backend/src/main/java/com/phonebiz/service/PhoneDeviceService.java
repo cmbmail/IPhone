@@ -31,6 +31,7 @@ public class PhoneDeviceService {
     private final EmployeeRepository employeeRepository;
     private final OrgStructureRepository orgStructureRepository;
 
+    @Transactional(readOnly = true)
     public Page<PhoneDeviceDTO> getDeviceList(List<Long> orgIds, Integer status, Pageable pageable) {
         Page<PhoneDevice> page;
         if (orgIds != null && !orgIds.isEmpty()) {
@@ -55,12 +56,14 @@ public class PhoneDeviceService {
         return page.map(d -> toDTOEnriched(d, orgNameMap, empNameMap, phoneCountMap));
     }
 
+    @Transactional(readOnly = true)
     public PhoneDeviceDTO getDeviceDetail(Long id) {
         PhoneDevice device = phoneDeviceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
         return toDTO(device);
     }
 
+    @Transactional(readOnly = true)
     public List<BoundPhoneDTO> getBoundPhones(Long deviceId) {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));
@@ -105,6 +108,7 @@ public class PhoneDeviceService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<PhoneDeviceHistoryDTO> getDeviceHistory(Long deviceId) {
         phoneDeviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVICE_NOT_FOUND));

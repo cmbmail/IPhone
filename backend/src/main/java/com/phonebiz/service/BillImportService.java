@@ -297,6 +297,7 @@ public class BillImportService {
         }
     }
 
+    @Transactional(readOnly = true)
     public String getAllocationStatus(String billMonth) {
         return allocationStatusMap.getOrDefault(billMonth, "not_found");
     }
