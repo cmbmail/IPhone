@@ -356,6 +356,7 @@ const DeviceManagement = () => {
             setPageSize(ps)
           },
           showSizeChanger: true,
+              showQuickJumper: true,
         }}
         scroll={{ x: 1100 }}
       />

@@ -297,6 +297,7 @@ const ExtensionPoolManagement = () => {
               setPageSize(ps)
             },
             showSizeChanger: true,
+              showQuickJumper: true,
           }}
         />
       </Card>

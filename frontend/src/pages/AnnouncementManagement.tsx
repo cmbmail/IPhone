@@ -287,7 +287,7 @@ const AnnouncementManagement = () => {
           dataSource={announcements}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: announcementData?.totalElements }}
+          pagination={{ pageSize: 20, total: announcementData?.totalElements, showQuickJumper: true, showSizeChanger: true }}
         />
       </Card>
 

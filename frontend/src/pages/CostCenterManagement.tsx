@@ -168,6 +168,7 @@ const CostCenterManagement = () => {
           pagination={{
             pageSize: 50,
             showSizeChanger: true,
+              showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条`,
           }}
           scroll={{ x: 700 }}

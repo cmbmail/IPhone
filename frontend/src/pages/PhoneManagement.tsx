@@ -321,6 +321,7 @@ const PhoneManagement = () => {
               setPageSize(ps)
             },
             showSizeChanger: true,
+              showQuickJumper: true,
           }}
         />
       </Card>

@@ -224,7 +224,7 @@ const SubsidiaryReconciliationPage = () => {
           dataSource={reconciliations}
           loading={isLoading}
           rowKey="id"
-          pagination={{ pageSize: 20, total: allocationData?.totalElements }}
+          pagination={{ pageSize: 20, total: allocationData?.totalElements, showQuickJumper: true, showSizeChanger: true }}
         />
       </Card>
     </div>

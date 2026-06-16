@@ -148,6 +148,8 @@ const AuditLogManagement = () => {
           pageSize: 20,
           onChange: (p) => fetchLogs(p - 1),
           showTotal: (t) => '共 ' + t + ' 条',
+          showQuickJumper: true,
+          showSizeChanger: true,
         }}
         scroll={{ x: 900 }}
         size="small"

@@ -408,7 +408,7 @@ const WorkOrderManagement = () => {
           columns={historyColumns}
           dataSource={historyOrders}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, showQuickJumper: true }}
           size="small"
           onHeaderRow={() => ({ style: { textAlign: 'center' } })}
         />

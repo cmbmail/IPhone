@@ -560,6 +560,7 @@ const BillManagement = () => {
               pageSize,
               total: billData?.totalElements ?? 0,
               showSizeChanger: true,
+              showQuickJumper: true,
               showTotal: (total) => `共 ${total} 条`,
               onChange: (p, ps) => {
                 setPage(p - 1)

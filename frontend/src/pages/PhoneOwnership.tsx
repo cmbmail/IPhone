@@ -327,6 +327,7 @@ const PhoneOwnershipPage = () => {
               setPageSize(ps)
             },
             showSizeChanger: true,
+              showQuickJumper: true,
           }}
         />
       </Card>
@@ -409,7 +410,7 @@ const PhoneOwnershipPage = () => {
           dataSource={compareData}
           rowKey="phoneNumber"
           size="small"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, showQuickJumper: true }}
           scroll={{ y: 400 }}
         />
       </Modal>

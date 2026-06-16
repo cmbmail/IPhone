@@ -209,7 +209,8 @@ const UserManagement = () => {
           dataSource={filteredUsers}
           rowKey="employeeId"
           loading={loading}
-          pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }}
+          pagination={{ pageSize: 20, showSizeChanger: true,
+              showQuickJumper: true, showTotal: (t) => `共 ${t} 条` }}
           scroll={{ x: 800 }}
         />
       </Card>
