@@ -164,7 +164,7 @@ public class InvoiceService {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            return null;
+            throw new BusinessException(ErrorCode.SYS_002, "SHA-256 algorithm not available");
         }
     }
 

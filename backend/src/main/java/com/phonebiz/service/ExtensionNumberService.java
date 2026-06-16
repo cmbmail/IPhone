@@ -194,9 +194,8 @@ public class ExtensionNumberService {
 
     private String resolveBranchName(Long deptOrgId) {
         if (deptOrgId == null) return null;
-        var deptOpt = orgRepo.findById(deptOrgId);
-        if (deptOpt.isEmpty()) return null;
-        OrgStructure dept = deptOpt.get();
+        OrgStructure dept = orgRepo.findById(deptOrgId).orElse(null);
+        if (dept == null) return null;
         if (dept.getPath() == null) return null;
         String[] segments = dept.getPath().split("/");
         if (segments.length < 3) return dept.getBranchName();

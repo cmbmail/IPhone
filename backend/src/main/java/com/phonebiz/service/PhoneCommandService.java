@@ -67,7 +67,8 @@ public class PhoneCommandService {
 
     @Transactional
     public PhoneNumber updatePhone(Long id, UpdatePhoneRequest request, String operator) {
-        PhoneNumber phone = queryService.getPhoneById(id);
+        PhoneNumber phone = phoneRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         if (request.getRemark() != null) {
             phone.setRemark(request.getRemark());
@@ -81,7 +82,8 @@ public class PhoneCommandService {
     public void recordHistory(Long phoneId, String action, Integer fromStatus, Integer toStatus,
                               String fromEmployeeNo, String toEmployeeNo, String fromOrg, String toOrg,
                               String operator, String workOrderNo, String remark) {
-        PhoneNumber phone = queryService.getPhoneById(phoneId);
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         PhoneHistory history = new PhoneHistory();
         history.setPhoneId(phoneId);

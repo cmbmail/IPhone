@@ -29,6 +29,7 @@ import type { ColumnsType } from 'antd/es/table'
 import type { OrgStructure, CreateOrgDTO } from '@/types/org'
 import { orgApi } from '@/api/org'
 import { phoneBranchApi, type BranchPoolStats } from '@/api/phoneBranch'
+import type { PhoneNumber } from '@/types/phone'
 import { userApi, type UserVO } from '@/api/user'
 import { roleApi } from '@/api/role'
 
@@ -92,7 +93,7 @@ const OrgManagement: React.FC = () => {
 
   // Phone pool state
   const [activeTab, setActiveTab] = useState('users')
-  const [branchPoolPhones, setBranchPoolPhones] = useState<any[]>([])
+  const [branchPoolPhones, setBranchPoolPhones] = useState<PhoneNumber[]>([])
   const [branchPoolStats, setBranchPoolStats] = useState<BranchPoolStats | null>(null)
   const [poolLoading, setPoolLoading] = useState(false)
   const [allocateDeptModalOpen, setAllocateDeptModalOpen] = useState(false)
@@ -186,7 +187,7 @@ const OrgManagement: React.FC = () => {
   }, [expandedAllKeys])
   const antTreeData = useMemo(() => convertToAntTree(treeData), [treeData, convertToAntTree])
 
-  const nameInputRef = React.useRef<any>(null)
+  const nameInputRef = React.useRef<InputRef>(null)
 
   const openAddChildForm = () => {
     orgForm.resetFields()
@@ -513,7 +514,7 @@ const OrgManagement: React.FC = () => {
   }, [treeData])
 
   // Phone pool columns
-  const poolColumns: ColumnsType<any> = [
+  const poolColumns: ColumnsType<PhoneNumber> = [
     { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140 },
     { title: '分机号', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100 },
     {
@@ -528,7 +529,7 @@ const OrgManagement: React.FC = () => {
       title: '操作',
       key: 'actions',
       width: 120,
-      render: (_: unknown, record: any) => (
+      render: (_: unknown, record: PhoneNumber) => (
         <Space>
           <Button type="link" size="small" onClick={() => handleBranchRevoke(record.id)} danger>
             回收

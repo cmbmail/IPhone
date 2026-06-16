@@ -1,7 +1,7 @@
 import { ApiGet } from './request'
 
 export interface ReportData {
-  [key: string]: any
+  [key: string]: string | number | boolean | null
 }
 
 export const reportApi = {

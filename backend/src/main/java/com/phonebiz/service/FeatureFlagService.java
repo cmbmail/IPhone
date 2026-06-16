@@ -38,13 +38,11 @@ public class FeatureFlagService {
 
     @Transactional(readOnly = true)
     public boolean isFeatureEnabled(String featureKey, Long orgId, Long userId) {
-        Optional<SysFeatureFlag> feature = featureFlagRepository.findByFeatureKey(featureKey);
+        SysFeatureFlag flag = featureFlagRepository.findByFeatureKey(featureKey).orElse(null);
         
-        if (feature.isEmpty()) {
+        if (flag == null) {
             return false;
         }
-
-        SysFeatureFlag flag = feature.get();
         
         if (!flag.getIsEnabled()) {
             return false;

@@ -99,11 +99,7 @@ public class EmployeeService {
         Employee saved = employeeRepository.save(employee);
 
         if (!Boolean.TRUE.equals(employee.getIsVirtual())) {
-            try {
-                sysUserService.createUserForEmployee(saved, operator);
-            } catch (Exception e) {
-                log.warn("Failed to create sys_user for employee: {}", employee.getEmployeeNo(), e);
-            }
+            sysUserService.createUserForEmployee(saved, operator);
         }
 
         return saved;
