@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.scheduling.annotation.Async;
@@ -30,15 +29,24 @@ import com.phonebiz.repository.PhoneNumberRepository;
 import com.phonebiz.repository.PhoneSnapshotRepository;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SnapshotService {
 
-    private final PhoneSnapshotRepository phoneSnapshotRepository;
-    private final PhoneNumberRepository phoneNumberRepository;
-    private final OrgStructureRepository orgStructureRepository;
-    private final CostCenterMappingRepository costCenterMappingRepository;
-    private final EmployeeRepository employeeRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PhoneSnapshotRepository phoneSnapshotRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PhoneNumberRepository phoneNumberRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private OrgStructureRepository orgStructureRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private CostCenterMappingRepository costCenterMappingRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private EmployeeRepository employeeRepository;
+
+    // Self-injection for @Async proxy (avoids self-invocation bypass)
+    @org.springframework.context.annotation.Lazy
+    @org.springframework.beans.factory.annotation.Autowired
+    private SnapshotService self;
 
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
     private static final int BATCH_SIZE = 500;
@@ -56,7 +64,7 @@ public class SnapshotService {
         } catch (Exception e) {
             log.error("月度快照执行失败，月份: {}", snapshotMonth, e);
             // Use @Async retry instead of Thread.sleep
-            asyncRetrySnapshot(snapshotMonth, 1);
+            self.asyncRetrySnapshot(snapshotMonth, 1);
         }
     }
 
@@ -78,7 +86,7 @@ public class SnapshotService {
             log.info("月度快照重试成功，月份: {}", snapshotMonth);
         } catch (Exception e) {
             log.error("月度快照重试失败，第 {} 次，月份: {}", attempt, snapshotMonth, e);
-            asyncRetrySnapshot(snapshotMonth, attempt + 1);
+            self.asyncRetrySnapshot(snapshotMonth, attempt + 1);
         }
     }
 

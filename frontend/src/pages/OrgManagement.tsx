@@ -34,8 +34,8 @@ import { roleApi } from '@/api/role'
 
 // Type constants matching backend OrgStructure
 // const ORG_GROUP = 1       // 集团
-const ORG_BRANCH = 2      // 分行
-const ORG_DEPT = 3        // 部门
+const ORG_BRANCH = 2 // 分行
+const ORG_DEPT = 3 // 部门
 // const ORG_COMP_SUB = 4 // unused    // 综合支行
 // const ORG_RETL_SUB = 5 // unused    // 零专支行
 
@@ -102,7 +102,7 @@ const OrgManagement: React.FC = () => {
     roleApi
       .getActive()
       .then((res) => setActiveRoles(res || []))
-      .catch(() => {})
+      .catch(() => { message.error('角色加载失败') })
   }, [])
   const [userListLoading, setUserListLoading] = useState(false)
   const [userList, setUserList] = useState<UserVO[]>([])
@@ -184,10 +184,7 @@ const OrgManagement: React.FC = () => {
   React.useEffect(() => {
     setExpandedKeys(expandedAllKeys)
   }, [expandedAllKeys])
-  const antTreeData = useMemo(
-    () => convertToAntTree(treeData),
-    [treeData, convertToAntTree]
-  )
+  const antTreeData = useMemo(() => convertToAntTree(treeData), [treeData, convertToAntTree])
 
   const nameInputRef = React.useRef<any>(null)
 
@@ -524,7 +521,8 @@ const OrgManagement: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (s: number) => (s === 0 ? <Tag color="default">空闲</Tag> : <Tag color="blue">预留</Tag>),
+      render: (s: number) =>
+        s === 0 ? <Tag color="default">空闲</Tag> : <Tag color="blue">预留</Tag>,
     },
     {
       title: '操作',
@@ -807,10 +805,12 @@ const OrgManagement: React.FC = () => {
             >
               <Select
                 placeholder="选择类型"
-                options={(editingOrg ? ALLOWED_CHILD_TYPES[editingOrg.type] || [] : []).map((t) => ({
-                  value: t.value,
-                  label: t.label,
-                }))}
+                options={(editingOrg ? ALLOWED_CHILD_TYPES[editingOrg.type] || [] : []).map(
+                  (t) => ({
+                    value: t.value,
+                    label: t.label,
+                  })
+                )}
               />
             </Form.Item>
           )}

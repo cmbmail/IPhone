@@ -59,4 +59,10 @@ public class Notification extends BaseEntity {
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    @Version
+    @Builder.Default
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
 }

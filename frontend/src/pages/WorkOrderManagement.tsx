@@ -154,6 +154,7 @@ const WorkOrderManagement = () => {
         setDetailDrawerOpen(true)
       })
       .catch(() => {
+        message.error('加载工单详情失败')
         setSelectedOrder(record)
         setDetailDrawerOpen(true)
       })
@@ -188,6 +189,7 @@ const WorkOrderManagement = () => {
         }))
       )
     } catch {
+      message.error('搜索分机号失败')
       setExtOptions([])
     }
     setExtLoading(false)
@@ -209,7 +211,7 @@ const WorkOrderManagement = () => {
           })
         }
       } catch {
-        /* ignore */
+        message.error('获取分机详情失败')
       }
     },
     [form]

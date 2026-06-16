@@ -85,7 +85,10 @@ const InvoiceManagement = () => {
 
   const { data: statsData } = useQuery({
     queryKey: ['invoice-stats', billMonthForApi],
-    queryFn: () => ApiGet<Record<string, number>>('/invoices/statistics', { params: { billMonth: billMonthForApi } }),
+    queryFn: () =>
+      ApiGet<Record<string, number>>('/invoices/statistics', {
+        params: { billMonth: billMonthForApi },
+      }),
   })
 
   const confirmMutation = useMutation({
@@ -339,7 +342,9 @@ const InvoiceManagement = () => {
               return false // prevent auto upload
             }}
             onRemove={(file) => {
-              setFileList((prev) => prev.filter((f) => f.name !== file.name || f.size !== file.size))
+              setFileList((prev) =>
+                prev.filter((f) => f.name !== file.name || f.size !== file.size)
+              )
               return false
             }}
             fileList={fileList.map((f, idx) => ({
@@ -370,7 +375,12 @@ const InvoiceManagement = () => {
                   dataSource={uploadResult.details.map((d, i) => ({ ...d, key: i }))}
                   columns={[
                     { title: '文件名', dataIndex: 'fileName', key: 'fileName' },
-                    { title: '匹配组织', dataIndex: 'matchedOrg', key: 'matchedOrg', render: (v: string) => v || '-' },
+                    {
+                      title: '匹配组织',
+                      dataIndex: 'matchedOrg',
+                      key: 'matchedOrg',
+                      render: (v: string) => v || '-',
+                    },
                     {
                       title: '状态',
                       dataIndex: 'status',

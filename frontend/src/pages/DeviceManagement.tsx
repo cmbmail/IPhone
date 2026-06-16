@@ -351,8 +351,11 @@ const DeviceManagement = () => {
           pageSize,
           total: devicesData?.totalElements,
           showTotal: (t) => `共 ${t} 条`,
-          onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
-            showSizeChanger: true,
+          onChange: (p, ps) => {
+            setPage(p - 1)
+            setPageSize(ps)
+          },
+          showSizeChanger: true,
         }}
         scroll={{ x: 1100 }}
       />

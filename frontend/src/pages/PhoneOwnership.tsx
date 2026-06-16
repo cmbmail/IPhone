@@ -322,7 +322,10 @@ const PhoneOwnershipPage = () => {
             current: page + 1,
             pageSize,
             total: listData?.totalElements || 0,
-            onChange: (p, ps) => { setPage(p - 1); setPageSize(ps); },
+            onChange: (p, ps) => {
+              setPage(p - 1)
+              setPageSize(ps)
+            },
             showSizeChanger: true,
           }}
         />

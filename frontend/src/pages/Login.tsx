@@ -1,68 +1,68 @@
-import { useState } from "react";
-import { Form, Input, Button, Card, message } from "antd";
-import { useNavigate } from "react-router-dom";
-import { authApi } from "@/api/auth";
-import { useAuthStore } from "@/stores/authStore";
+import { useState } from 'react'
+import { Form, Input, Button, Card, message } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { authApi } from '@/api/auth'
+import { useAuthStore } from '@/stores/authStore'
 
 const Login = () => {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
 
   const onFinish = async (values: { username: string; password: string }) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await authApi.login(values);
-      const { token, user, expiresIn, permissions } = response;
+      const response = await authApi.login(values)
+      const { token, user, expiresIn, permissions } = response
 
-      const userWithPermissions = { ...user, permissions: permissions ?? [] };
+      const userWithPermissions = { ...user, permissions: permissions ?? [] }
 
-      localStorage.setItem("expiresIn", String(expiresIn));
-      localStorage.setItem("loginTime", String(Date.now()));
+      localStorage.setItem('expiresIn', String(expiresIn))
+      localStorage.setItem('loginTime', String(Date.now()))
 
-      setAuth(token, userWithPermissions);
+      setAuth(token, userWithPermissions)
 
       if (user.needsPasswordChange) {
-        message.warning("首次登录，请修改密码");
-        navigate("/change-password");
+        message.warning('首次登录，请修改密码')
+        navigate('/change-password')
       } else {
-        message.success("登录成功");
-        navigate("/");
+        message.success('登录成功')
+        navigate('/')
       }
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : "登录失败";
-      message.error(errorMsg);
+      const errorMsg = error instanceof Error ? error.message : '登录失败'
+      message.error(errorMsg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        background: "var(--bg-page)",
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        background: 'var(--bg-page)',
       }}
     >
       <Card
         title="PhoneBiz"
         style={{
           width: 420,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border-light)",
-          borderRadius: "16px",
-          boxShadow: "var(--shadow-lg)",
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-light)',
+          borderRadius: '16px',
+          boxShadow: 'var(--shadow-lg)',
         }}
         styles={{
           header: {
-            color: "var(--text-primary)",
+            color: 'var(--text-primary)',
             fontWeight: 600,
             fontSize: 24,
-            fontFamily: "Playfair Display, serif",
-            borderBottom: "1px solid var(--border-light)",
+            fontFamily: 'Playfair Display, serif',
+            borderBottom: '1px solid var(--border-light)',
           },
         }}
       >
@@ -70,7 +70,7 @@ const Login = () => {
           <Form.Item
             label="用户名"
             name="username"
-            rules={[{ required: true, message: "请输入用户名" }]}
+            rules={[{ required: true, message: '请输入用户名' }]}
           >
             <Input placeholder="输入用户名" />
           </Form.Item>
@@ -78,7 +78,7 @@ const Login = () => {
           <Form.Item
             label="密码"
             name="password"
-            rules={[{ required: true, message: "请输入密码" }]}
+            rules={[{ required: true, message: '请输入密码' }]}
           >
             <Input.Password placeholder="输入密码" />
           </Form.Item>
@@ -91,7 +91,7 @@ const Login = () => {
         </Form>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

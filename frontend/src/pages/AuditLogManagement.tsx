@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Table, Card, Input, Select, Tag, Button } from 'antd'
+import { Table, Card, Input, Select, Tag, Button, message } from 'antd'
+import { message } from "antd"
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
 import { auditLogApi } from '@/api/auditLog'
 import type { AuditLogEntry } from '@/types/auditLog'
@@ -27,7 +28,7 @@ const AuditLogManagement = () => {
       setTotal(data.totalElements || 0)
       setPage(p)
     } catch {
-      /* ignore */
+      message.error('日志加载失败')
     } finally {
       setLoading(false)
     }

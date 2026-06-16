@@ -74,4 +74,10 @@ public static final int WO_TYPE_ADD = 1;          // 新增
 
     @Column(name = "remark", length = 500)
     private String remark;
+
+    @Version
+    @Builder.Default
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
 }

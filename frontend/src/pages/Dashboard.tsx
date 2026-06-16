@@ -12,6 +12,7 @@ import {
   List,
   Modal,
   Typography,
+  message,
 } from 'antd'
 import { PhoneOutlined, TeamOutlined, FileTextOutlined, DesktopOutlined } from '@ant-design/icons'
 import { statisticsApi, type PhoneStatistics, type DeviceStatistics } from '@/api/statistics'
@@ -142,7 +143,7 @@ const Dashboard = () => {
           setWorkOrders(all.filter((o: WorkOrder) => [0, 1, 2].includes(Number(o.status))))
         }
       } catch {
-        // Silently fail
+        message.error("数据加载失败")
       } finally {
         setLoading(false)
       }

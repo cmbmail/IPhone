@@ -39,7 +39,7 @@ const UserManagement = () => {
       const res = await roleApi.getActive()
       setRoles(res || [])
     } catch {
-      // ignore
+      message.error('角色加载失败')
     }
   }
 

@@ -410,7 +410,7 @@ const BillManagement = () => {
       const dist = result?.monthDistribution
       if (dist && Object.keys(dist).length > 0) {
         const months = Object.keys(dist)
-        const msg = months.map(m => `${m}: ${dist[m]}条`).join('，')
+        const msg = months.map((m) => `${m}: ${dist[m]}条`).join('，')
         message.success(`导入成功，共 ${count} 条（${msg}）`)
         // Auto-switch to the first month that has data (useful for flash SMS)
         if (months.length > 0 && months[0] !== billMonth) {
@@ -437,7 +437,7 @@ const BillManagement = () => {
       const dist = result?.monthDistribution
       if (dist && Object.keys(dist).length > 0) {
         const months = Object.keys(dist)
-        const msg = months.map(m => `${m}: ${dist[m]}条`).join('，')
+        const msg = months.map((m) => `${m}: ${dist[m]}条`).join('，')
         message.success(`导入并分摊成功，共 ${count} 条（${msg}）`)
         if (months.length > 0 && months[0] !== billMonth) {
           setBillMonth(months[0])

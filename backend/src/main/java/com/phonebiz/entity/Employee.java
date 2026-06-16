@@ -47,5 +47,10 @@ public class Employee extends BaseEntity {
 
     @Column(name = "is_virtual", nullable = false)
     private Boolean isVirtual = false;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
 }
 

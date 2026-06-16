@@ -47,4 +47,10 @@ public class Announcement extends BaseEntity {
     private Integer priority;
     @Column(name = "status", nullable = false, length = 20)
     private Integer status;
+
+    @Version
+    @Builder.Default
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
 }

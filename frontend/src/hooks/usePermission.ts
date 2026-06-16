@@ -17,7 +17,8 @@ export function usePermission() {
 
   const hasRole = (r: Role) => role === 'admin' || role === r
 
-  const hasAnyRole = (roles: Role[]) => role === 'admin' || (role != null && roles.includes(role as Role))
+  const hasAnyRole = (roles: Role[]) =>
+    role === 'admin' || (role != null && roles.includes(role as Role))
 
   const hasPermission = (code: string) => role === 'admin' || permissions.includes(code)
 

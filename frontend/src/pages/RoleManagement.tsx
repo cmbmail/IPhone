@@ -69,6 +69,7 @@ const RoleManagement: React.FC = () => {
       const perms: SysPermission[] = res || []
       setRolePermissionIds(perms.map((p) => p.id))
     } catch {
+      message.error('加载权限失败')
       setRolePermissionIds([])
     }
   }

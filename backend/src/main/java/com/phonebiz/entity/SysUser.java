@@ -55,6 +55,11 @@ public class SysUser extends BaseEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
+
     public boolean isLocked() {
         return lockedUntil != null && LocalDateTime.now().isBefore(lockedUntil);
     }
