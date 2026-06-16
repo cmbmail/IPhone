@@ -153,7 +153,7 @@ public class BillImportService {
 
         try {
             b.setRawData(objectMapper.writeValueAsString(Map.of()));
-        } catch (JsonProcessingException e) { log.warn("BillImport JSON parse failed", e); throw new RuntimeException(e); }
+        } catch (JsonProcessingException e) { log.warn("BillImport JSON parse failed", e); throw new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.IMPORT_001, e.getMessage()); }
 
         return b;
     }

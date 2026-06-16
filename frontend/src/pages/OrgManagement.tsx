@@ -33,11 +33,11 @@ import { userApi, type UserVO } from '@/api/user'
 import { roleApi } from '@/api/role'
 
 // Type constants matching backend OrgStructure
-const ORG_GROUP = 1       // 集团
+// const ORG_GROUP = 1       // 集团
 const ORG_BRANCH = 2      // 分行
 const ORG_DEPT = 3        // 部门
-const ORG_COMP_SUB = 4    // 综合支行
-const ORG_RETL_SUB = 5    // 零专支行
+// const ORG_COMP_SUB = 4 // unused    // 综合支行
+// const ORG_RETL_SUB = 5 // unused    // 零专支行
 
 const TYPE_LABELS: Record<number, string> = {
   1: '集团',
@@ -69,7 +69,7 @@ const ALLOWED_CHILD_TYPES: Record<number, { value: number; label: string }[]> = 
 }
 
 // Icon mapping for tree
-const TYPE_ICONS: Record<number, React.ReactNode> = {}
+// const TYPE_ICONS // unused: Record<number, React.ReactNode> = {}
 
 const OrgManagement: React.FC = () => {
   const [treeData, setTreeData] = useState<OrgStructure[]>([])

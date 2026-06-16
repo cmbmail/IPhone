@@ -202,7 +202,7 @@ public class ImportService {
         if (data.containsKey("orgId")) {
             try {
                 existing.setOrgId(Long.parseLong(String.valueOf(data.get("orgId"))));
-            } catch (NumberFormatException e) { log.warn("ImportService number format error", e); throw new RuntimeException(e); }
+            } catch (NumberFormatException e) { log.warn("ImportService number format error", e); throw new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.IMPORT_001, e.getMessage()); }
         }
         
         if (data.containsKey("extensionNumber")) {

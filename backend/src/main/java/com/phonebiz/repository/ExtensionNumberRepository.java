@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -45,4 +46,8 @@ public interface ExtensionNumberRepository extends JpaRepository<ExtensionNumber
     List<ExtensionNumber> searchByKeyword(@Param("keyword") String keyword);
 
     List<ExtensionNumber> findAllByPhoneIdIn(List<Long> phoneIds);
+
+    @Query("SELECT e FROM ExtensionNumber e WHERE e.id = :id")
+    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    Optional<ExtensionNumber> findByIdWithLock(@Param("id") Long id);
 }

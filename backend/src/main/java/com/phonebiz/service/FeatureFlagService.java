@@ -58,7 +58,7 @@ public class FeatureFlagService {
             return false;
         }
 
-        if (flag.getScopeType() == null || flag.getScopeType() == null || flag.getScopeType() == SysFeatureFlag.SCOPE_ALL) {
+        if (flag.getScopeType() == null || flag.getScopeValue() == null || flag.getScopeType() == SysFeatureFlag.SCOPE_ALL) {
             return true;
         }
 

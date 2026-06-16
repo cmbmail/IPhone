@@ -40,7 +40,7 @@ public class PhoneOwnershipService {
     @Transactional
     public PhoneOwnership update(Long id, Long branchOrgId, Long deptOrgId, String remark) {
         PhoneOwnership po = phoneOwnershipRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("号码归属记录不存在"));
+                .orElseThrow(() -> new com.phonebiz.common.BusinessException(com.phonebiz.common.ErrorCode.PHONE_001));
 
         if (branchOrgId != null) {
             OrgStructure branch = orgStructureRepository.findById(branchOrgId).orElse(null);

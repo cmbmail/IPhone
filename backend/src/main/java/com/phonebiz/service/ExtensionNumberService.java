@@ -49,8 +49,9 @@ public class ExtensionNumberService {
         List<ExtensionNumber> content = page.getContent();
         Set<Long> extIdsWithPendingWO = findExtIdsWithPendingWorkOrders(content);
 
-        // 动态计算status
+        // 动态计算status (detach first to prevent Hibernate flush in readOnly TX)
         for (ExtensionNumber ext : content) {
+            entityManager.detach(ext);
             ext.setStatus(computeStatus(ext, extIdsWithPendingWO));
         }
 
@@ -106,7 +107,7 @@ public class ExtensionNumberService {
 
     @Transactional
     public ExtensionNumber allocate(Long id, String userName, Long deptOrgId, String deptName, String phoneNumber, String operator) {
-        ExtensionNumber ext = extRepo.findById(id)
+        ExtensionNumber ext = extRepo.findByIdWithLock(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
 
         ext.setEmployeeName(userName);
@@ -130,7 +131,7 @@ public class ExtensionNumberService {
 
     @Transactional
     public ExtensionNumber reclaim(Long id, String operator) {
-        ExtensionNumber ext = extRepo.findById(id)
+        ExtensionNumber ext = extRepo.findByIdWithLock(id)
                 .orElseThrow(() -> new RuntimeException("分机号不存在"));
 
         String prevEmployeeName = ext.getEmployeeName();

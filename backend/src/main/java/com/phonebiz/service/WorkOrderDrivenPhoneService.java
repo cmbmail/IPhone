@@ -41,7 +41,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -73,7 +73,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -106,7 +106,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -139,7 +139,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -172,7 +172,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -204,7 +204,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -236,7 +236,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()
@@ -268,7 +268,7 @@ public class WorkOrderDrivenPhoneService {
             throw new BusinessException(ErrorCode.SYS_001);
         }
 
-        PhoneNumber phone = phoneRepository.findById(phoneId)
+        PhoneNumber phone = phoneRepository.findByIdWithLock(phoneId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PHONE_001));
 
         CreateWorkOrderRequest.WorkOrderItemRequest itemRequest = CreateWorkOrderRequest.WorkOrderItemRequest.builder()

@@ -2,6 +2,7 @@ package com.phonebiz.service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import jakarta.persistence.EntityManager;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,8 @@ import com.phonebiz.repository.OrgStructureRepository;
 @Service
 @RequiredArgsConstructor
 public class OrgService {
+
+    private final EntityManager entityManager;
 
     private final OrgStructureRepository orgRepository;
 
@@ -327,6 +330,10 @@ public class OrgService {
     }
 
     private List<OrgStructure> buildTree(List<OrgStructure> allOrgs) {
+        // Detach all entities first to prevent Hibernate flush on collection mutations
+        for (OrgStructure org : allOrgs) {
+            entityManager.detach(org);
+        }
         // Clear JPA EAGER-loaded children first to avoid duplication
         for (OrgStructure org : allOrgs) {
             org.getChildren().clear();

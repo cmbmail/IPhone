@@ -339,7 +339,7 @@ const InvoiceManagement = () => {
               return false // prevent auto upload
             }}
             onRemove={(file) => {
-              setFileList((prev) => prev.filter((f) => f !== file))
+              setFileList((prev) => prev.filter((f) => f.name !== file.name || f.size !== file.size))
               return false
             }}
             fileList={fileList.map((f, idx) => ({
