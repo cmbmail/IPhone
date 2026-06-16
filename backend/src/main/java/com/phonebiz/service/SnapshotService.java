@@ -321,7 +321,7 @@ public class SnapshotService {
                                        Map<Long, OrgStructure> orgMap,
                                        Map<Long, String> costCenterMap,
                                        Map<String, Employee> employeeMap) {
-        Long orgId = phone.getAllocationOrgId();
+        Long orgId = phone.getOrgId() != null ? phone.getOrgId() : phone.getAllocationOrgId();
         String orgName = null;
         Long branchOrgId = null;
         String branchName = null;

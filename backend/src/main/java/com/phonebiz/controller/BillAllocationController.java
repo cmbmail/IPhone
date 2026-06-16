@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.phonebiz.common.ApiResponse;
 import com.phonebiz.dto.BillAllocationDTO;
 import com.phonebiz.dto.BillAllocationSummaryDTO;
+import com.phonebiz.dto.BranchAllocationDTO;
 import com.phonebiz.entity.BillAllocation;
 import com.phonebiz.service.BillAllocationService;
 import com.phonebiz.annotation.AuditLog;
@@ -123,4 +124,11 @@ public class BillAllocationController {
             @RequestParam String billMonth) {
         return ApiResponse.success(billAllocationService.getAllocationSummary(billMonth));
     }
+
+    @GetMapping("/branch-allocation")
+    public ApiResponse<BranchAllocationDTO.BranchAllocationResponse> getBranchAllocation(
+            @RequestParam String billMonth) {
+        return ApiResponse.success(billAllocationService.getBranchAllocation(billMonth));
+    }
+
 }

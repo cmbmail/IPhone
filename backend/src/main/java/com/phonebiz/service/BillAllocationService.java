@@ -20,6 +20,7 @@ import com.phonebiz.repository.BillRawRepository;
 import com.phonebiz.repository.CostCenterMappingRepository;
 import com.phonebiz.dto.BillAllocationDTO;
 import com.phonebiz.dto.BillAllocationSummaryDTO;
+import com.phonebiz.dto.BranchAllocationDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.phonebiz.repository.PhoneSnapshotRepository;
@@ -332,4 +333,122 @@ public class BillAllocationService {
         }
         return result;
     }
+
+    // ==================== Branch-level Allocation ====================
+
+    /**
+     * Generate branch-level allocation summary for a bill month.
+     * Uses phone_snapshot to resolve branch for each phone number,
+     * then aggregates bill_allocation charges by branch.
+     */
+    @Transactional(readOnly = true)
+    public BranchAllocationDTO.BranchAllocationResponse getBranchAllocation(String billMonth) {
+        // 1. Load snapshots: prefer billMonth-linked, fallback to snapshotMonth
+        List<PhoneSnapshot> snapshots = phoneSnapshotRepository.findByBillMonth(billMonth);
+        String snapshotMonth = billMonth;
+        if (snapshots.isEmpty()) {
+            snapshots = phoneSnapshotRepository.findBySnapshotMonth(billMonth);
+        } else {
+            // Derive snapshotMonth from the data
+            snapshotMonth = snapshots.get(0).getSnapshotMonth();
+        }
+
+        // 2. Build phone->branch map from snapshots
+        Map<String, BranchKey> phoneToBranch = new HashMap<>();
+        for (PhoneSnapshot snap : snapshots) {
+            Long branchId = snap.getBranchOrgId();
+            String branchName = snap.getBranchName();
+            if (branchId == null && branchName == null) {
+                branchName = "未归属";
+            }
+            phoneToBranch.put(snap.getPhoneNumber(), new BranchKey(
+                branchId != null ? branchId : -1L,
+                branchName != null ? branchName : "未归属"
+            ));
+        }
+
+        // 3. Load allocations for the bill month
+        List<BillAllocation> allocations = billAllocationRepository.findByBillMonth(billMonth);
+
+        // 4. Aggregate by branch
+        Map<BranchKey, BranchAggregator> branchMap = new LinkedHashMap<>();
+        BigDecimal grandTotal = BigDecimal.ZERO;
+
+        for (BillAllocation alloc : allocations) {
+            BranchKey key = phoneToBranch.getOrDefault(alloc.getPhoneNumber(), new BranchKey(-1L, "未归属"));
+            BranchAggregator agg = branchMap.computeIfAbsent(key, k -> new BranchAggregator());
+            agg.phoneCount++;
+            agg.totalCharge = agg.totalCharge.add(alloc.getChargeAmount());
+            grandTotal = grandTotal.add(alloc.getChargeAmount());
+            if (Boolean.TRUE.equals(alloc.getAnomalyFlag())) {
+                agg.anomalyCount++;
+            }
+        }
+
+        // 5. Mark allocated count from snapshots
+        for (PhoneSnapshot snap : snapshots) {
+            BranchKey key = phoneToBranch.get(snap.getPhoneNumber());
+            if (key != null) {
+                BranchAggregator agg = branchMap.get(key);
+                if (agg != null && snap.getAllocationStatus() == PhoneSnapshot.ALLOC_ALLOCATED) {
+                    agg.allocatedCount++;
+                }
+            }
+        }
+
+        // 6. Build DTOs sorted by totalCharge desc
+        List<BranchAllocationDTO> branches = new ArrayList<>();
+        for (Map.Entry<BranchKey, BranchAggregator> entry : branchMap.entrySet()) {
+            BranchKey key = entry.getKey();
+            BranchAggregator agg = entry.getValue();
+            BigDecimal pct = grandTotal.compareTo(BigDecimal.ZERO) > 0
+                ? agg.totalCharge.multiply(new BigDecimal(100)).divide(grandTotal, 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+            branches.add(BranchAllocationDTO.builder()
+                .branchOrgId(key.id == -1L ? null : key.id)
+                .branchName(key.name)
+                .phoneCount(agg.phoneCount)
+                .totalChargeAmount(agg.totalCharge)
+                .allocatedCount(agg.allocatedCount)
+                .anomalyCount(agg.anomalyCount)
+                .unallocatedCount(agg.phoneCount - agg.allocatedCount - agg.anomalyCount)
+                .chargePercentage(pct)
+                .build());
+        }
+
+        branches.sort((a, b) -> b.getTotalChargeAmount().compareTo(a.getTotalChargeAmount()));
+
+        int totalPhones = branches.stream().mapToInt(BranchAllocationDTO::getPhoneCount).sum();
+
+        return BranchAllocationDTO.BranchAllocationResponse.builder()
+                .billMonth(billMonth)
+                .snapshotMonth(snapshotMonth)
+                .totalBranches(branches.size())
+                .totalPhones(totalPhones)
+                .totalAmount(grandTotal)
+                .branches(branches)
+                .build();
+    }
+
+    private static class BranchKey {
+        final Long id;
+        final String name;
+        BranchKey(Long id, String name) { this.id = id; this.name = name; }
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof BranchKey)) return false;
+            BranchKey that = (BranchKey) o;
+            return id.equals(that.id);
+        }
+        @Override public int hashCode() { return id.hashCode(); }
+    }
+
+    private static class BranchAggregator {
+        int phoneCount = 0;
+        BigDecimal totalCharge = BigDecimal.ZERO;
+        int allocatedCount = 0;
+        int anomalyCount = 0;
+    }
+
 }
