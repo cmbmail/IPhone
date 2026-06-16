@@ -19,9 +19,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PhoneSnapshot extends BaseEntity {
 
+    // Allocation status constants
+    public static final int ALLOC_NOT_ALLOCATED = 0;
+    public static final int ALLOC_ALLOCATED = 1;
+    public static final int ALLOC_ANOMALY = 2;
 
     @Column(name = "snapshot_month", length = 7, nullable = false)
     private String snapshotMonth;
+
+    @Column(name = "bill_month", length = 7)
+    private String billMonth;
 
     @Column(name = "phone_id", nullable = false)
     private Long phoneId;
@@ -39,8 +46,14 @@ public class PhoneSnapshot extends BaseEntity {
     @Column(name = "org_id")
     private Long orgId;
 
+    @Column(name = "branch_org_id")
+    private Long branchOrgId;
+
     @Column(name = "org_name", length = 200)
     private String orgName;
+
+    @Column(name = "branch_name", length = 100)
+    private String branchName;
 
     @Column(name = "cost_center_code", length = 50)
     private String costCenterCode;
@@ -58,4 +71,8 @@ public class PhoneSnapshot extends BaseEntity {
     @Column(name = "is_allocatable")
     @Builder.Default
     private Boolean isAllocatable = false;
+
+    @Column(name = "allocation_status", nullable = false)
+    @Builder.Default
+    private Integer allocationStatus = ALLOC_NOT_ALLOCATED;
 }

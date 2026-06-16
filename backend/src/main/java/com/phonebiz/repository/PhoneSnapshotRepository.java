@@ -33,24 +33,44 @@ public interface PhoneSnapshotRepository extends JpaRepository<PhoneSnapshot, Lo
     @Query("SELECT p FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.orgId IN :orgIds")
     List<PhoneSnapshot> findBySnapshotMonthAndOrgIds(@Param("snapshotMonth") String snapshotMonth, @Param("orgIds") List<Long> orgIds);
 
+    // Paged queries
     Page<PhoneSnapshot> findBySnapshotMonth(String snapshotMonth, Pageable pageable);
 
+    Page<PhoneSnapshot> findBySnapshotMonthAndStatus(String snapshotMonth, Integer status, Pageable pageable);
+
+    Page<PhoneSnapshot> findBySnapshotMonthAndOrgId(String snapshotMonth, Long orgId, Pageable pageable);
+
+    Page<PhoneSnapshot> findBySnapshotMonthAndBranchOrgId(String snapshotMonth, Long branchOrgId, Pageable pageable);
+
+    // By billMonth
+    List<PhoneSnapshot> findByBillMonth(String billMonth);
+
+    Page<PhoneSnapshot> findByBillMonth(String billMonth, Pageable pageable);
+
+    // Count queries
     int countBySnapshotMonth(String snapshotMonth);
 
     int countBySnapshotMonthAndStatus(String snapshotMonth, Integer status);
 
     int countBySnapshotMonthAndOrgId(String snapshotMonth, Long orgId);
 
+    long countByBillMonth(String billMonth);
 
-    // Report aggregation queries
-    @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth")
-    long countByMonth(@Param("snapshotMonth") String snapshotMonth);
-
+    // Aggregation queries
     @Query("SELECT p.status, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth GROUP BY p.status")
     List<Object[]> countGroupByStatus(@Param("snapshotMonth") String snapshotMonth);
 
     @Query("SELECT p.orgId, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.orgId IS NOT NULL GROUP BY p.orgId")
     List<Object[]> countGroupByOrgId(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT p.branchOrgId, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.branchOrgId IS NOT NULL GROUP BY p.branchOrgId")
+    List<Object[]> countGroupByBranchOrgId(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT p.allocationStatus, COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth GROUP BY p.allocationStatus")
+    List<Object[]> countGroupByAllocationStatus(@Param("snapshotMonth") String snapshotMonth);
+
+    @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth")
+    long countByMonth(@Param("snapshotMonth") String snapshotMonth);
 
     @Query("SELECT COUNT(p) FROM PhoneSnapshot p WHERE p.snapshotMonth = :snapshotMonth AND p.employeeNo IS NOT NULL AND p.employeeNo <> ''")
     long countAllocatedByMonth(@Param("snapshotMonth") String snapshotMonth);

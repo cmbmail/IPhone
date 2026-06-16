@@ -41,7 +41,15 @@ public class BillAllocationService {
 
     @Transactional
     public void autoAllocateAndSave(List<BillRaw> rawBills, String billMonth, String operator) {
-        List<PhoneSnapshot> snapshots = phoneSnapshotRepository.findBySnapshotMonth(billMonth);
+        // Priority 1: Use snapshots linked to this billMonth via billMonth field
+        // Priority 2: Fall back to snapshots by snapshotMonth = billMonth
+        List<PhoneSnapshot> snapshots = phoneSnapshotRepository.findByBillMonth(billMonth);
+        if (snapshots.isEmpty()) {
+            snapshots = phoneSnapshotRepository.findBySnapshotMonth(billMonth);
+        }
+        log.info("Allocation for bill month {}: using {} snapshots (source: {})", 
+                billMonth, snapshots.size(), 
+                phoneSnapshotRepository.findByBillMonth(billMonth).isEmpty() ? "snapshotMonth" : "billMonth link");
         Map<String, PhoneSnapshot> snapshotMap = new HashMap<>();
         for (PhoneSnapshot snapshot : snapshots) {
             snapshotMap.put(snapshot.getPhoneNumber(), snapshot);
