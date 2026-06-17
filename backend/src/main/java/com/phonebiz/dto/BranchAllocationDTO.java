@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Branch-level allocation summary DTO.
- * Aggregates bill_allocation data by branch (from phone_snapshot).
+ * Aggregates bill_raw + bill_allocation data by branch (from phone_snapshot).
  */
 @Data
 @Builder
@@ -23,12 +23,20 @@ public class BranchAllocationDTO {
     private Integer phoneCount;
     private BigDecimal totalChargeAmount;
 
-    /** Fee breakdown */
+    /** Fee breakdown from bill_raw (charge_type=PHONE) */
     private BigDecimal platformUsageFee;
     private BigDecimal numberMonthlyRent;
     private BigDecimal domesticCharge;
     private BigDecimal internationalCharge;
-    private BigDecimal otherCharge;
+    private BigDecimal callAmount;
+
+    /** Fee breakdown by charge_type */
+    private BigDecimal recordingFee;
+    private BigDecimal ringtoneFee;
+    private BigDecimal flashSmsFee;
+
+    /** Fee subtotal: platformUsageFee + numberMonthlyRent + domesticCharge + internationalCharge + callAmount */
+    private BigDecimal feeSubtotal;
 
     /** Allocation status counts */
     private Integer allocatedCount;
@@ -51,6 +59,14 @@ public class BranchAllocationDTO {
         private Integer totalBranches;
         private Integer totalPhones;
         private BigDecimal totalAmount;
+        private BigDecimal totalPlatformUsageFee;
+        private BigDecimal totalNumberMonthlyRent;
+        private BigDecimal totalDomesticCharge;
+        private BigDecimal totalInternationalCharge;
+        private BigDecimal totalCallAmount;
+        private BigDecimal totalRecordingFee;
+        private BigDecimal totalRingtoneFee;
+        private BigDecimal totalFlashSmsFee;
         private List<BranchAllocationDTO> branches;
     }
 }

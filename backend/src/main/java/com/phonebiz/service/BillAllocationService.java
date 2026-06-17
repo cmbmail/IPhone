@@ -349,7 +349,6 @@ public class BillAllocationService {
         if (snapshots.isEmpty()) {
             snapshots = phoneSnapshotRepository.findBySnapshotMonth(billMonth);
         } else {
-            // Derive snapshotMonth from the data
             snapshotMonth = snapshots.get(0).getSnapshotMonth();
         }
 
@@ -367,30 +366,75 @@ public class BillAllocationService {
             ));
         }
 
-        // 3. Load allocations for the bill month
-        List<BillAllocation> allocations = billAllocationRepository.findByBillMonth(billMonth);
+        // 3. Load bill_raw for fee breakdown
+        List<BillRaw> rawBills = billRawRepository.findByBillMonth(billMonth);
 
-        // 4. Aggregate by branch
+        // 4. Aggregate bill_raw by branch (from snapshot)
         Map<BranchKey, BranchAggregator> branchMap = new LinkedHashMap<>();
         BigDecimal grandTotal = BigDecimal.ZERO;
+        BigDecimal grandPlatformUsage = BigDecimal.ZERO;
+        BigDecimal grandMonthlyRent = BigDecimal.ZERO;
+        BigDecimal grandDomestic = BigDecimal.ZERO;
+        BigDecimal grandInternational = BigDecimal.ZERO;
+        BigDecimal grandCall = BigDecimal.ZERO;
+        BigDecimal grandRecording = BigDecimal.ZERO;
+        BigDecimal grandRingtone = BigDecimal.ZERO;
+        BigDecimal grandFlash = BigDecimal.ZERO;
 
-        for (BillAllocation alloc : allocations) {
-            BranchKey key = phoneToBranch.getOrDefault(alloc.getPhoneNumber(), new BranchKey(-1L, "未归属"));
+        for (BillRaw raw : rawBills) {
+            BranchKey key = phoneToBranch.getOrDefault(raw.getPhoneNumber(), new BranchKey(-1L, "未归属"));
             BranchAggregator agg = branchMap.computeIfAbsent(key, k -> new BranchAggregator());
-            agg.phoneCount++;
-            agg.totalCharge = agg.totalCharge.add(alloc.getChargeAmount());
-            grandTotal = grandTotal.add(alloc.getChargeAmount());
-            if (Boolean.TRUE.equals(alloc.getAnomalyFlag())) {
-                agg.anomalyCount++;
+
+            BigDecimal chargeAmount = raw.getChargeAmount() != null ? raw.getChargeAmount() : BigDecimal.ZERO;
+            agg.totalCharge = agg.totalCharge.add(chargeAmount);
+            grandTotal = grandTotal.add(chargeAmount);
+
+            // Fee breakdown by charge_type
+            int chargeType = raw.getChargeType() != null ? raw.getChargeType() : 0;
+            if (chargeType == BillRaw.CHARGE_TYPE_PHONE) {
+                BigDecimal platFee = raw.getPlatformUsageFee() != null ? raw.getPlatformUsageFee() : BigDecimal.ZERO;
+                BigDecimal rentFee = raw.getNumberMonthlyRent() != null ? raw.getNumberMonthlyRent() : BigDecimal.ZERO;
+                BigDecimal domFee = raw.getDomesticCharge() != null ? raw.getDomesticCharge() : BigDecimal.ZERO;
+                BigDecimal intFee = raw.getInternationalCharge() != null ? raw.getInternationalCharge() : BigDecimal.ZERO;
+                BigDecimal callFee = BigDecimal.ZERO; // BillRaw has no callAmount field
+
+                agg.platformUsageFee = agg.platformUsageFee.add(platFee);
+                agg.numberMonthlyRent = agg.numberMonthlyRent.add(rentFee);
+                agg.domesticCharge = agg.domesticCharge.add(domFee);
+                agg.internationalCharge = agg.internationalCharge.add(intFee);
+                
+
+                grandPlatformUsage = grandPlatformUsage.add(platFee);
+                grandMonthlyRent = grandMonthlyRent.add(rentFee);
+                grandDomestic = grandDomestic.add(domFee);
+                grandInternational = grandInternational.add(intFee);
+                
+
+                agg.phoneBillCount++;
+            } else if (chargeType == BillRaw.CHARGE_TYPE_RECORDING) {
+                agg.recordingFee = agg.recordingFee.add(chargeAmount);
+                grandRecording = grandRecording.add(chargeAmount);
+            } else if (chargeType == BillRaw.CHARGE_TYPE_RINGTONE) {
+                agg.ringtoneFee = agg.ringtoneFee.add(chargeAmount);
+                grandRingtone = grandRingtone.add(chargeAmount);
+            } else if (chargeType == BillRaw.CHARGE_TYPE_FLASH_SMS) {
+                agg.flashSmsFee = agg.flashSmsFee.add(chargeAmount);
+                grandFlash = grandFlash.add(chargeAmount);
             }
+
+            agg.totalBillCount++;
         }
 
-        // 5. Mark allocated count from snapshots
-        for (PhoneSnapshot snap : snapshots) {
-            BranchKey key = phoneToBranch.get(snap.getPhoneNumber());
-            if (key != null) {
-                BranchAggregator agg = branchMap.get(key);
-                if (agg != null && snap.getAllocationStatus() == PhoneSnapshot.ALLOC_ALLOCATED) {
+        // 5. Count allocation status from bill_allocation
+        List<BillAllocation> allocations = billAllocationRepository.findByBillMonth(billMonth);
+        for (BillAllocation alloc : allocations) {
+            BranchKey key = phoneToBranch.getOrDefault(alloc.getPhoneNumber(), new BranchKey(-1L, "未归属"));
+            BranchAggregator agg = branchMap.get(key);
+            if (agg != null) {
+                agg.phoneCount++;
+                if (Boolean.TRUE.equals(alloc.getAnomalyFlag())) {
+                    agg.anomalyCount++;
+                } else {
                     agg.allocatedCount++;
                 }
             }
@@ -402,31 +446,49 @@ public class BillAllocationService {
             BranchKey key = entry.getKey();
             BranchAggregator agg = entry.getValue();
             BigDecimal pct = grandTotal.compareTo(BigDecimal.ZERO) > 0
-                ? agg.totalCharge.multiply(new BigDecimal(100)).divide(grandTotal, 2, java.math.RoundingMode.HALF_UP)
+                ? agg.totalCharge.multiply(new BigDecimal("100")).divide(grandTotal, 2, java.math.RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
+
+            BigDecimal feeSubtotal = agg.platformUsageFee.add(agg.numberMonthlyRent)
+                .add(agg.domesticCharge).add(agg.internationalCharge);
 
             branches.add(BranchAllocationDTO.builder()
                 .branchOrgId(key.id == -1L ? null : key.id)
                 .branchName(key.name)
                 .phoneCount(agg.phoneCount)
                 .totalChargeAmount(agg.totalCharge)
+                .platformUsageFee(agg.platformUsageFee)
+                .numberMonthlyRent(agg.numberMonthlyRent)
+                .domesticCharge(agg.domesticCharge)
+                .internationalCharge(agg.internationalCharge)
+                .callAmount(agg.callAmount)
+                .recordingFee(agg.recordingFee)
+                .ringtoneFee(agg.ringtoneFee)
+                .flashSmsFee(agg.flashSmsFee)
+                .feeSubtotal(feeSubtotal)
                 .allocatedCount(agg.allocatedCount)
                 .anomalyCount(agg.anomalyCount)
-                .unallocatedCount(agg.phoneCount - agg.allocatedCount - agg.anomalyCount)
+                .unallocatedCount(agg.totalBillCount - agg.allocatedCount - agg.anomalyCount)
                 .chargePercentage(pct)
                 .build());
         }
 
         branches.sort((a, b) -> b.getTotalChargeAmount().compareTo(a.getTotalChargeAmount()));
 
-        int totalPhones = branches.stream().mapToInt(BranchAllocationDTO::getPhoneCount).sum();
-
         return BranchAllocationDTO.BranchAllocationResponse.builder()
                 .billMonth(billMonth)
                 .snapshotMonth(snapshotMonth)
                 .totalBranches(branches.size())
-                .totalPhones(totalPhones)
+                .totalPhones(branches.stream().mapToInt(BranchAllocationDTO::getPhoneCount).sum())
                 .totalAmount(grandTotal)
+                .totalPlatformUsageFee(grandPlatformUsage)
+                .totalNumberMonthlyRent(grandMonthlyRent)
+                .totalDomesticCharge(grandDomestic)
+                .totalInternationalCharge(grandInternational)
+                .totalCallAmount(grandCall)
+                .totalRecordingFee(grandRecording)
+                .totalRingtoneFee(grandRingtone)
+                .totalFlashSmsFee(grandFlash)
                 .branches(branches)
                 .build();
     }
@@ -446,7 +508,17 @@ public class BillAllocationService {
 
     private static class BranchAggregator {
         int phoneCount = 0;
+        int totalBillCount = 0;
+        int phoneBillCount = 0;
         BigDecimal totalCharge = BigDecimal.ZERO;
+        BigDecimal platformUsageFee = BigDecimal.ZERO;
+        BigDecimal numberMonthlyRent = BigDecimal.ZERO;
+        BigDecimal domesticCharge = BigDecimal.ZERO;
+        BigDecimal internationalCharge = BigDecimal.ZERO;
+        BigDecimal callAmount = BigDecimal.ZERO;
+        BigDecimal recordingFee = BigDecimal.ZERO;
+        BigDecimal ringtoneFee = BigDecimal.ZERO;
+        BigDecimal flashSmsFee = BigDecimal.ZERO;
         int allocatedCount = 0;
         int anomalyCount = 0;
     }
