@@ -25,8 +25,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Page<Employee> findByOrgId(Long orgId, Pageable pageable);
 
+    Page<Employee> findByStatus(Integer status, Pageable pageable);
+
     @Query("SELECT e FROM Employee e WHERE e.status = 1 ORDER BY e.employeeNo")
     List<Employee> findAllActive();
+
+    @Query("SELECT e FROM Employee e WHERE e.status = 1 ORDER BY e.employeeNo")
+    Page<Employee> findAllActivePaged(Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.orgId IN :orgIds AND e.status = 1")
     List<Employee> findByOrgIdInAndStatusActive(@Param("orgIds") List<Long> orgIds);
@@ -40,5 +45,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e WHERE e.name LIKE %:keyword% OR e.employeeNo LIKE %:keyword%")
     List<Employee> searchByKeyword(@Param("keyword") String keyword);
 
-}
+    @Query("SELECT e FROM Employee e WHERE (e.name LIKE CONCAT('%',:keyword,'%') OR e.employeeNo LIKE CONCAT('%',:keyword,'%')) AND e.status = 1")
+    Page<Employee> searchActiveByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+}

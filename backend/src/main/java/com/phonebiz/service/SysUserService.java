@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.phonebiz.common.BusinessException;
@@ -98,6 +100,20 @@ public class SysUserService {
     public List<UserVO> getAllUsers() {
         List<Employee> employees = employeeRepository.findAllActive();
         return buildUserVOList(employees);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserVO> getAllUsersPaged(Pageable pageable) {
+        Page<Employee> page = employeeRepository.findAllActivePaged(pageable);
+        List<UserVO> voList = buildUserVOList(page.getContent());
+        return new org.springframework.data.domain.PageImpl<>(voList, pageable, page.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserVO> searchUsersPaged(String keyword, Pageable pageable) {
+        Page<Employee> page = employeeRepository.searchActiveByKeyword(keyword, pageable);
+        List<UserVO> voList = buildUserVOList(page.getContent());
+        return new org.springframework.data.domain.PageImpl<>(voList, pageable, page.getTotalElements());
     }
 
     private List<Long> getOrgIdsWithDescendants(Long orgId) {

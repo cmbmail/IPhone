@@ -27,4 +27,6 @@ export const userApi = {
   delete: (employeeId: number) => ApiDelete(`/users/${employeeId}`),
   updateRole: (employeeId: number, roleId: number) =>
     ApiPut(`/users/${employeeId}/role`, { roleId }),
+  getPaged: (params: { page: number; size: number; keyword?: string }) =>
+    ApiGet<any>('/users/paged', { params }),
 }

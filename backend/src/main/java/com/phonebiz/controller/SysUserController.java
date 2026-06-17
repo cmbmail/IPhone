@@ -1,6 +1,9 @@
 package com.phonebiz.controller;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,21 @@ public class SysUserController {
     @GetMapping
     public ApiResponse<List<UserVO>> getAllUsers() {
         return ApiResponse.success(sysUserService.getAllUsers());
+    }
+
+    @GetMapping("/paged")
+    public ApiResponse<Page<UserVO>> getAllUsersPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("employeeNo").ascending());
+        Page<UserVO> result;
+        if (keyword != null && !keyword.isBlank()) {
+            result = sysUserService.searchUsersPaged(keyword.trim(), pageRequest);
+        } else {
+            result = sysUserService.getAllUsersPaged(pageRequest);
+        }
+        return ApiResponse.success(result);
     }
 
     @PutMapping("/{id:[0-9]+}/username")
