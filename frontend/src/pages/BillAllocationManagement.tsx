@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Statistic, Row, Col, Tabs, Tag, Progress } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { Table, Button, Card, Select, Statistic, Row, Col, Tabs, Tag, Progress, Space, message, Popconfirm } from 'antd'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiGet } from '@/api/request'
+import { feeAllocationApi, type LevelResponse, type FeeAllocationItem } from '@/api/feeAllocation'
 
 const { Option } = Select
 
@@ -42,9 +43,183 @@ interface BranchAllocResponse {
   branches: BranchAllocItem[]
 }
 
+// ==================== Allocation Level Tab Component ====================
+const AllocationLevelTab = ({ level, billMonth }: { level: number; billMonth: string }) => {
+  const queryClient = useQueryClient()
+  const [selectedParent, setSelectedParent] = useState<number | undefined>(undefined)
+
+  const levelKey = `alloc-level-${level}`
+  const levelName = level === 1 ? '一次分摊' : level === 2 ? '二次分摊' : '三次分摊'
+  const levelDesc = level === 1 ? '总行 → 一级分行' : level === 2 ? '一级分行 → 二级分行/部门/综合支行' : '二级分行 → 部门/综合支行/零专支行'
+
+  const apiFn = level === 1 ? feeAllocationApi.getLevel1 : level === 2 ? feeAllocationApi.getLevel2 : feeAllocationApi.getLevel3
+
+  const { data, isLoading } = useQuery({
+    queryKey: [levelKey, billMonth, selectedParent],
+    queryFn: () => apiFn(billMonth, selectedParent),
+  })
+
+  const calcMutation = useMutation({
+    mutationFn: () => feeAllocationApi.calculate(billMonth, level),
+    onSuccess: () => {
+      message.success(`${levelName}计算完成`)
+      queryClient.invalidateQueries({ queryKey: [levelKey] })
+    },
+    onError: () => message.error('计算失败'),
+  })
+
+  const confirmMutation = useMutation({
+    mutationFn: (id: number) => feeAllocationApi.confirm(id),
+    onSuccess: () => {
+      message.success('已确认')
+      queryClient.invalidateQueries({ queryKey: [levelKey] })
+    },
+    onError: () => message.error('确认失败'),
+  })
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: number) => feeAllocationApi.reject(id),
+    onSuccess: () => {
+      message.success('已驳回')
+      queryClient.invalidateQueries({ queryKey: [levelKey] })
+    },
+    onError: () => message.error('驳回失败'),
+  })
+
+  const fmtMoney = (v: number) => `\u00a5${(v || 0).toFixed(2)}`
+
+  const items: FeeAllocationItem[] = data?.items || []
+
+  const columns = [
+    { title: '组织名称', dataIndex: 'orgName', key: 'orgName', width: 140, fixed: 'left' as const, render: (v: string) => v || '未归属' },
+    { title: '类型', dataIndex: 'orgTypeName', key: 'orgTypeName', width: 80, render: (v: string) => <Tag>{v || '-'}</Tag> },
+    ...(level >= 2 ? [{ title: '上级组织', dataIndex: 'parentOrgName', key: 'parentOrgName', width: 120 }] : []),
+    { title: '号码数', dataIndex: 'phoneCount', key: 'phoneCount', width: 70, align: 'right' as const },
+    { title: '平台使用费', dataIndex: 'platformUsageFee', key: 'platformUsageFee', width: 110, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '月租费', dataIndex: 'numberMonthlyRent', key: 'numberMonthlyRent', width: 100, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '国内费用', dataIndex: 'domesticCharge', key: 'domesticCharge', width: 100, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '国际费用', dataIndex: 'internationalCharge', key: 'internationalCharge', width: 100, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '录音费', dataIndex: 'recordingFee', key: 'recordingFee', width: 90, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '彩铃费', dataIndex: 'ringtoneFee', key: 'ringtoneFee', width: 90, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    { title: '闪信费', dataIndex: 'flashSmsFee', key: 'flashSmsFee', width: 90, align: 'right' as const, render: (v: number) => fmtMoney(v) },
+    {
+      title: '费用合计', dataIndex: 'totalAmount', key: 'totalAmount', width: 120, align: 'right' as const, fixed: 'right' as const,
+      render: (v: number) => <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span>,
+    },
+    { title: '占比', dataIndex: 'percentage', key: 'percentage', width: 90, align: 'right' as const, render: (v: number) => `${(v || 0).toFixed(1)}%` },
+    {
+      title: '状态', dataIndex: 'statusName', key: 'statusName', width: 80,
+      render: (v: string, r: FeeAllocationItem) =>
+        r.status === 1 ? <Tag color="green">{v}</Tag> : r.status === 2 ? <Tag color="red">{v}</Tag> : <Tag color="blue">{v}</Tag>,
+    },
+    {
+      title: '操作', key: 'action', width: 140, fixed: 'right' as const,
+      render: (_: unknown, r: FeeAllocationItem) => r.status === 0 ? (
+        <Space size="small">
+          <Popconfirm title="确认该分摊结果？" onConfirm={() => confirmMutation.mutate(r.id)}>
+            <Button type="link" size="small">确认</Button>
+          </Popconfirm>
+          <Popconfirm title="驳回该分摊结果？" onConfirm={() => rejectMutation.mutate(r.id)}>
+            <Button type="link" size="small" danger>驳回</Button>
+          </Popconfirm>
+        </Space>
+      ) : '-',
+    },
+  ]
+
+  // Get unique parent names for dropdown (level 2 & 3)
+  const parentOptions = [...new Map(items.map(i => [i.parentOrgId, i.parentOrgName])).entries()]
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <Space>
+          <span style={{ fontWeight: 600 }}>{levelName}：{levelDesc}</span>
+          {level >= 2 && (
+            <Select
+              placeholder="选择上级组织"
+              style={{ width: 180 }}
+              value={selectedParent}
+              onChange={setSelectedParent}
+              allowClear
+            >
+              {parentOptions.map(([id, name]) => (
+                <Option key={id} value={Number(id)}>{name}</Option>
+              ))}
+            </Select>
+          )}
+        </Space>
+        <Space>
+          <Button type="primary" loading={calcMutation.isPending} onClick={() => calcMutation.mutate()}>
+            计算{levelName}
+          </Button>
+          <span style={{ color: '#999' }}>
+            {data?.calculated ? `${data.totalCount} 条记录` : '未计算'}
+          </span>
+        </Space>
+      </div>
+
+      {/* Summary stats */}
+      {data?.calculated && (
+        <Row gutter={12} style={{ marginBottom: 12 }}>
+          <Col span={4}><Card size="small"><Statistic title="组织数" value={data.totalCount} /></Card></Col>
+          <Col span={4}><Card size="small"><Statistic title="号码数" value={data.totalPhones} /></Card></Col>
+          <Col span={5}><Card size="small"><Statistic title="费用合计" value={data.totalAmount} precision={2} prefix="\u00a5" valueStyle={{ color: '#cf1322', fontWeight: 700 }} /></Card></Col>
+          <Col span={4}><Card size="small"><Statistic title="平台使用费" value={data.totalPlatformUsageFee} precision={2} prefix="\u00a5" /></Card></Col>
+          <Col span={4}><Card size="small"><Statistic title="月租费" value={data.totalNumberMonthlyRent} precision={2} prefix="\u00a5" /></Card></Col>
+          <Col span={3}><Card size="small"><Statistic title="录音费" value={data.totalRecordingFee} precision={2} prefix="\u00a5" /></Card></Col>
+        </Row>
+      )}
+
+      <Table
+        columns={columns}
+        dataSource={items}
+        loading={isLoading}
+        rowKey="orgId"
+        scroll={{ x: 1600 }}
+        pagination={{ pageSize: 50, showQuickJumper: true }}
+        size="middle"
+        bordered
+        summary={(pageData) => {
+          const arr = pageData as FeeAllocationItem[]
+          if (!arr.length) return null
+          let tPhones = 0, tPlat = 0, tRent = 0, tDom = 0, tIntl = 0, tRec = 0, tRing = 0, tFlash = 0, tTotal = 0
+          arr.forEach(r => {
+            tPhones += r.phoneCount || 0; tPlat += r.platformUsageFee || 0; tRent += r.numberMonthlyRent || 0
+            tDom += r.domesticCharge || 0; tIntl += r.internationalCharge || 0
+            tRec += r.recordingFee || 0; tRing += r.ringtoneFee || 0; tFlash += r.flashSmsFee || 0; tTotal += r.totalAmount || 0
+          })
+          return (
+            <Table.Summary.Row style={{ background: '#fafafa', fontWeight: 700 }}>
+              <Table.Summary.Cell index={0}>合计</Table.Summary.Cell>
+              <Table.Summary.Cell index={1} />
+              {level >= 2 && <Table.Summary.Cell index={2} />}
+              <Table.Summary.Cell index={level >= 2 ? 3 : 2} align="right">{tPhones}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 4 : 3} align="right">{fmtMoney(tPlat)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 5 : 4} align="right">{fmtMoney(tRent)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 6 : 5} align="right">{fmtMoney(tDom)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 7 : 6} align="right">{fmtMoney(tIntl)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 8 : 7} align="right">{fmtMoney(tRec)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 9 : 8} align="right">{fmtMoney(tRing)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 10 : 9} align="right">{fmtMoney(tFlash)}</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 11 : 10} align="right">
+                <span style={{ color: '#1890ff', fontWeight: 700 }}>{fmtMoney(tTotal)}</span>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 12 : 11}>100%</Table.Summary.Cell>
+              <Table.Summary.Cell index={level >= 2 ? 13 : 12} />
+              <Table.Summary.Cell index={level >= 2 ? 14 : 13} />
+            </Table.Summary.Row>
+          )
+        }}
+      />
+    </div>
+  )
+}
+
+// ==================== Main Component ====================
 const BillAllocationManagement = () => {
   const [activeTab, setActiveTab] = useState('detail')
-  const [billMonth, setBillMonth] = useState<string>(new Date().toISOString().slice(0, 7))
+  const [billMonth, setBillMonth] = useState<string>('2026-05')
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date()
@@ -86,17 +261,6 @@ const BillAllocationManagement = () => {
       title: '合计', dataIndex: 'totalChargeAmount', key: 'totalChargeAmount', width: 120, align: 'right' as const, fixed: 'right' as const,
       render: (v: number) => <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span>,
     },
-  ]
-
-  // ==================== Summary columns (overview with allocation status) ====================
-  const summaryColumns = [
-    { title: '分行', dataIndex: 'branchName', key: 'branchName', width: 130, fixed: 'left' as const, render: (v: string) => v || '未归属' },
-    { title: '号码数', dataIndex: 'phoneCount', key: 'phoneCount', width: 80, align: 'right' as const },
-    { title: '已分摊', dataIndex: 'allocatedCount', key: 'allocatedCount', width: 80, align: 'right' as const, render: (v: number) => <span style={{ color: '#52c41a' }}>{v}</span> },
-    { title: '异常', dataIndex: 'anomalyCount', key: 'anomalyCount', width: 70, align: 'right' as const, render: (v: number) => v > 0 ? <Tag color="red">{v}</Tag> : v },
-    { title: '未分摊', dataIndex: 'unallocatedCount', key: 'unallocatedCount', width: 80, align: 'right' as const, render: (v: number) => v > 0 ? <Tag color="orange">{v}</Tag> : v },
-    { title: '费用合计', dataIndex: 'totalChargeAmount', key: 'totalChargeAmount', width: 130, align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 700, color: '#1890ff', fontSize: 14 }}>{fmtMoney(v)}</span> },
-    { title: '占比', dataIndex: 'chargePercentage', key: 'chargePercentage', width: 160, render: (v: number) => <Progress percent={v || 0} size="small" format={(p) => `${p?.toFixed(1)}%`} /> },
   ]
 
   // Summary row renderer for fee table
@@ -185,39 +349,19 @@ const BillAllocationManagement = () => {
               ),
             },
             {
-              key: 'overview',
-              label: '分摊概览',
-              children: (
-                <Table
-                  columns={summaryColumns}
-                  dataSource={branchItems}
-                  loading={isLoading}
-                  rowKey="branchName"
-                  scroll={{ x: 800 }}
-                  pagination={{ pageSize: 50, showQuickJumper: true }}
-                  size="middle"
-                  bordered
-                  summary={(pageData) => {
-                    let tPhones = 0, tAlloc = 0, tAnomaly = 0, tUnalloc = 0, tCharge = 0
-                    pageData.forEach(r => {
-                      tPhones += r.phoneCount; tAlloc += r.allocatedCount
-                      tAnomaly += r.anomalyCount; tUnalloc += r.unallocatedCount
-                      tCharge += r.totalChargeAmount || 0
-                    })
-                    return (
-                      <Table.Summary.Row style={{ background: '#fafafa', fontWeight: 700 }}>
-                        <Table.Summary.Cell index={0}>合计</Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">{tPhones}</Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} align="right"><span style={{ color: '#52c41a' }}>{tAlloc}</span></Table.Summary.Cell>
-                        <Table.Summary.Cell index={3} align="right">{tAnomaly > 0 ? <Tag color="red">{tAnomaly}</Tag> : tAnomaly}</Table.Summary.Cell>
-                        <Table.Summary.Cell index={4} align="right">{tUnalloc > 0 ? <Tag color="orange">{tUnalloc}</Tag> : tUnalloc}</Table.Summary.Cell>
-                        <Table.Summary.Cell index={5} align="right"><span style={{ color: '#1890ff', fontWeight: 700, fontSize: 14 }}>{fmtMoney(tCharge)}</span></Table.Summary.Cell>
-                        <Table.Summary.Cell index={6}>100%</Table.Summary.Cell>
-                      </Table.Summary.Row>
-                    )
-                  }}
-                />
-              ),
+              key: 'alloc1',
+              label: '一次分摊',
+              children: <AllocationLevelTab level={1} billMonth={billMonth} />,
+            },
+            {
+              key: 'alloc2',
+              label: '二次分摊',
+              children: <AllocationLevelTab level={2} billMonth={billMonth} />,
+            },
+            {
+              key: 'alloc3',
+              label: '三次分摊',
+              children: <AllocationLevelTab level={3} billMonth={billMonth} />,
             },
           ]}
         />
