@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +29,28 @@ public class PhoneOwnershipService {
     private final PhoneOwnershipRepository phoneOwnershipRepository;
     private final OrgStructureRepository orgStructureRepository;
 
+    // Cache org map - org structure rarely changes, refresh every 5 minutes
+    private volatile Map<Long, OrgStructure> orgMapCache = null;
+    private volatile long orgMapCacheTime = 0;
+    private static final long ORG_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+    private Map<Long, OrgStructure> getOrgMap() {
+        long now = System.currentTimeMillis();
+        if (orgMapCache == null || (now - orgMapCacheTime) > ORG_CACHE_TTL_MS) {
+            List<OrgStructure> allOrgs = orgStructureRepository.findAll();
+            Map<Long, OrgStructure> map = new ConcurrentHashMap<>();
+            for (OrgStructure o : allOrgs) { map.put(o.getId(), o); }
+            orgMapCache = map;
+            orgMapCacheTime = now;
+        }
+        return orgMapCache;
+    }
+
     @Transactional(readOnly = true)
     public Page<PhoneOwnershipVO> search(String keyword, Long branchOrgId, Pageable pageable) {
         Page<PhoneOwnership> page = phoneOwnershipRepository.search(keyword, branchOrgId, pageable);
-        // Build org path map once
-        List<OrgStructure> allOrgs = orgStructureRepository.findAll();
-        java.util.Map<Long, OrgStructure> orgMap = new java.util.HashMap<>();
-        for (OrgStructure o : allOrgs) { orgMap.put(o.getId(), o); }
+        // Use cached org map
+        java.util.Map<Long, OrgStructure> orgMap = getOrgMap();
 
         return page.map(po -> {
             PhoneOwnershipVO vo = PhoneOwnershipVO.from(po);
@@ -94,9 +110,7 @@ public class PhoneOwnershipService {
     @Transactional(readOnly = true)
     public List<PhoneOwnershipVO> listAllVO() {
         List<PhoneOwnership> all = phoneOwnershipRepository.findAllByOrderByPhoneNumberAsc();
-        List<OrgStructure> allOrgs = orgStructureRepository.findAll();
-        java.util.Map<Long, OrgStructure> orgMap = new java.util.HashMap<>();
-        for (OrgStructure o : allOrgs) { orgMap.put(o.getId(), o); }
+        java.util.Map<Long, OrgStructure> orgMap = getOrgMap();
 
         return all.stream().map(po -> {
             PhoneOwnershipVO vo = PhoneOwnershipVO.from(po);
