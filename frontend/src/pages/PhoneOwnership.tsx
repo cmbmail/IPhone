@@ -207,16 +207,23 @@ const PhoneOwnershipPage = () => {
   const columns = [
     { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150 },
     {
-      title: '分行',
-      dataIndex: 'branchName',
-      key: 'branchName',
+      title: '一级分行',
+      dataIndex: 'level1BranchName',
+      key: 'level1BranchName',
+      width: 130,
+      render: (v: string) => v || '-',
+    },
+    {
+      title: '二级分行/部门',
+      dataIndex: 'level2OrgName',
+      key: 'level2OrgName',
       width: 150,
       render: (v: string) => v || '-',
     },
     {
-      title: '部门',
-      dataIndex: 'deptName',
-      key: 'deptName',
+      title: '部门/支行',
+      dataIndex: 'level3OrgName',
+      key: 'level3OrgName',
       width: 150,
       render: (v: string) => v || '-',
     },
@@ -326,7 +333,7 @@ const PhoneOwnershipPage = () => {
       render: (s: number) => <Tag color={SNAPSHOT_STATUS_COLORS[s] || 'default'}>{SNAPSHOT_STATUS_LABELS[s] || s}</Tag>,
     },
     { title: '组织', dataIndex: 'orgName', key: 'orgName', width: 150, render: (v: string | null) => v || '-' },
-    { title: '分行', dataIndex: 'branchName', key: 'branchName', width: 120, render: (v: string | null) => v || '-' },
+          { title: '一级分行', dataIndex: 'level1BranchName', key: 'branchName', width: 120, render: (v: string | null) => v || '-' },
     { title: '成本中心', dataIndex: 'costCenterCode', key: 'costCenterCode', width: 100, render: (v: string | null) => v || '-' },
     { title: '工号', dataIndex: 'employeeNo', key: 'employeeNo', width: 90, render: (v: string | null) => v || '-' },
     { title: '姓名', dataIndex: 'employeeName', key: 'employeeName', width: 100, render: (v: string | null) => v || '-' },
@@ -367,12 +374,12 @@ const PhoneOwnershipPage = () => {
                   </Col>
                   <Col span={8}>
                     <Card>
-                      <Statistic title="已归属分行" value={content.filter((c) => c.branchName).length} valueStyle={{ color: '#52c41a' }} />
+                      <Statistic title="已归属一级分行" value={content.filter((c) => c.level1BranchName).length} valueStyle={{ color: '#52c41a' }} />
                     </Card>
                   </Col>
                   <Col span={8}>
                     <Card>
-                      <Statistic title="已归属部门" value={content.filter((c) => c.deptName).length} valueStyle={{ color: '#1890ff' }} />
+                      <Statistic title="已归属二级分行" value={content.filter((c) => c.level2OrgName).length} valueStyle={{ color: '#1890ff' }} />
                     </Card>
                   </Col>
                 </Row>

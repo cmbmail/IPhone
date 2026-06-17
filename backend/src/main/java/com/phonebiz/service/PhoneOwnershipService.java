@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.phonebiz.dto.PhoneOwnershipImportDTO;
+import com.phonebiz.dto.PhoneOwnershipVO;
 import com.phonebiz.entity.OrgStructure;
 import com.phonebiz.entity.PhoneOwnership;
 import com.phonebiz.repository.OrgStructureRepository;
@@ -28,13 +29,89 @@ public class PhoneOwnershipService {
     private final OrgStructureRepository orgStructureRepository;
 
     @Transactional(readOnly = true)
-    public Page<PhoneOwnership> search(String keyword, Long branchOrgId, Pageable pageable) {
-        return phoneOwnershipRepository.search(keyword, branchOrgId, pageable);
+    public Page<PhoneOwnershipVO> search(String keyword, Long branchOrgId, Pageable pageable) {
+        Page<PhoneOwnership> page = phoneOwnershipRepository.search(keyword, branchOrgId, pageable);
+        // Build org path map once
+        List<OrgStructure> allOrgs = orgStructureRepository.findAll();
+        java.util.Map<Long, OrgStructure> orgMap = new java.util.HashMap<>();
+        for (OrgStructure o : allOrgs) { orgMap.put(o.getId(), o); }
+
+        return page.map(po -> {
+            PhoneOwnershipVO vo = PhoneOwnershipVO.from(po);
+            // Resolve allocation level columns from org tree
+            Long deptId = po.getDeptOrgId() != null ? po.getDeptOrgId() : po.getBranchOrgId();
+            if (deptId != null) {
+                String[] levels = resolveLevels(deptId, orgMap);
+                vo.setLevel1BranchName(levels[0]);
+                vo.setLevel1BranchOrgId(levels[1] != null ? Long.parseLong(levels[1]) : null);
+                vo.setLevel2OrgName(levels[2]);
+                vo.setLevel2OrgId(levels[3] != null ? Long.parseLong(levels[3]) : null);
+                vo.setLevel3OrgName(levels[4]);
+                vo.setLevel3OrgId(levels[5] != null ? Long.parseLong(levels[5]) : null);
+            }
+            return vo;
+        });
+    }
+
+    /**
+     * Resolve 3-level allocation names from org tree path.
+     * Returns [L1Name, L1Id, L2Name, L2Id, L3Name, L3Id]
+     */
+    private String[] resolveLevels(Long orgId, java.util.Map<Long, OrgStructure> orgMap) {
+        // Build path from root to this org
+        java.util.List<Long> path = new java.util.ArrayList<>();
+        java.util.Set<Long> visited = new java.util.HashSet<>();
+        Long cur = orgId;
+        while (cur != null && !visited.contains(cur)) {
+            path.add(0, cur);
+            visited.add(cur);
+            OrgStructure o = orgMap.get(cur);
+            if (o == null) break;
+            cur = o.getParentId();
+        }
+        // path[0]=root, path[1]=一级分行, path[2]=二级分行/部门/综合支行, path[3]=部门/支行/零专支行
+        String l1Name = null, l1Id = null, l2Name = null, l2Id = null, l3Name = null, l3Id = null;
+        if (path.size() > 1) {
+            OrgStructure l1 = orgMap.get(path.get(1));
+            if (l1 != null) { l1Name = l1.getName(); l1Id = String.valueOf(l1.getId()); }
+        }
+        if (path.size() > 2) {
+            OrgStructure l2 = orgMap.get(path.get(2));
+            if (l2 != null) { l2Name = l2.getName(); l2Id = String.valueOf(l2.getId()); }
+        }
+        if (path.size() > 3) {
+            OrgStructure l3 = orgMap.get(path.get(3));
+            if (l3 != null) { l3Name = l3.getName(); l3Id = String.valueOf(l3.getId()); }
+        }
+        return new String[]{l1Name, l1Id, l2Name, l2Id, l3Name, l3Id};
     }
 
     @Transactional(readOnly = true)
     public List<PhoneOwnership> listAll() {
         return phoneOwnershipRepository.findAllByOrderByPhoneNumberAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PhoneOwnershipVO> listAllVO() {
+        List<PhoneOwnership> all = phoneOwnershipRepository.findAllByOrderByPhoneNumberAsc();
+        List<OrgStructure> allOrgs = orgStructureRepository.findAll();
+        java.util.Map<Long, OrgStructure> orgMap = new java.util.HashMap<>();
+        for (OrgStructure o : allOrgs) { orgMap.put(o.getId(), o); }
+
+        return all.stream().map(po -> {
+            PhoneOwnershipVO vo = PhoneOwnershipVO.from(po);
+            Long deptId = po.getDeptOrgId() != null ? po.getDeptOrgId() : po.getBranchOrgId();
+            if (deptId != null) {
+                String[] levels = resolveLevels(deptId, orgMap);
+                vo.setLevel1BranchName(levels[0]);
+                vo.setLevel1BranchOrgId(levels[1] != null ? Long.parseLong(levels[1]) : null);
+                vo.setLevel2OrgName(levels[2]);
+                vo.setLevel2OrgId(levels[3] != null ? Long.parseLong(levels[3]) : null);
+                vo.setLevel3OrgName(levels[4]);
+                vo.setLevel3OrgId(levels[5] != null ? Long.parseLong(levels[5]) : null);
+            }
+            return vo;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional

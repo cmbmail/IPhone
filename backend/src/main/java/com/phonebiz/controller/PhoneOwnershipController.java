@@ -29,7 +29,7 @@ public class PhoneOwnershipController {
     private final PhoneOwnershipService phoneOwnershipService;
 
     @GetMapping
-    public ApiResponse<Page<PhoneOwnership>> search(
+    public ApiResponse<Page<com.phonebiz.dto.PhoneOwnershipVO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long branchOrgId,
             @PageableDefault(size = 20, sort = "phoneNumber", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -63,14 +63,15 @@ public class PhoneOwnershipController {
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
     public ResponseEntity<byte[]> export() {
-        List<PhoneOwnership> all = phoneOwnershipService.listAll();
+        List<com.phonebiz.dto.PhoneOwnershipVO> all = phoneOwnershipService.listAllVO();
         StringBuilder sb = new StringBuilder();
-        sb.append("电话号码,分行,部门,备注\n");
-        for (PhoneOwnership po : all) {
-            sb.append(po.getPhoneNumber()).append(',')
-              .append(po.getBranchName() != null ? po.getBranchName() : "").append(',')
-              .append(po.getDeptName() != null ? po.getDeptName() : "").append(',')
-              .append(po.getRemark() != null ? po.getRemark() : "").append('\n');
+        sb.append("电话号码,一级分行,二级分行/部门,部门/支行,备注\n");
+        for (com.phonebiz.dto.PhoneOwnershipVO vo : all) {
+            sb.append(vo.getPhoneNumber()).append(',')
+              .append(vo.getLevel1BranchName() != null ? vo.getLevel1BranchName() : "").append(',')
+              .append(vo.getLevel2OrgName() != null ? vo.getLevel2OrgName() : "").append(',')
+              .append(vo.getLevel3OrgName() != null ? vo.getLevel3OrgName() : "").append(',')
+              .append(vo.getRemark() != null ? vo.getRemark() : "").append('\n');
         }
         byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         // Add BOM for Excel to recognize UTF-8
