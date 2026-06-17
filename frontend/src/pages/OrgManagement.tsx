@@ -181,10 +181,7 @@ const OrgManagement: React.FC = () => {
     })
   }
 
-  const expandedAllKeys = useMemo(() => getAllKeys(treeData), [treeData])
-  React.useEffect(() => {
-    setExpandedKeys(expandedAllKeys)
-  }, [expandedAllKeys])
+  // Tree defaults to collapsed — user expands manually
   const antTreeData = useMemo(() => convertToAntTree(treeData), [treeData, convertToAntTree])
 
   const nameInputRef = React.useRef<InputRef>(null)
