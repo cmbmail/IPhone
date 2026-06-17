@@ -215,19 +215,19 @@ public class PhoneAllocationService {
                 phone.setStatus(PhoneNumber.PS_ACTIVE);
             }
             phone.setUpdatedBy(operator);
-
-            PhoneNumber saved = phoneRepository.save(phone);
-
-            commandService.recordHistory(saved.getId(), "dept_allocate", PhoneNumber.PS_IDLE, saved.getStatus(),
-                    saved.getEmployeeNo(), saved.getEmployeeNo(),
-                    fromOrg, toOrg,
-                    operator, null,
-                    request.getRemark() != null ? "分配到部门: " + request.getRemark() : "分配到部门");
-
-            updated.add(saved);
+            updated.add(phone);
         }
 
-        log.info("Allocated {} phones to dept {} by {}", updated.size(), deptOrgId, operator);
+        List<PhoneNumber> savedList = phoneRepository.saveAll(updated);
+        for (PhoneNumber saved : savedList) {
+            String fromOrg = saved.getOrgId() != null ? String.valueOf(saved.getOrgId()) : null;
+            commandService.recordHistory(saved.getId(), "dept_allocate", PhoneNumber.PS_IDLE, saved.getStatus(),
+                    saved.getEmployeeNo(), saved.getEmployeeNo(),
+                    fromOrg, String.valueOf(deptOrgId),
+                    operator, null,
+                    request.getRemark() != null ? "分配到部门: " + request.getRemark() : "分配到部门");
+        }
+        log.info("Allocated {} phones to dept {} by {}", savedList.size(), deptOrgId, operator);
         if (updated.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were allocated — they may not be in a branch pool or already allocated to a department");
         }
@@ -263,19 +263,18 @@ public class PhoneAllocationService {
             phone.setExtensionType(null);
             phone.setStatus(PhoneNumber.PS_IDLE);
             phone.setUpdatedBy(operator);
-
-            PhoneNumber saved = phoneRepository.save(phone);
-
-            commandService.recordHistory(saved.getId(), "dept_revoke", PhoneNumber.PS_ACTIVE, PhoneNumber.PS_IDLE,
-                    phone.getEmployeeNo(), null,
-                    fromOrg, String.valueOf(saved.getBranchOrgId()),
-                    operator, null,
-                    request.getRemark() != null ? "从部门回收到分行池: " + request.getRemark() : "从部门回收到分行池");
-
-            updated.add(saved);
+            updated.add(phone);
         }
 
-        log.info("Revoked {} phones from dept back to branch pool by {}", updated.size(), operator);
+        List<PhoneNumber> savedDrList = phoneRepository.saveAll(updated);
+        for (PhoneNumber saved : savedDrList) {
+            commandService.recordHistory(saved.getId(), "dept_revoke", PhoneNumber.PS_ACTIVE, PhoneNumber.PS_IDLE,
+                    saved.getEmployeeNo(), null,
+                    String.valueOf(saved.getOrgId() != null ? saved.getOrgId() : ""), String.valueOf(saved.getBranchOrgId()),
+                    operator, null,
+                    request.getRemark() != null ? "从部门回收到分行池: " + request.getRemark() : "从部门回收到分行池");
+        }
+        log.info("Revoked {} phones from dept back to branch pool by {}", savedDrList.size(), operator);
         if (updated.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were revoked — they may not be allocated to any department");
         }
@@ -315,19 +314,18 @@ public class PhoneAllocationService {
             phone.setBranchOrgId(null);
             phone.setOrgId(null);
             phone.setUpdatedBy(operator);
-
-            PhoneNumber saved = phoneRepository.save(phone);
-
-            commandService.recordHistory(saved.getId(), "branch_revoke", saved.getStatus(), saved.getStatus(),
-                    saved.getEmployeeNo(), saved.getEmployeeNo(),
-                    fromBranch, null,
-                    operator, null,
-                    request.getRemark() != null ? "从分行回收到系统池: " + request.getRemark() : "从分行回收到系统池");
-
-            updated.add(saved);
+            updated.add(phone);
         }
 
-        log.info("Revoked {} phones from branch back to system pool by {}", updated.size(), operator);
+        List<PhoneNumber> savedBrList = phoneRepository.saveAll(updated);
+        for (PhoneNumber saved : savedBrList) {
+            commandService.recordHistory(saved.getId(), "branch_revoke", saved.getStatus(), saved.getStatus(),
+                    saved.getEmployeeNo(), saved.getEmployeeNo(),
+                    String.valueOf(saved.getBranchOrgId() != null ? saved.getBranchOrgId() : ""), null,
+                    operator, null,
+                    request.getRemark() != null ? "从分行回收到系统池: " + request.getRemark() : "从分行回收到系统池");
+        }
+        log.info("Revoked {} phones from branch back to system pool by {}", savedBrList.size(), operator);
         if (updated.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_VALIDATION_FAILED, "No phones were revoked — they may not be in any branch pool");
         }

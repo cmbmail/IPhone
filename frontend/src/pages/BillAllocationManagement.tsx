@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Table, Button, Card, Select, Statistic, Row, Col, Tabs, Tag, Progress, Space, message, Popconfirm } from 'antd'
+import { Table, Button, Card, Select, Statistic, Row, Col, Tabs, Tag, Space, message, Popconfirm } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiGet } from '@/api/request'
-import { feeAllocationApi, type LevelResponse, type FeeAllocationItem } from '@/api/feeAllocation'
+import { feeAllocationApi, type FeeAllocationItem } from '@/api/feeAllocation'
 
 const { Option } = Select
 

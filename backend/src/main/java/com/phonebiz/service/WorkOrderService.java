@@ -128,6 +128,7 @@ public class WorkOrderService {
 
         // Create items if provided (driven service path)
         if (request.getItems() != null && !request.getItems().isEmpty()) {
+            List<WorkOrderItem> items = new java.util.ArrayList<>();
             for (CreateWorkOrderRequest.WorkOrderItemRequest itemReq : request.getItems()) {
                 WorkOrderItem item = WorkOrderItem.builder()
                         .workOrderId(saved.getId())
@@ -140,8 +141,9 @@ public class WorkOrderService {
                         .build();
                 item.setCreatedAt(LocalDateTime.now());
                 item.setUpdatedAt(LocalDateTime.now());
-                workOrderItemRepository.save(item);
+                items.add(item);
             }
+            workOrderItemRepository.saveAll(items);
         }
 
         log.info("Work order created: {}", workOrderNo);
@@ -392,6 +394,7 @@ public class WorkOrderService {
 
             WorkOrder savedChild = workOrderRepository.save(childWorkOrder);
 
+            List<WorkOrderItem> splitItems = new java.util.ArrayList<>();
             for (WorkOrderItem item : entry.getValue()) {
                 WorkOrderItem newItem = WorkOrderItem.builder()
                         .workOrderId(savedChild.getId())
@@ -404,8 +407,9 @@ public class WorkOrderService {
                         .build();
                 newItem.setCreatedAt(LocalDateTime.now());
                 newItem.setUpdatedAt(LocalDateTime.now());
-                workOrderItemRepository.save(newItem);
+                splitItems.add(newItem);
             }
+            workOrderItemRepository.saveAll(splitItems);
 
             result.add(getWorkOrderById(savedChild.getId()));
         }

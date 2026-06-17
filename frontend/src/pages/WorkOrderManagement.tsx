@@ -1,4 +1,13 @@
-import { useState, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import {
+  WORK_ORDER_STATUS_COLORS as STATUS_COLORS,
+  WORK_ORDER_STATUS_NAMES as STATUS_NAMES,
+  WORK_ORDER_TYPE_NAMES as TYPE_NAMES,
+  WORK_ORDER_TYPE_COLORS as TYPE_COLORS,
+  WORK_ORDER_ITEM_TYPE_NAMES as ITEM_TYPE_NAMES,
+  WORK_ORDER_ITEM_STATUS_NAMES as ITEM_STATUS_NAMES,
+  WORK_ORDER_ITEM_STATUS_COLORS as ITEM_STATUS_COLORS,
+} from '@/constants/workOrder'
 import {
   Table,
   Button,
@@ -36,51 +45,6 @@ const PASTE_FIELDS = [
   'remark',
 ]
 
-const STATUS_COLORS: Record<number, string> = {
-  0: 'warning',
-  1: 'processing',
-  2: 'processing',
-  3: 'success',
-  4: 'default',
-  5: 'error',
-}
-const STATUS_NAMES: Record<number, string> = {
-  0: '待处理',
-  1: '挂起',
-  2: '处理中',
-  3: '已完成',
-  4: '已归档',
-  5: '已取消',
-}
-const TYPE_NAMES: Record<number, string> = {
-  1: '新增',
-  2: '变更',
-  3: '解绑',
-  4: '座机绑定',
-  5: '号码拆机',
-}
-const TYPE_COLORS: Record<number, string> = {
-  1: 'green',
-  2: 'blue',
-  3: 'orange',
-  4: 'purple',
-  5: 'red',
-}
-const ITEM_TYPE_NAMES: Record<number, string> = { 1: '号码', 2: '设备', 3: '员工' }
-const ITEM_STATUS_NAMES: Record<number, string> = {
-  0: '待执行',
-  1: '执行中',
-  2: '已完成',
-  3: '失败',
-  4: '已跳过',
-}
-const ITEM_STATUS_COLORS: Record<number, string> = {
-  0: 'processing',
-  1: 'processing',
-  2: 'success',
-  3: 'error',
-  4: 'default',
-}
 
 /** 已完成/已归档/已取消的工单归入历史 */
 const isHistorical = (s: number) => s === 3 || s === 4 || s === 5

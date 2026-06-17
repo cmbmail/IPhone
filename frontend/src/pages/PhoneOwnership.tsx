@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useAuthStore } from '@/stores/authStore'
 import {
   Table,
   Button,
@@ -16,7 +17,7 @@ import {
   Statistic,
   Popconfirm,
 } from 'antd'
-import { UploadOutlined, DownloadOutlined, EditOutlined, CameraOutlined, ReloadOutlined, LinkOutlined } from '@ant-design/icons'
+import { UploadOutlined, DownloadOutlined, EditOutlined, ReloadOutlined, LinkOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   phoneOwnershipApi,
@@ -182,12 +183,8 @@ const PhoneOwnershipPage = () => {
   }
 
   const handleExport = () => {
-    // Read token from Zustand persist storage
-    let token: string | null = null
-    try {
-      const raw = localStorage.getItem('auth-storage')
-      if (raw) { token = JSON.parse(raw)?.state?.token || null }
-    } catch { /* ignore */ }
+    // Read token from Zustand store (works outside React via getState)
+    const token = useAuthStore.getState().token
     if (!token) { message.error('未登录或登录已过期'); return }
     const url = '/api/phone-ownership/export?token=' + encodeURIComponent(token)
     window.open(url, '_blank')
@@ -204,7 +201,7 @@ const PhoneOwnershipPage = () => {
   const depts = editBranch ? orgs.filter((o: OrgStructure) => o.parentId === editBranch) : []
 
   // ==================== Ownership columns ====================
-  const columns = [
+  const columns = useMemo(() => [
     { title: '电话号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150 },
     {
       title: '一级分行',
@@ -244,7 +241,7 @@ const PhoneOwnershipPage = () => {
         </Button>
       ),
     },
-  ]
+  ], [])
 
   const totalCount = listData?.totalElements || 0
   const content: PhoneOwnership[] = listData?.content || []
@@ -322,7 +319,7 @@ const PhoneOwnershipPage = () => {
   ]
 
   // ==================== Snapshot columns ====================
-  const snapColumns = [
+  const snapColumns = useMemo(() => [
     { title: '号码', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 140, fixed: 'left' as const },
     { title: '分机', dataIndex: 'extensionNumber', key: 'extensionNumber', width: 100, render: (v: string | null) => v || '-' },
     {
@@ -347,7 +344,7 @@ const PhoneOwnershipPage = () => {
         return <Tag color={colors[s] || 'default'}>{ALLOC_STATUS_LABELS[s] || s}</Tag>
       },
     },
-  ]
+  ], [])
 
   const snapContent: PhoneSnapshot[] = (snapData as any)?.content || []
   const snapTotal: number = (snapData as any)?.totalElements || 0

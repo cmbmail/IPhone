@@ -97,7 +97,11 @@ public class PhoneViewService {
         // 有未完成工单的电话号码ID集合
         Set<Long> phoneIdsWithPendingWO = findPhoneIdsWithPendingWorkOrders(phoneIds, extMap);
 
-        // 3. 组装 DTO
+        // 3. Preload org map for batch lookup
+        java.util.Map<Long, OrgStructure> orgMap = new java.util.HashMap<>();
+        orgRepo.findAll().forEach(o -> orgMap.put(o.getId(), o));
+
+        // 4. 组装 DTO
         List<PhoneViewDTO> dtos = new ArrayList<>();
         for (PhoneNumber p : phones) {
             List<ExtensionNumber> exts = extMap.getOrDefault(p.getId(), List.of());
@@ -112,8 +116,14 @@ public class PhoneViewService {
             String deptName = exts.stream().map(ExtensionNumber::getDeptName).filter(Objects::nonNull).findFirst().orElse(null);
             String employeeName = exts.stream().map(ExtensionNumber::getEmployeeName).filter(Objects::nonNull).findFirst().orElse(null);
 
-            if (branchName == null && p.getOrgId() != null) branchName = resolveBranchName(p.getOrgId());
-            if (deptName == null && p.getOrgId() != null) deptName = resolveDeptName(p.getOrgId());
+            if (branchName == null && p.getOrgId() != null) {
+                OrgStructure org = orgMap.get(p.getOrgId());
+                if (org != null) branchName = org.getBranchName();
+            }
+            if (deptName == null && p.getOrgId() != null) {
+                OrgStructure org = orgMap.get(p.getOrgId());
+                if (org != null) deptName = org.getName();
+            }
 
             int computedStatus = computeStatus(extNumbers, p.getId(), phoneIdsWithPendingWO);
 

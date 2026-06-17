@@ -160,21 +160,23 @@ public class EmployeeService {
 
         String employeeNo = employee.getEmployeeNo();
         
-        phoneDeviceRepository.findByAssignedEmployeeNo(employeeNo).forEach(device -> {
+        List<PhoneDevice> devices = phoneDeviceRepository.findByAssignedEmployeeNo(employeeNo);
+        devices.forEach(device -> {
             device.setStatus(PhoneDevice.PD_STOCK);
             device.setAssignedEmployeeNo(null);
             device.setUpdatedBy(operator);
-            phoneDeviceRepository.save(device);
             log.info("Device {} reclaimed from employee {} on termination", device.getId(), employeeNo);
         });
+        phoneDeviceRepository.saveAll(devices);
 
-        phoneNumberRepository.findByEmployeeNo(employeeNo).forEach(phone -> {
+        List<PhoneNumber> phones = phoneNumberRepository.findByEmployeeNo(employeeNo);
+        phones.forEach(phone -> {
             phone.setEmployeeNo(null);
             phone.setStatus(PhoneNumber.PS_IDLE);
             phone.setUpdatedBy(operator);
-            phoneNumberRepository.save(phone);
             log.info("Phone {} reclaimed from employee {} on termination", phone.getPhoneNumber(), employeeNo);
         });
+        phoneNumberRepository.saveAll(phones);
 
         employee.setStatus(Employee.EMP_INACTIVE);
         employee.setLeaveDate(LocalDate.now());

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Table, Card, Input, Select, Tag, Button, message } from 'antd'
-import { message } from "antd"
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
 import { auditLogApi } from '@/api/auditLog'
 import type { AuditLogEntry } from '@/types/auditLog'

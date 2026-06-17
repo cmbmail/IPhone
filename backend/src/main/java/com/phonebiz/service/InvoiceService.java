@@ -227,8 +227,18 @@ public class InvoiceService {
         return names.isEmpty() ? null : names.get(0);
     }
 
+    // Cached org list for matching (refreshed per batch)
+    private List<OrgStructure> cachedOrgList = null;
+    private long cachedOrgListTime = 0;
+    private static final long ORG_LIST_CACHE_TTL_MS = 5 * 60 * 1000;
+
     private Long matchRecipientOrg(String companyName) {
-        return orgStructureRepository.findAll().stream()
+        long now = System.currentTimeMillis();
+        if (cachedOrgList == null || (now - cachedOrgListTime) > ORG_LIST_CACHE_TTL_MS) {
+            cachedOrgList = orgStructureRepository.findAll();
+            cachedOrgListTime = now;
+        }
+        return cachedOrgList.stream()
                 .filter(org -> org.getName().contains(companyName) || companyName.contains(org.getName()))
                 .map(org -> org.getId())
                 .findFirst()
