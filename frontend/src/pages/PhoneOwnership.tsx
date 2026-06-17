@@ -26,12 +26,70 @@ import {
 import { ApiGet } from '@/api/request'
 import type { OrgStructure } from '@/types/org'
 import { snapshotApi } from '@/api/snapshot'
+import { ownershipLevelApi, type OwnershipLevelItem, type LevelSummaryResponse } from '@/api/ownershipLevel'
 import type { PhoneSnapshot } from '@/types/snapshot'
 import {
   SNAPSHOT_STATUS_LABELS,
   SNAPSHOT_STATUS_COLORS,
   ALLOC_STATUS_LABELS,
 } from '@/types/snapshot'
+
+// ==================== Level Table Component ====================
+const LevelTable = ({ data, loading, summary, onSelect }: {
+  data: OwnershipLevelItem[]
+  loading: boolean
+  summary?: LevelSummaryResponse | null
+  onSelect?: (orgId: number) => void
+}) => {
+  const columns = [
+    {
+      title: '组织名称', dataIndex: 'orgName', key: 'orgName', width: 160, fixed: 'left' as const,
+      render: (v: string, r: OwnershipLevelItem) => onSelect ? (
+        <a onClick={() => onSelect(r.orgId)} style={{ fontWeight: 500 }}>{v}</a>
+      ) : <span style={{ fontWeight: 500 }}>{v}</span>,
+    },
+    { title: '类型', dataIndex: 'orgTypeName', key: 'orgTypeName', width: 90, render: (v: string) => <Tag>{v || '-'}</Tag> },
+    ...(summary && summary.level >= 2 ? [{ title: '上级组织', dataIndex: 'parentOrgName', key: 'parentOrgName', width: 130 }] : []),
+    { title: '号码数', dataIndex: 'phoneCount', key: 'phoneCount', width: 90, align: 'right' as const,
+      render: (v: number) => <span style={{ fontWeight: 600, color: '#1890ff' }}>{v}</span>,
+    },
+    { title: '已归属', dataIndex: 'allocatedCount', key: 'allocatedCount', width: 90, align: 'right' as const,
+      render: (v: number) => <span style={{ color: '#52c41a' }}>{v}</span>,
+    },
+  ]
+
+  return (
+    <Table
+      columns={columns}
+      dataSource={data}
+      loading={loading}
+      rowKey="orgId"
+      scroll={{ x: 500 }}
+      pagination={{ pageSize: 50, showQuickJumper: true }}
+      size="middle"
+      bordered
+      summary={(pageData) => {
+        const arr = pageData as OwnershipLevelItem[]
+        if (!arr.length) return null
+        let tPhones = 0, tAlloc = 0
+        arr.forEach(r => { tPhones += r.phoneCount; tAlloc += r.allocatedCount })
+        return (
+          <Table.Summary.Row style={{ background: '#fafafa', fontWeight: 700 }}>
+            <Table.Summary.Cell index={0}>合计</Table.Summary.Cell>
+            <Table.Summary.Cell index={1} />
+            {summary && summary.level >= 2 && <Table.Summary.Cell index={2} />}
+            <Table.Summary.Cell index={summary && summary.level >= 2 ? 3 : 2} align="right">
+              <span style={{ color: '#1890ff', fontWeight: 700 }}>{tPhones}</span>
+            </Table.Summary.Cell>
+            <Table.Summary.Cell index={summary && summary.level >= 2 ? 4 : 3} align="right">
+              <span style={{ color: '#52c41a' }}>{tAlloc}</span>
+            </Table.Summary.Cell>
+          </Table.Summary.Row>
+        )
+      }}
+    />
+  )
+}
 
 const PhoneOwnershipPage = () => {
   const [activeTab, setActiveTab] = useState('ownership')
@@ -56,6 +114,12 @@ const PhoneOwnershipPage = () => {
   const [snapStatus, setSnapStatus] = useState<number | undefined>(undefined)
   const [linkModalOpen, setLinkModalOpen] = useState(false)
   const [linkBillMonth, setLinkBillMonth] = useState('')
+
+  // Ownership level state
+  const [ownershipSubTab, setOwnershipSubTab] = useState('level1')
+  const [levelParentId, setLevelParentId] = useState<number | undefined>(undefined)
+  const [level2ParentId, setLevel2ParentId] = useState<number | undefined>(undefined)
+  const [level3ParentId, setLevel3ParentId] = useState<number | undefined>(undefined)
 
   const queryClient = useQueryClient()
 
@@ -100,6 +164,22 @@ const PhoneOwnershipPage = () => {
         status: snapStatus,
       }),
     enabled: !!snapMonth,
+  })
+
+  // Ownership level queries
+  const { data: level1Data, isLoading: level1Loading } = useQuery({
+    queryKey: ['ownership-level', 1],
+    queryFn: () => ownershipLevelApi.getByLevel(1),
+  })
+  const { data: level2Data, isLoading: level2Loading } = useQuery({
+    queryKey: ['ownership-level', 2, level2ParentId],
+    queryFn: () => ownershipLevelApi.getByLevel(2, level2ParentId),
+    enabled: ownershipSubTab === 'level2',
+  })
+  const { data: level3Data, isLoading: level3Loading } = useQuery({
+    queryKey: ['ownership-level', 3, level3ParentId],
+    queryFn: () => ownershipLevelApi.getByLevel(3, level3ParentId),
+    enabled: ownershipSubTab === 'level3',
   })
 
   const { data: snapStats } = useQuery({
@@ -362,40 +442,127 @@ const PhoneOwnershipPage = () => {
             children: (
               <>
                 <Row gutter={16} style={{ marginBottom: 16 }}>
-                  <Col span={8}>
+                  <Col span={6}>
                     <Card><Statistic title="号码总数" value={totalCount} /></Card>
                   </Col>
-                  <Col span={8}>
+                  <Col span={6}>
                     <Card>
                       <Statistic title="已归属分行" value={content.filter((c) => c.branchName).length} valueStyle={{ color: '#52c41a' }} />
                     </Card>
                   </Col>
-                  <Col span={8}>
+                  <Col span={6}>
                     <Card>
                       <Statistic title="已归属部门" value={content.filter((c) => c.deptName).length} valueStyle={{ color: '#1890ff' }} />
                     </Card>
                   </Col>
+                  <Col span={6}>
+                    <Card>
+                      <Statistic title="一级分行" value={level1Data?.totalOrgs || 0} suffix="个" />
+                    </Card>
+                  </Col>
                 </Row>
                 <Card>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <Space>
-                      <Input.Search placeholder="搜索号码/分行/部门" value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 220 }} onSearch={() => setPage(0)} />
-                      <Select placeholder="筛选分行" value={branchOrgId} onChange={(v) => { setBranchOrgId(v); setPage(0) }} style={{ width: 150 }} allowClear>
-                        {branches.map((b: OrgStructure) => (<Select.Option key={b.id} value={b.id}>{b.branchName || b.name}</Select.Option>))}
-                      </Select>
-                    </Space>
-                    <Space>
-                      <Upload accept=".csv,.txt" showUploadList={false} beforeUpload={(file) => { handleImport(file); return false }}>
-                        <Button icon={<UploadOutlined />}>导入</Button>
-                      </Upload>
-                      <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
-                    </Space>
-                  </div>
-                  <Table columns={columns} dataSource={content} loading={isLoading} rowKey="id" pagination={{
-                    current: page + 1, pageSize, total: listData?.totalElements || 0,
-                    onChange: (p, ps) => { setPage(p - 1); setPageSize(ps) },
-                    showSizeChanger: true, showQuickJumper: true,
-                  }} />
+                  <Tabs
+                    activeKey={ownershipSubTab}
+                    onChange={(k) => setOwnershipSubTab(k)}
+                    items={[
+                      {
+                        key: 'level1',
+                        label: '一级分行',
+                        children: (
+                          <LevelTable
+                            data={level1Data?.items || []}
+                            loading={level1Loading}
+                            summary={level1Data}
+                            onSelect={(orgId) => { setLevel2ParentId(orgId); setOwnershipSubTab('level2') }}
+                          />
+                        ),
+                      },
+                      {
+                        key: 'level2',
+                        label: '二级分行/一级部门/综合支行',
+                        children: (
+                          <div>
+                            {level2ParentId && (
+                              <div style={{ marginBottom: 12 }}>
+                                <Select
+                                  placeholder="选择一级分行"
+                                  value={level2ParentId}
+                                  onChange={(v) => setLevel2ParentId(v)}
+                                  style={{ width: 200 }}
+                                >
+                                  {(level1Data?.items || []).map((i: OwnershipLevelItem) => (
+                                    <Select.Option key={i.orgId} value={i.orgId}>{i.orgName}</Select.Option>
+                                  ))}
+                                </Select>
+                              </div>
+                            )}
+                            <LevelTable
+                              data={level2Data?.items || []}
+                              loading={level2Loading}
+                              summary={level2Data}
+                              onSelect={(orgId) => { setLevel3ParentId(orgId); setOwnershipSubTab('level3') }}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'level3',
+                        label: '部门/支行/零专支行',
+                        children: (
+                          <div>
+                            {level2Data?.items && (
+                              <div style={{ marginBottom: 12 }}>
+                                <Select
+                                  placeholder="选择上级组织"
+                                  value={level3ParentId}
+                                  onChange={(v) => setLevel3ParentId(v)}
+                                  style={{ width: 200 }}
+                                  allowClear
+                                >
+                                  {(level2Data.items || []).map((i: OwnershipLevelItem) => (
+                                    <Select.Option key={i.orgId} value={i.orgId}>{i.orgName}({i.orgTypeName})</Select.Option>
+                                  ))}
+                                </Select>
+                              </div>
+                            )}
+                            <LevelTable
+                              data={level3Data?.items || []}
+                              loading={level3Loading}
+                              summary={level3Data}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'all',
+                        label: '全部号码',
+                        children: (
+                          <div style={{ marginTop: 12 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                              <Space>
+                                <Input.Search placeholder="搜索号码/分行/部门" value={keyword} onChange={(e) => setKeyword(e.target.value)} style={{ width: 220 }} onSearch={() => setPage(0)} />
+                                <Select placeholder="筛选分行" value={branchOrgId} onChange={(v) => { setBranchOrgId(v); setPage(0) }} style={{ width: 150 }} allowClear>
+                                  {branches.map((b: OrgStructure) => (<Select.Option key={b.id} value={b.id}>{b.branchName || b.name}</Select.Option>))}
+                                </Select>
+                              </Space>
+                              <Space>
+                                <Upload accept=".csv,.txt" showUploadList={false} beforeUpload={(file) => { handleImport(file); return false }}>
+                                  <Button icon={<UploadOutlined />}>导入</Button>
+                                </Upload>
+                                <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
+                              </Space>
+                            </div>
+                            <Table columns={columns} dataSource={content} loading={isLoading} rowKey="id" pagination={{
+                              current: page + 1, pageSize, total: listData?.totalElements || 0,
+                              onChange: (p, ps) => { setPage(p - 1); setPageSize(ps) },
+                              showSizeChanger: true, showQuickJumper: true,
+                            }} />
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
                 </Card>
               </>
             ),

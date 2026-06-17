@@ -84,4 +84,11 @@ public class PhoneOwnershipController {
                 .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
                 .body(result);
     }
+    @GetMapping("/by-level")
+    @PreAuthorize("hasAuthority('phone:view') or hasRole('ADMIN')")
+    public ApiResponse<com.phonebiz.dto.OwnershipLevelDTO.LevelSummaryResponse> getByLevel(
+            @RequestParam int level,
+            @RequestParam(required = false) Long parentOrgId) {
+        return ApiResponse.success(phoneOwnershipService.getOwnershipByLevel(level, parentOrgId));
+    }
 }
