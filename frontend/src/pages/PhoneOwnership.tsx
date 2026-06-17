@@ -333,7 +333,7 @@ const PhoneOwnershipPage = () => {
       render: (s: number) => <Tag color={SNAPSHOT_STATUS_COLORS[s] || 'default'}>{SNAPSHOT_STATUS_LABELS[s] || s}</Tag>,
     },
     { title: '组织', dataIndex: 'orgName', key: 'orgName', width: 150, render: (v: string | null) => v || '-' },
-          { title: '一级分行', dataIndex: 'level1BranchName', key: 'branchName', width: 120, render: (v: string | null) => v || '-' },
+          { title: '一级分行', dataIndex: 'branchName', key: 'branchName', width: 120, render: (v: string | null) => v || '-' },
     { title: '成本中心', dataIndex: 'costCenterCode', key: 'costCenterCode', width: 100, render: (v: string | null) => v || '-' },
     { title: '工号', dataIndex: 'employeeNo', key: 'employeeNo', width: 90, render: (v: string | null) => v || '-' },
     { title: '姓名', dataIndex: 'employeeName', key: 'employeeName', width: 100, render: (v: string | null) => v || '-' },
