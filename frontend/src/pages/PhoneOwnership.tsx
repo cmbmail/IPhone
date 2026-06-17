@@ -182,8 +182,14 @@ const PhoneOwnershipPage = () => {
   }
 
   const handleExport = () => {
-    const token = localStorage.getItem('token')
-    const url = `/api/phone-ownership/export?token=${token}`
+    // Read token from Zustand persist storage
+    let token: string | null = null
+    try {
+      const raw = localStorage.getItem('auth-storage')
+      if (raw) { token = JSON.parse(raw)?.state?.token || null }
+    } catch { /* ignore */ }
+    if (!token) { message.error('未登录或登录已过期'); return }
+    const url = '/api/phone-ownership/export?token=' + encodeURIComponent(token)
     window.open(url, '_blank')
   }
 
