@@ -29,25 +29,4 @@ public interface PhoneOwnershipRepository extends JpaRepository<PhoneOwnership, 
     List<PhoneOwnership> findAllByOrderByPhoneNumberAsc();
 
     boolean existsByPhoneNumber(String phoneNumber);
-
-    // Count phones by branch org ID
-    long countByBranchOrgIdAndDeletedAtIsNull(Long branchOrgId);
-
-    // Count phones by branch org ID with non-null dept
-    long countByBranchOrgIdAndDeptOrgIdIsNotNullAndDeletedAtIsNull(Long branchOrgId);
-
-    // Count phones by dept org ID list
-    @Query("SELECT COUNT(p) FROM PhoneOwnership p WHERE p.deptOrgId IN :orgIds AND p.deletedAt IS NULL")
-    long countByDeptOrgIdIn(@Param("orgIds") List<Long> orgIds);
-
-    // Count phones by dept org ID list with non-null dept
-    @Query("SELECT COUNT(p) FROM PhoneOwnership p WHERE p.deptOrgId IN :orgIds AND p.deptOrgId IS NOT NULL AND p.deletedAt IS NULL")
-    long countAllocatedByDeptOrgIdIn(@Param("orgIds") List<Long> orgIds);
-
-    // Find by orgIds with pagination
-    @Query("SELECT p FROM PhoneOwnership p WHERE p.deptOrgId IN :orgIds AND p.deletedAt IS NULL ORDER BY p.phoneNumber")
-    Page<PhoneOwnership> findByDeptOrgIdIn(@Param("orgIds") List<Long> orgIds, Pageable pageable);
-
-    // Find by branchOrgId with pagination
-    Page<PhoneOwnership> findByBranchOrgIdAndDeletedAtIsNull(Long branchOrgId, Pageable pageable);
 }
